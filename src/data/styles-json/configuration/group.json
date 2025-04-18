@@ -1,0 +1,1 @@
+{"gap":"\n.pot-group {\n    --group-gap: initial;                 /* Расстояние между элементами */\n\n    gap: var(--group-gap);\n}\n"}
