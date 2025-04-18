@@ -1,0 +1,7 @@
+{
+    "checkbox": "pot-checkbox",
+    "target": "pot-checkbox__target",
+    "iconWrapper": "pot-checkbox__icon-wrapper",
+    "icon": "pot-checkbox__icon",
+    "label": "pot-checkbox__label"
+}
