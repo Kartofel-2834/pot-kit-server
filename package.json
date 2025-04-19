@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "bun-types": "latest",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "wrangler": "^4.12.0"
   },
   "module": "src/index.js"
 }

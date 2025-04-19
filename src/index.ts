@@ -6,8 +6,8 @@ const app = new Elysia();
 // Styles static
 app.use(
     staticPlugin({
-        assets: './src/data/styles-json',
-        prefix: '/styles',
+        assets: './src/data/json',
+        prefix: '/data',
     }),
 );
 
