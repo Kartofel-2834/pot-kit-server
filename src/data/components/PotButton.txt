@@ -1,0 +1,117 @@
+<script lang="ts" setup>
+// Types
+import type { IPotButtonProps } from '$types-import/components/pot-button';
+import type { EPotDevice, EPotColor, EPotSize, EPotRadius } from '$types-import/pot-kit';
+
+// Enums
+import { POT_BREAKPOINT } from '$types-import/pot-kit';
+
+// Vue
+import { defineAsyncComponent, computed } from 'vue';
+
+// Composables
+import { useClassList } from '$composables-import/class-list';
+import { useDeviceProperties } from '$composables-import/device-properties';
+import { useDeviceIs } from '$composables-import/device-is';
+
+// Components
+const PotIcon = defineAsyncComponent(() => import('./PotIcon.vue'));
+
+const $props = withDefaults(
+    defineProps<IPotButtonProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
+    {
+        tag: 'button',
+    },
+);
+
+const $deviceIs = useDeviceIs(POT_BREAKPOINT);
+
+/**
+ * Вычисляет и возвращает свойства компонента на основе
+ * брейкпоинтов и текущего размера экрана
+ */
+const properties = computed(() => {
+    return useDeviceProperties(
+        {
+            color: $props.color,
+            size: $props.size,
+            radius: $props.radius,
+        },
+        $props.devices,
+        $deviceIs.device.value,
+        POT_BREAKPOINT,
+    );
+});
+
+/** Классы модификаторы компонента */
+const classList = computed(() =>
+    useClassList({
+        ...properties.value,
+        square: $props.square,
+    }),
+);
+</script>
+
+<template>
+    <component
+        :is="tag"
+        :class="['pot-button', classList]"
+        :disabled="disabled"
+    >
+        <slot name="preicon">
+            <PotIcon
+                v-if="preicon"
+                :icon="preicon"
+                class="pot-button__icon pot-button__icon_pre"
+            />
+        </slot>
+
+        <span
+            v-if="$slots?.default"
+            class="pot-button__label"
+        >
+            <slot />
+        </span>
+
+        <slot name="icon">
+            <PotIcon
+                v-if="icon"
+                :icon="icon"
+                class="pot-button__icon pot-button__icon_post"
+            />
+        </slot>
+    </component>
+</template>
+
+<style>
+.pot-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+    border-style: solid;
+    font-weight: 500;
+    line-height: 1;
+    transition:
+        color 0.4s ease,
+        border-color 0.4s ease,
+        background-color 0.4s ease;
+}
+
+/* --- PotButton - Disabled --- */
+.pot-button:disabled {
+    cursor: not-allowed;
+}
+
+/* --- PotButton - Square --- */
+.pot-button._square {
+    padding: 0;
+    aspect-ratio: 1 / 1;
+}
+
+.pot-button__icon {
+    flex-shrink: 0;
+}
+</style>

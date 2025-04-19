@@ -1,0 +1,13 @@
+export type TDevicePropertyValue<T> = T extends unknown[] ? TDevicePropertyValue<T[number]> : T;
+
+export type TDeviceProperties<T> = {
+    [Property in keyof T]?: TDevicePropertyValue<T[Property]>
+}
+
+export type TDeviceBreakpointValues<T, TDevice extends string = string> = Partial<{
+    [Breakpoint in TDevice]: TDevicePropertyValue<T>;
+}>
+
+export type TDevicePropertiesBreakpointsValues<T, TDevice extends string = string> = Partial<{
+    [Property in keyof T]: TDeviceBreakpointValues<T[Property], TDevice>
+}>

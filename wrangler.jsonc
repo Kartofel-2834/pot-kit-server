@@ -2,6 +2,6 @@
     "name": "pot-kit-worker",
     "compatibility_date": "2022-07-12",
     "assets": {
-        "directory": "./src/data/json"
+        "directory": "./src/data"
     }
 }

@@ -61,15 +61,15 @@ async function mapStylesToMap(dataKey: string, inputPath: string, outputPath: st
 }
 
 async function mapConditions() {
-    const inputPath = path.join(__dirname, 'data', 'styles', 'conditions');
-    const outputPath = path.join(__dirname, 'data', 'styles-json', 'conditions');
+    const inputPath = path.join(__dirname, 'styles', 'conditions');
+    const outputPath = path.join(__dirname, 'data', 'conditions');
 
     return mapStylesToMap('CONDITION', inputPath, outputPath);
 }
 
 async function mapConfigurations() {
-    const inputPath = path.join(__dirname, 'data', 'styles', 'configuration');
-    const outputPath = path.join(__dirname, 'data', 'styles-json', 'configuration');
+    const inputPath = path.join(__dirname, 'styles', 'configuration');
+    const outputPath = path.join(__dirname, 'data', 'configuration');
 
     return mapStylesToMap('CONFIGURATION', inputPath, outputPath);
 }
