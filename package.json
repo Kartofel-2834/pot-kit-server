@@ -4,7 +4,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
-    "map-styles": "bun run src/map-styles.ts"
+    "map-styles": "bun run src/map-styles.ts",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@elysiajs/static": "^1.2.0",
