@@ -1,0 +1,32 @@
+/* NOT EDIT! THIS ENUMS GENERATED AUTOMATICALLY! */
+
+/* Color */
+export const %upper%_COLOR = {} as const;
+
+export type E%camel%Color = string;
+
+/* Radius */
+export const %upper%_RADIUS = {} as const;
+
+export type E%camel%Radius = string;
+
+/* Gap */
+export const %upper%_GAP = {} as const;
+
+export type E%camel%Gap = string;
+
+/* Device */
+export const %upper%_DEVICE = {} as const;
+
+export type E%camel%Device = string;
+
+export const %upper%_BREAKPOINT: { readonly [key in E%camel%Device]: number; } = {};
+
+export const ALL_DEVICES = Object.keys(%upper%_BREAKPOINT);
+
+export const ALL_DEVICES_REVERSED = Object.keys(%upper%_BREAKPOINT).reverse();
+
+/* Size */
+export const %upper%_SIZE = {} as const;
+
+export type E%camel%Size = string;

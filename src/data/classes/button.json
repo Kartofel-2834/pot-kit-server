@@ -1,5 +1,5 @@
 {
-    "button": "pot-button",
-    "icon": "pot-button__icon",
-    "label": "pot-button__label"
+    "button": "%kebab%-button",
+    "icon": "%kebab%-button__icon",
+    "label": "%kebab%-button__label"
 }

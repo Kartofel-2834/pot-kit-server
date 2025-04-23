@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 // Types
-import type { IPotButtonProps } from '$types-import/components/pot-button';
-import type { EPotDevice, EPotColor, EPotSize, EPotRadius } from '$types-import/pot-kit';
+import type { I%camel%ButtonProps } from '$types-import/components/button';
+import type { E%camel%Device, E%camel%Color, E%camel%Size, E%camel%Radius } from '$types-import/index';
 
 // Enums
-import { POT_BREAKPOINT } from '$types-import/pot-kit';
+import { %upper%_BREAKPOINT } from '$types-import/index';
 
 // Vue
 import { defineAsyncComponent, computed } from 'vue';
@@ -15,16 +15,16 @@ import { useDeviceProperties } from '$composables-import/device-properties';
 import { useDeviceIs } from '$composables-import/device-is';
 
 // Components
-const PotIcon = defineAsyncComponent(() => import('./PotIcon.vue'));
+const %camel%Icon = defineAsyncComponent(() => import('./%camel%Icon.vue'));
 
 const $props = withDefaults(
-    defineProps<IPotButtonProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
+    defineProps<I%camel%ButtonProps<E%camel%Device, E%camel%Color, E%camel%Size, E%camel%Radius>>(), 
     {
         tag: 'button',
     },
 );
 
-const $deviceIs = useDeviceIs(POT_BREAKPOINT);
+const $deviceIs = useDeviceIs(%upper%_BREAKPOINT);
 
 /**
  * Вычисляет и возвращает свойства компонента на основе
@@ -39,7 +39,7 @@ const properties = computed(() => {
         },
         $props.devices,
         $deviceIs.device.value,
-        POT_BREAKPOINT,
+        %upper%_BREAKPOINT,
     );
 });
 
@@ -55,36 +55,36 @@ const classList = computed(() =>
 <template>
     <component
         :is="tag"
-        :class="['pot-button', classList]"
+        :class="['%kebab%-button', classList]"
         :disabled="disabled"
     >
         <slot name="preicon">
-            <PotIcon
+            <%camel%Icon
                 v-if="preicon"
                 :icon="preicon"
-                class="pot-button__icon pot-button__icon_pre"
+                class="%kebab%-button__icon %kebab%-button__icon_pre"
             />
         </slot>
 
         <span
             v-if="$slots?.default"
-            class="pot-button__label"
+            class="%kebab%-button__label"
         >
             <slot />
         </span>
 
         <slot name="icon">
-            <PotIcon
+            <%camel%Icon
                 v-if="icon"
                 :icon="icon"
-                class="pot-button__icon pot-button__icon_post"
+                class="%kebab%-button__icon %kebab%-button__icon_post"
             />
         </slot>
     </component>
 </template>
 
 <style>
-.pot-button {
+.%kebab%-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -100,18 +100,18 @@ const classList = computed(() =>
         background-color 0.4s ease;
 }
 
-/* --- PotButton - Disabled --- */
-.pot-button:disabled {
+/* --- %camel%Button - Disabled --- */
+.%kebab%-button:disabled {
     cursor: not-allowed;
 }
 
-/* --- PotButton - Square --- */
-.pot-button._square {
+/* --- %camel%Button - Square --- */
+.%kebab%-button._square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
-.pot-button__icon {
+.%kebab%-button__icon {
     flex-shrink: 0;
 }
 </style>

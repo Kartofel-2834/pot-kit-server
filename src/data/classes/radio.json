@@ -1,4 +1,4 @@
 {
-    "radio": "pot-radio",
-    "marker": "pot-radio__marker"
+    "radio": "%kebab%-radio",
+    "marker": "%kebab%-radio__marker"
 }

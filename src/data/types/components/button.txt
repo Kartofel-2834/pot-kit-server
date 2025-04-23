@@ -1,7 +1,7 @@
 /**
- * Интерфейс пропсов для компонента PotButton
+ * Интерфейс пропсов для компонента %camel%Button
  */
-export interface IPotButtonProps<
+export interface I%camel%ButtonProps<
     TDevice extends string = string,
     TColor extends string = string,
     TSize extends string = string, 

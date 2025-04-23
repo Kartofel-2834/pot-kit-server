@@ -1,4 +1,4 @@
 {
-    "tooltip": "pot-tooltip",
-    "tooltipWrapper": "pot-tooltip__wrapper"
+    "tooltip": "%kebab%-tooltip",
+    "tooltipWrapper": "%kebab%-tooltip__wrapper"
 }

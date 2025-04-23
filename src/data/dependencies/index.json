@@ -1,0 +1,60 @@
+{
+    "components": {
+        "button": {
+            "components": [
+                "icon"
+            ],
+            "composables": [
+                "class-list",
+                "device-is",
+                "device-properties"
+            ],
+            "types": [
+                "components/button",
+                "index"
+            ]
+        },
+        "icon": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "components/icon"
+            ]
+        }
+    },
+    "composables": {
+        "class-list": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "device-is": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/device-is"
+            ]
+        },
+        "device-properties": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/device-properties"
+            ]
+        },
+        "form": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/form"
+            ]
+        },
+        "specs": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/specs"
+            ]
+        }
+    }
+}

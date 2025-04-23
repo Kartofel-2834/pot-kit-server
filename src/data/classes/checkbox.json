@@ -1,7 +1,7 @@
 {
-    "checkbox": "pot-checkbox",
-    "target": "pot-checkbox__target",
-    "iconWrapper": "pot-checkbox__icon-wrapper",
-    "icon": "pot-checkbox__icon",
-    "label": "pot-checkbox__label"
+    "checkbox": "%kebab%-checkbox",
+    "target": "%kebab%-checkbox__target",
+    "iconWrapper": "%kebab%-checkbox__icon-wrapper",
+    "icon": "%kebab%-checkbox__icon",
+    "label": "%kebab%-checkbox__label"
 }
