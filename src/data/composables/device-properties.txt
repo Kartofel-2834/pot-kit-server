@@ -4,7 +4,7 @@ import type {
     TDevicePropertiesBreakpointsValues,
     TDevicePropertyValue,
 } from '$types-import/composables/device-properties';
-import { ALL_DEVICES_REVERSED } from '$types-import/pot-kit';
+import { ALL_DEVICES_REVERSED } from '$types-import';
 
 // TODO: Переписать и сделать подключение в компоненты более удобным
 
