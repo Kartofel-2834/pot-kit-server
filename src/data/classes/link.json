@@ -1,4 +1,4 @@
 {
-    "link": "%kebab%-link",
-    "icon": "%kebab%-link__icon"
+    "link": "<%kebab%>-link",
+    "icon": "<%kebab%>-link__icon"
 }

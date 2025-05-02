@@ -1,35 +1,28 @@
 <script lang="ts" setup>
 // Types
-import type { I%camel%ButtonProps } from '$types-import/components/button';
-import type { E%camel%Device, E%camel%Color, E%camel%Size, E%camel%Radius } from '$types-import/index';
-
-// Enums
-import { %upper%_BREAKPOINT } from '$types-import/index';
+import type { I<%camel%>ButtonProps } from '<%typesImport%>/components/button';
+import type { E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius } from '<%typesImport%>';
 
 // Vue
 import { defineAsyncComponent, computed } from 'vue';
 
 // Composables
-import { useClassList } from '$composables-import/class-list';
-import { useDeviceProperties } from '$composables-import/device-properties';
-import { useDeviceIs } from '$composables-import/device-is';
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-properties';
+import { useDeviceIs } from '<%composablesImport%>/device-is';
 
 // Components
-const %camel%Icon = defineAsyncComponent(() => import('./%camel%Icon.vue'));
+const <%camel%>Icon = defineAsyncComponent(() => import('./<%camel%>Icon.vue'));
 
 const $props = withDefaults(
-    defineProps<I%camel%ButtonProps<E%camel%Device, E%camel%Color, E%camel%Size, E%camel%Radius>>(), 
+    defineProps<I<%camel%>ButtonProps<E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius>>(),
     {
         tag: 'button',
     },
 );
 
-const $deviceIs = useDeviceIs(%upper%_BREAKPOINT);
+const $deviceIs = useDeviceIs();
 
-/**
- * Вычисляет и возвращает свойства компонента на основе
- * брейкпоинтов и текущего размера экрана
- */
 const properties = computed(() => {
     return useDeviceProperties(
         {
@@ -37,13 +30,11 @@ const properties = computed(() => {
             size: $props.size,
             radius: $props.radius,
         },
-        $props.devices,
         $deviceIs.device.value,
-        %upper%_BREAKPOINT,
+        $props.devices,
     );
 });
 
-/** Классы модификаторы компонента */
 const classList = computed(() =>
     useClassList({
         ...properties.value,
@@ -55,36 +46,36 @@ const classList = computed(() =>
 <template>
     <component
         :is="tag"
-        :class="['%kebab%-button', classList]"
+        :class="['<%kebab%>-button', classList]"
         :disabled="disabled"
     >
         <slot name="preicon">
-            <%camel%Icon
+            <<%camel%>Icon
                 v-if="preicon"
                 :icon="preicon"
-                class="%kebab%-button__icon %kebab%-button__icon_pre"
+                class="<%kebab%>-button__icon <%kebab%>-button__icon_pre"
             />
         </slot>
 
         <span
             v-if="$slots?.default"
-            class="%kebab%-button__label"
+            class="<%kebab%>-button__label"
         >
             <slot />
         </span>
 
         <slot name="icon">
-            <%camel%Icon
+            <<%camel%>Icon
                 v-if="icon"
                 :icon="icon"
-                class="%kebab%-button__icon %kebab%-button__icon_post"
+                class="<%kebab%>-button__icon <%kebab%>-button__icon_post"
             />
         </slot>
     </component>
 </template>
 
 <style>
-.%kebab%-button {
+.<%kebab%>-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -100,18 +91,18 @@ const classList = computed(() =>
         background-color 0.4s ease;
 }
 
-/* --- %camel%Button - Disabled --- */
-.%kebab%-button:disabled {
+/* --- <%camel%>Button - Disabled --- */
+.<%kebab%>-button:disabled {
     cursor: not-allowed;
 }
 
-/* --- %camel%Button - Square --- */
-.%kebab%-button._square {
+/* --- <%camel%>Button - Square --- */
+.<%kebab%>-button._square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
-.%kebab%-button__icon {
+.<%kebab%>-button__icon {
     flex-shrink: 0;
 }
 </style>

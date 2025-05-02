@@ -12,4 +12,3 @@ export type TDeviceIs<TDevice extends string = string> = {
     /** Текущий активный брейкпонт */
     device: Ref<TDevice | null>;
 };
-

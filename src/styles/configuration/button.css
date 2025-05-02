@@ -13,6 +13,10 @@
     border-width: var(--button-size-border);
     font-size: var(--button-size-text);
 }
+
+.pot-button__icon {
+    width: var(--button-size-icon);
+}
 /* CONFIGURATION:size - END */
 
 /* CONFIGURATION:radius - START */
