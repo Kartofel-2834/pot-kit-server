@@ -1,0 +1,25 @@
+/* CONFIGURATION:size - START */
+.pot-button {
+    --button-size-height: initial;
+    --button-size-padding: initial;
+    --button-size-border: initial;
+    --button-size-text: initial;
+    --button-size-outline: initial;
+    --button-size-outline-offset: initial;
+
+    height: var(--button-size-height);
+    padding: 0 var(--button-size-padding);
+    border-width: var(--button-size-border);
+    font-size: var(--button-size-text);
+    outline-width: var(--button-size-outline);
+    outline-offset: var(--button-size-outline-offset);
+}
+/* CONFIGURATION:size - END */
+
+/* CONFIGURATION:radius - START */
+.pot-button {
+    --button-radius: initial;
+
+    border-radius: var(--button-radius);
+}
+/* CONFIGURATION:radius - END */

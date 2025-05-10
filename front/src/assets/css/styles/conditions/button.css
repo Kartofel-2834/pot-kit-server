@@ -1,0 +1,61 @@
+/* CONDITION:base - START */
+.pot-button {
+    --button-color-base-border: initial;
+    --button-color-base-background: initial;
+    --button-color-base-text: initial;
+    --button-color-base-outline: initial;
+
+    border-color: var(--button-color-base-border);
+    background-color: var(--button-color-base-background);
+    color: var(--button-color-base-text);
+    outline-color: var(--button-color-base-outline);
+}
+/* CONDITION:base - END */
+
+/* CONDITION:hover - START */
+.pot-button {
+    --button-color-hover-border: initial;
+    --button-color-hover-background: initial;
+    --button-color-hover-text: initial;
+    --button-color-hover-outline: initial;
+}
+
+.pot-button:hover {
+    border-color: var(--button-color-hover-border);
+    background-color: var(--button-color-hover-background);
+    color: var(--button-color-hover-text);
+    outline-color: var(--button-color-hover-outline);
+}
+/* CONDITION:hover - END */
+
+/* CONDITION:pressed - START */
+.pot-button {
+    --button-color-pressed-border: initial;
+    --button-color-pressed-background: initial;
+    --button-color-pressed-text: initial;
+    --button-color-pressed-outline: initial;
+}
+
+.pot-button:active {
+    border-color: var(--button-color-pressed-border);
+    background-color: var(--button-color-pressed-background);
+    color: var(--button-color-pressed-text);
+    outline-color: var(--button-color-pressed-outline);
+}
+/* CONDITION:pressed - END */
+
+/* CONDITION:disabled - START */
+.pot-button {
+    --button-color-disabled-border: initial;
+    --button-color-disabled-background: initial;
+    --button-color-disabled-text: initial;
+    --button-color-disabled-outline: initial;
+}
+
+.pot-button:disabled {
+    border-color: var(--button-color-disabled-border);
+    background-color: var(--button-color-disabled-background);
+    color: var(--button-color-disabled-text);
+    outline-color: var(--button-color-disabled-outline);
+}
+/* CONDITION:disabled - END */

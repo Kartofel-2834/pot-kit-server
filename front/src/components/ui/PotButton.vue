@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 // Types
-import type { I<%camel%>ButtonProps } from '<%typesImport%>/components/button';
-import type { E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius } from '<%typesImport%>';
+import type { IPotButtonProps } from '@/types/components/button';
+import type { EPotDevice, EPotColor, EPotSize, EPotRadius } from '@/types';
 
 // Vue
 import { computed } from 'vue';
 
 // Composables
-import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
+import { useClassList } from '@/composables/class-list';
+import { useDeviceProperties } from '@/composables/device-properties';
+import { useDeviceIs } from '@/composables/device-is';
 
 const $props = withDefaults(
-    defineProps<I<%camel%>ButtonProps<E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius>>(),
+    defineProps<IPotButtonProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
     {
         tag: 'button',
     },
@@ -43,7 +43,7 @@ const classList = computed(() =>
 <template>
     <component
         :is="tag"
-        :class="['<%kebab%>-button', classList]"
+        :class="['pot-button', classList]"
         :disabled="disabled"
     >
         <slot />
@@ -51,7 +51,7 @@ const classList = computed(() =>
 </template>
 
 <style>
-.<%kebab%>-button {
+.pot-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,14 +67,20 @@ const classList = computed(() =>
         background-color 0.4s ease;
 }
 
-/* --- <%camel%>Button - Disabled --- */
-.<%kebab%>-button:disabled {
+/* --- PotButton - Disabled --- */
+.pot-button:disabled {
     cursor: not-allowed;
 }
 
-/* --- <%camel%>Button - Square --- */
-.<%kebab%>-button._square {
+/* --- PotButton - Square --- */
+.pot-button._square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 </style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/button.css" />
+<style src="@/assets/css/styles/conditions/button.css" />
+<style src="@/assets/css/styles/configuration/button.css" />
+<!-- Styles - END -->

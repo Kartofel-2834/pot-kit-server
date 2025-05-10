@@ -1,1 +1,0 @@
-{"base":"\n.pot-tooltip {\n    --tooltip-color-base-shadow: initial;\n    --tooltip-color-base-background: initial;\n    --tooltip-color-base-text: initial;\n}\n\n.pot-tooltip__wrapper {\n    box-shadow: var(--tooltip-color-base-shadow);\n    background-color: var(--tooltip-color-base-background);\n    color: var(--tooltip-color-base-text);\n}\n"}

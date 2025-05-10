@@ -1,0 +1,14 @@
+{
+    "components": "./src/components/ui/",
+    "styles": "./src/assets/css/ui/",
+    "composables": "./src/composables/",
+    "types": "./src/types/",
+    "imports": {
+        "@": "./src"
+    },
+    "options": {
+        "potServer": true,
+        "overwrite": true,
+        "prefix": "ui"
+    }
+}

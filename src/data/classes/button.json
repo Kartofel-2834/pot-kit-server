@@ -1,5 +1,3 @@
 {
-    "button": "<%kebab%>-button",
-    "icon": "<%kebab%>-button__icon",
-    "label": "<%kebab%>-button__label"
+    "button": "<%kebab%>-button"
 }

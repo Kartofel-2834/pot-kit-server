@@ -1,23 +1,23 @@
 // Types
-import type { TDeviceIs } from '<%typesImport%>/composables/device-is';
-import type { E<%camel%>Device } from '<%typesImport%>';
+import type { TDeviceIs } from '@/types/composables/device-is';
+import type { EPotDevice } from '@/types';
 
 // Constants
-import { ALL_DEVICES, <%upper%>_BREAKPOINT } from '<%typesImport%>';
+import { ALL_DEVICES, POT_BREAKPOINT } from '@/types';
 
 // Vue
 import { computed, ref } from 'vue';
 
-const emptyState: Record<E<%camel%>Device, boolean> = Object.keys(<%upper%>_BREAKPOINT).reduce(
+const emptyState: Record<EPotDevice, boolean> = Object.keys(POT_BREAKPOINT).reduce(
     (res, breakpoint) => {
         return { ...res, [breakpoint]: false };
     },
-    {} as Record<E<%camel%>Device, boolean>,
+    {} as Record<EPotDevice, boolean>,
 );
 
-let queries: Map<E<%camel%>Device, MediaQueryList> | null = null;
+let queries: Map<EPotDevice, MediaQueryList> | null = null;
 
-const device = ref<E<%camel%>Device | null>(null);
+const device = ref<EPotDevice | null>(null);
 
 const state = computed(() => {
     const data = { ...emptyState };
@@ -29,18 +29,18 @@ const state = computed(() => {
     return data;
 });
 
-function queryChangeListener(event: MediaQueryListEvent, breakpoint: E<%camel%>Device | null) {
+function queryChangeListener(event: MediaQueryListEvent, breakpoint: EPotDevice | null) {
     if (!event || !event.matches) return;
 
     device.value = breakpoint;
 }
 
 function createQuery(
-    currentBreakpoint: E<%camel%>Device | null,
-    nextBreakpoint: E<%camel%>Device | null,
+    currentBreakpoint: EPotDevice | null,
+    nextBreakpoint: EPotDevice | null,
 ): MediaQueryList | null {
-    const minWidth = currentBreakpoint ? <%upper%>_BREAKPOINT[currentBreakpoint] : NaN;
-    const maxWidth = nextBreakpoint ? <%upper%>_BREAKPOINT[nextBreakpoint] : NaN;
+    const minWidth = currentBreakpoint ? POT_BREAKPOINT[currentBreakpoint] : NaN;
+    const maxWidth = nextBreakpoint ? POT_BREAKPOINT[nextBreakpoint] : NaN;
 
     const minWidthQuery = isNaN(minWidth) ? '' : `(min-width: ${minWidth}px)`;
     const maxWidthQuery = isNaN(maxWidth) ? '' : `(max-width: ${maxWidth - 0.02}px)`;
@@ -82,8 +82,8 @@ function initQueries() {
 
     clearQueries();
 
-    const createdQueries = new Map<E<%camel%>Device, MediaQueryList>();
-    let currentDevice: E<%camel%>Device | null = null;
+    const createdQueries = new Map<EPotDevice, MediaQueryList>();
+    let currentDevice: EPotDevice | null = null;
 
     for (let index = 0; index < ALL_DEVICES.length; index++) {
         const breakpoint = ALL_DEVICES[index];
@@ -101,7 +101,7 @@ function initQueries() {
     device.value = currentDevice;
 }
 
-export function useDeviceIs(): TDeviceIs<E<%camel%>Device> {
+export function useDeviceIs(): TDeviceIs<EPotDevice> {
     if (queries === null) {
         setTimeout(() => {
             if (queries) return;

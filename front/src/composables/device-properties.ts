@@ -2,16 +2,16 @@
 import type {
     TDeviceProperties,
     TDevicePropertyValue,
-} from '<%typesImport%>/composables/device-properties';
-import type { E<%camel%>Device } from '<%typesImport%>';
+} from '@/types/composables/device-properties';
+import type { EPotDevice } from '@/types';
 
 // Constants
-import { ALL_DEVICES_REVERSED } from '<%typesImport%>';
+import { ALL_DEVICES_REVERSED } from '@/types';
 
 export function useDeviceProperties<T extends object>(
     properties: T,
-    currentDevice: E<%camel%>Device | null,
-    devices?: E<%camel%>Device[],
+    currentDevice: EPotDevice | null,
+    devices?: EPotDevice[],
 ) {
     const devicesList = devices ?? ALL_DEVICES_REVERSED;
 
@@ -27,14 +27,14 @@ export function useDeviceProperties<T extends object>(
 
 function getCurrentValue<T>(
     values: T[keyof T],
-    currentDevice: E<%camel%>Device | null,
-    devices: E<%camel%>Device[],
+    currentDevice: EPotDevice | null,
+    devices: EPotDevice[],
 ): TDevicePropertyValue<T[keyof T]> | null {
     if (!Array.isArray(values)) return values as TDevicePropertyValue<T[keyof T]>;
 
     if (!currentDevice) return values[0] ?? null;
 
-    const deviceIndex = ALL_DEVICES_REVERSED.indexOf(currentDevice as E<%camel%>Device);
+    const deviceIndex = ALL_DEVICES_REVERSED.indexOf(currentDevice as EPotDevice);
 
     if (deviceIndex === -1) return null;
 

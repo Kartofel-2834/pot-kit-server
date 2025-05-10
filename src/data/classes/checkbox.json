@@ -1,7 +1,0 @@
-{
-    "checkbox": "<%kebab%>-checkbox",
-    "target": "<%kebab%>-checkbox__target",
-    "iconWrapper": "<%kebab%>-checkbox__icon-wrapper",
-    "icon": "<%kebab%>-checkbox__icon",
-    "label": "<%kebab%>-checkbox__label"
-}
