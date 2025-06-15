@@ -1,0 +1,21 @@
+/* CONFIGURATION:size - START */
+.pot-popover {
+    --pot-popover-size-border: initial;
+    --pot-popover-size-padding: initial;
+    --pot-popover-size-shadow: initial;
+    --pot-popover-size-text: initial;
+
+    border-width: var(--pot-popover-size-border);
+    padding: var(--pot-popover-size-padding);
+    box-shadow: var(--pot-popover-size-shadow);
+    font-size: var(--pot-popover-size-text);
+}
+/* CONFIGURATION:size - END */
+
+/* CONFIGURATION:radius - START */
+.pot-popover {
+    --pot-popover-radius: initial;
+
+    border-radius: var(--pot-popover-radius);
+}
+/* CONFIGURATION:radius - END */

@@ -29,12 +29,14 @@ const state = computed(() => {
     return data;
 });
 
-function queryChangeListener(event: MediaQueryListEvent, breakpoint: EPotDevice | null) {
+/** Handle media-query change event */
+function handleQueryChange(event: MediaQueryListEvent, breakpoint: EPotDevice | null) {
     if (!event || !event.matches) return;
 
     device.value = breakpoint;
 }
 
+/** Create media-query for breakpoint */
 function createQuery(
     currentBreakpoint: EPotDevice | null,
     nextBreakpoint: EPotDevice | null,
@@ -54,13 +56,14 @@ function createQuery(
     const createdQuery: MediaQueryList = window.matchMedia(query);
 
     createdQuery.onchange = (event: MediaQueryListEvent) => {
-        queryChangeListener(event, currentBreakpoint);
+        handleQueryChange(event, currentBreakpoint);
     };
 
     return createdQuery;
 }
 
-function clearQueries() {
+/** Terminate all media-queries listeners */
+export function terminate() {
     if (!queries) return;
 
     queries.forEach(value => {
@@ -70,17 +73,17 @@ function clearQueries() {
     });
 
     queries = null;
+    device.value = null;
 }
 
-function initQueries() {
+/** Setup all based on breakpoints media-queries listeners */
+export function setup() {
     if (!window?.matchMedia) {
-        console.warn(
-            '[deviceIs/initQueries]: media query setup failed. widnow matchMedia not found',
-        );
+        console.warn('[deviceIs/setup]: media query setup failed. widnow matchMedia not found');
         return;
     }
 
-    clearQueries();
+    terminate();
 
     const createdQueries = new Map<EPotDevice, MediaQueryList>();
     let currentDevice: EPotDevice | null = null;
@@ -101,14 +104,7 @@ function initQueries() {
     device.value = currentDevice;
 }
 
+/** Composable for get current screen breakpoint */
 export function useDeviceIs(): TDeviceIs<EPotDevice> {
-    if (queries === null) {
-        setTimeout(() => {
-            if (queries) return;
-
-            initQueries();
-        });
-    }
-
     return { state, device };
 }

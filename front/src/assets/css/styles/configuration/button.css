@@ -1,25 +1,25 @@
 /* CONFIGURATION:size - START */
 .pot-button {
-    --button-size-height: initial;
-    --button-size-padding: initial;
-    --button-size-border: initial;
-    --button-size-text: initial;
-    --button-size-outline: initial;
-    --button-size-outline-offset: initial;
+    --pot-button-size-height: initial;
+    --pot-button-size-padding: initial;
+    --pot-button-size-border: initial;
+    --pot-button-size-text: initial;
+    --pot-button-size-outline: initial;
+    --pot-button-size-outline-offset: initial;
 
-    height: var(--button-size-height);
-    padding: 0 var(--button-size-padding);
-    border-width: var(--button-size-border);
-    font-size: var(--button-size-text);
-    outline-width: var(--button-size-outline);
-    outline-offset: var(--button-size-outline-offset);
+    height: var(--pot-button-size-height);
+    padding: 0 var(--pot-button-size-padding);
+    border-width: var(--pot-button-size-border);
+    font-size: var(--pot-button-size-text);
+    outline-width: var(--pot-button-size-outline);
+    outline-offset: var(--pot-button-size-outline-offset);
 }
 /* CONFIGURATION:size - END */
 
 /* CONFIGURATION:radius - START */
 .pot-button {
-    --button-radius: initial;
+    --pot-button-radius: initial;
 
-    border-radius: var(--button-radius);
+    border-radius: var(--pot-button-radius);
 }
 /* CONFIGURATION:radius - END */

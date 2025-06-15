@@ -1,30 +1,27 @@
-/**
- * Интерфейс пропсов для компонента PotButton
- */
 export interface IPotButtonProps<
     TDevice extends string = string,
     TColor extends string = string,
     TSize extends string = string,
     TRadius extends string = string,
 > {
-    /** HTML-тег кнопки. По умолчанию - 'button' */
+    /** Button HTML-tag */
     tag?: string;
 
-    /** Размер кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Button size */
     size?: TSize | TSize[] | null;
 
-    /** Цвет кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Button color */
     color?: TColor | TColor[] | null;
 
-    /** Радиус границ кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Button border radius */
     radius?: TRadius | TRadius[] | null;
 
-    /** Точки останова для адаптивного дизайна */
+    /** Breakpoints names for responsive design */
     devices?: TDevice[];
 
-    /** Если true, то длина кнопки будет равна ширине из пропа size */
+    /** If true, the button length will be equal to the width from the size prop */
     square?: boolean;
 
-    /** Если true, то кнопка будет заблокирована и не активна */
+    /** If true, the button will be disabled and inactive */
     disabled?: boolean;
 }

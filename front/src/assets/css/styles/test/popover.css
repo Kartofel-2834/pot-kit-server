@@ -1,0 +1,45 @@
+.pot-popover._color-pot {
+    --pot-popover-color-base-background: var(--pot-base-0);
+    --pot-popover-color-base-border: var(--pot-base-400);
+    --pot-popover-color-base-text: inherit;
+}
+
+.pot-popover._size-tiny {
+    --pot-popover-size-border: 1px;
+    --pot-popover-size-padding: var(--pot-spacer-1-200);
+    --pot-popover-size-shadow: var(--pot-shadow-200);
+    --pot-popover-size-text: var(--pot-font-size-200);
+}
+
+.pot-popover._size-small {
+    --pot-popover-size-border: 1px;
+    --pot-popover-size-padding: var(--pot-spacer-1-800);
+    --pot-popover-size-shadow: var(--pot-shadow-200);
+    --pot-popover-size-text: var(--pot-font-size-200);
+}
+
+.pot-popover._size-medium {
+    --pot-popover-size-border: 1px;
+    --pot-popover-size-padding: var(--pot-spacer-2-400);
+    --pot-popover-size-shadow: var(--pot-shadow-300);
+    --pot-popover-size-text: var(--pot-font-size-200);
+}
+
+.pot-popover._size-large {
+    --pot-popover-size-border: 1px;
+    --pot-popover-size-padding: var(--pot-spacer-3-200);
+    --pot-popover-size-shadow: var(--pot-shadow-300);
+    --pot-popover-size-text: var(--pot-font-size-200);
+}
+
+.pot-popover._radius-circle,
+.pot-popover._radius-large,
+.pot-popover._radius-medium,
+.pot-popover._radius-small,
+.pot-popover._radius-tiny,
+.pot-popover._radius-radius--8,
+.pot-popover._radius-radius--6,
+.pot-popover._radius-radius--4,
+.pot-popover._radius-radius--2 {
+    --pot-popover-radius: var(--radius);
+}

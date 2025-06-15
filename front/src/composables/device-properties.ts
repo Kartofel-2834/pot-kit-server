@@ -8,6 +8,7 @@ import type { EPotDevice } from '@/types';
 // Constants
 import { ALL_DEVICES_REVERSED } from '@/types';
 
+/** Composable for getting values depending on screen breakpoints */
 export function useDeviceProperties<T extends object>(
     properties: T,
     currentDevice: EPotDevice | null,
@@ -25,6 +26,7 @@ export function useDeviceProperties<T extends object>(
     }, {}) as TDeviceProperties<T>;
 }
 
+/** Get value for current breakpoint */
 function getCurrentValue<T>(
     values: T[keyof T],
     currentDevice: EPotDevice | null,

@@ -1,6 +1,3 @@
-/**
- * Интерфейс пропсов для компонента <%camel%>Button
- */
 export interface I<%camel%>ButtonProps<
     TDevice extends string = string,
     TColor extends string = string,
@@ -10,13 +7,13 @@ export interface I<%camel%>ButtonProps<
     /** HTML-тег кнопки. По умолчанию - 'button' */
     tag?: string;
 
-    /** Размер кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Размер кнопки */
     size?: TSize | TSize[] | null;
 
-    /** Цвет кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Цвет кнопки */
     color?: TColor | TColor[] | null;
 
-    /** Радиус границ кнопки. Может быть одним значением или массивом значений для адаптивного дизайна */
+    /** Радиус границ кнопки */
     radius?: TRadius | TRadius[] | null;
 
     /** Точки останова для адаптивного дизайна */

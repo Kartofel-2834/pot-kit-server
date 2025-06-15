@@ -1,0 +1,11 @@
+/* CONDITION:base - START */
+.pot-popover {
+    --pot-popover-color-base-background: initial;
+    --pot-popover-color-base-border: initial;
+    --pot-popover-color-base-text: initial;
+
+    background-color: var(--pot-popover-color-base-background);
+    border-color: var(--pot-popover-color-base-border);
+    color: var(--pot-popover-color-base-text);
+}
+/* CONDITION:base - END */

@@ -1,0 +1,53 @@
+<script lang="ts">
+// Types
+import type { IPotSlotCatcherProps } from '@/types/components/slot-target';
+import type { VNode } from 'vue';
+
+// Vue
+import { cloneVNode, defineComponent } from 'vue';
+
+export default defineComponent<IPotSlotCatcherProps>({
+    inheritAttrs: false,
+
+    props: {
+        options: {
+            type: Function,
+            required: true,
+        },
+    },
+
+    setup(props, { slots }) {
+        return () => {
+            if (!slots?.default) {
+                return null;
+            }
+
+            // Unwrapping fragments nodes
+            const vnodesList = slots
+                .default()
+                .map(vnode => {
+                    const isFragment =
+                        typeof vnode.type === 'symbol' && vnode.type.description === 'v-fgt';
+
+                    return isFragment && Array.isArray(vnode.children)
+                        ? (vnode.children as VNode[])
+                        : vnode;
+                })
+                .flat(Infinity) as VNode[];
+
+            // Deleting comments
+            const vnodesListCleared = vnodesList.filter(
+                vnode => typeof vnode.type !== 'symbol' || vnode.type.description !== 'v-cmt',
+            );
+
+            if (!Array.isArray(vnodesListCleared) || !vnodesListCleared.length) {
+                return vnodesListCleared;
+            }
+
+            return vnodesListCleared.map((vnode, index) => {
+                return cloneVNode(vnode, props.options(vnode, index));
+            });
+        };
+    },
+});
+</script>

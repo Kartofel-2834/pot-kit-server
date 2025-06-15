@@ -1,0 +1,6 @@
+import type { VNodeProps } from 'vue';
+
+export interface I<%camel%>SlotTargetProps {
+    /** Настройки, которые нужно добавить VNode-ам */
+    options: VNodeProps;
+}
