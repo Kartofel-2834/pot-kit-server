@@ -1,0 +1,487 @@
+// Types
+import type { E<%camel%>PopoverPosition } from '<%typesImport%>/components/popover';
+import type { IPopover, IPopoverOptions } from '<%typesImport%>/composables/popover';
+import type { ISurroundingData } from '<%typesImport%>/composables/surrounding';
+
+// Constants
+import { <%upper%>_POPOVER_POSITION } from '<%typesImport%>/components/popover';
+
+// Vue
+import { computed, ref } from 'vue';
+
+// Composables
+import { useSurrounding } from '<%composablesImport%>/surrounding';
+
+// TODO: add arrow to popups
+const arrowSize = 16;
+
+const xOppositePositions: Record<E<%camel%>PopoverPosition, E<%camel%>PopoverPosition | null> = {
+    [<%upper%>_POPOVER_POSITION.TOP_START]: null,
+    [<%upper%>_POPOVER_POSITION.TOP_END]: null,
+    [<%upper%>_POPOVER_POSITION.TOP_CENTER]: null,
+
+    [<%upper%>_POPOVER_POSITION.BOTTOM_START]: null,
+    [<%upper%>_POPOVER_POSITION.BOTTOM_END]: null,
+    [<%upper%>_POPOVER_POSITION.BOTTOM_CENTER]: null,
+
+    [<%upper%>_POPOVER_POSITION.LEFT_START]: <%upper%>_POPOVER_POSITION.RIGHT_START,
+    [<%upper%>_POPOVER_POSITION.LEFT_END]: <%upper%>_POPOVER_POSITION.RIGHT_END,
+    [<%upper%>_POPOVER_POSITION.LEFT_CENTER]: <%upper%>_POPOVER_POSITION.RIGHT_CENTER,
+
+    [<%upper%>_POPOVER_POSITION.RIGHT_START]: <%upper%>_POPOVER_POSITION.LEFT_START,
+    [<%upper%>_POPOVER_POSITION.RIGHT_END]: <%upper%>_POPOVER_POSITION.LEFT_END,
+    [<%upper%>_POPOVER_POSITION.RIGHT_CENTER]: <%upper%>_POPOVER_POSITION.LEFT_CENTER,
+};
+
+const yOppositePositions: Record<E<%camel%>PopoverPosition, E<%camel%>PopoverPosition | null> = {
+    [<%upper%>_POPOVER_POSITION.TOP_START]: <%upper%>_POPOVER_POSITION.BOTTOM_START,
+    [<%upper%>_POPOVER_POSITION.TOP_END]: <%upper%>_POPOVER_POSITION.BOTTOM_END,
+    [<%upper%>_POPOVER_POSITION.TOP_CENTER]: <%upper%>_POPOVER_POSITION.BOTTOM_CENTER,
+
+    [<%upper%>_POPOVER_POSITION.BOTTOM_START]: <%upper%>_POPOVER_POSITION.TOP_START,
+    [<%upper%>_POPOVER_POSITION.BOTTOM_END]: <%upper%>_POPOVER_POSITION.TOP_END,
+    [<%upper%>_POPOVER_POSITION.BOTTOM_CENTER]: <%upper%>_POPOVER_POSITION.TOP_CENTER,
+
+    [<%upper%>_POPOVER_POSITION.LEFT_START]: null,
+    [<%upper%>_POPOVER_POSITION.LEFT_END]: null,
+    [<%upper%>_POPOVER_POSITION.LEFT_CENTER]: null,
+
+    [<%upper%>_POPOVER_POSITION.RIGHT_START]: null,
+    [<%upper%>_POPOVER_POSITION.RIGHT_END]: null,
+    [<%upper%>_POPOVER_POSITION.RIGHT_CENTER]: null,
+};
+
+/** Composable for calculating popover position */
+export function usePopover(options: IPopoverOptions): IPopover {
+    const x = computed<number>(getX);
+    const y = computed<number>(getY);
+
+    const targetElement = ref<Element | null>(null);
+    const popoverElement = ref<Element | null>(null);
+
+    const surrounding = useSurrounding({
+        onResize: handleSurroundingResize(),
+        onScroll: handleSurroundingScroll(),
+    });
+
+    const isTargetResizing = ref<boolean>(false);
+    const isPopoverResizing = ref<boolean>(false);
+    const isSurroundingResizing = ref<boolean>(false);
+    const isScrolling = ref<boolean>(false);
+
+    const targetRect = ref<DOMRect | null>(null);
+    const popoverRect = ref<DOMRect | null>(null);
+
+    const currentSurrounding = ref<ISurroundingData[]>([]);
+
+    const targetResizeObserver = new ResizeObserver(
+        getDebounceListener<[ResizeObserverEntry[]]>({
+            delay: 100,
+            action: async entries => {
+                if (targetRect.value === null) {
+                    await updateTargetRect(entries[0].target);
+                } else {
+                    isTargetResizing.value = true;
+                }
+            },
+            debounceAction: async entries => {
+                if (!isTargetResizing.value) return;
+
+                isTargetResizing.value = false;
+                await updateTargetRect(entries[0].target);
+            },
+        }),
+    );
+
+    const popoverResizeObserver = new ResizeObserver(
+        getDebounceListener<[ResizeObserverEntry[]]>({
+            delay: 100,
+            action: async entries => {
+                if (popoverRect.value === null) {
+                    await updatePopoverRect(entries[0].target);
+                } else {
+                    isPopoverResizing.value = true;
+                }
+            },
+            debounceAction: async entries => {
+                if (!isPopoverResizing.value) return;
+
+                isPopoverResizing.value = false;
+                await updatePopoverRect(entries[0].target);
+            },
+        }),
+    );
+
+    /** Set popover target element */
+    function setTarget(target: Element) {
+        targetElement.value = target;
+    }
+
+    /** Set popover element */
+    function setPopover(popover: Element) {
+        popoverElement.value = popover;
+    }
+
+    /** Setup popover, target and their surrounding observers */
+    function setup() {
+        if (!targetElement.value || !popoverElement.value) return;
+
+        targetResizeObserver.observe(targetElement.value);
+        popoverResizeObserver.observe(popoverElement.value);
+
+        surrounding.setup(targetElement.value);
+        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
+    }
+
+    /** Terminate popover, target and their surrounding observers */
+    function terminate() {
+        targetElement.value = null;
+        popoverElement.value = null;
+
+        currentSurrounding.value = [];
+        targetRect.value = null;
+        popoverRect.value = null;
+
+        targetResizeObserver.disconnect();
+        popoverResizeObserver.disconnect();
+        surrounding.terminate();
+    }
+
+    /** Get popover Y coordinate */
+    function getY(): number {
+        if (!targetRect.value || !popoverRect.value) return 0;
+
+        const offset = getYOffset();
+
+        return calculateLimitedY(options, offset, targetRect.value, popoverRect.value);
+    }
+
+    /** Get popover X coordinate */
+    function getX(): number {
+        if (!targetRect.value || !popoverRect.value) return 0;
+
+        const offset = getXOffset();
+
+        return calculateLimitedX(options, offset, targetRect.value, popoverRect.value);
+    }
+
+    /** Get popover Y scroll-offset */
+    function getYOffset(): number {
+        return currentSurrounding.value.reduce((res, data, index) => {
+            const initialData = surrounding.data.value[index];
+            return res + (initialData.scrollY - data.scrollY);
+        }, 0);
+    }
+
+    /** Get popover X scroll-offset */
+    function getXOffset(): number {
+        return currentSurrounding.value.reduce((res, data, index) => {
+            const initialData = surrounding.data.value[index];
+            return res + (initialData.scrollX - data.scrollX);
+        }, 0);
+    }
+
+    /** Update target sizes */
+    async function updateTargetRect(targetElement: Element) {
+        targetRect.value = await getElementBounding(targetElement);
+    }
+
+    /** Update popover sizes */
+    async function updatePopoverRect(targetElement: Element) {
+        popoverRect.value = await getElementBounding(targetElement);
+    }
+
+    /** Update surrounding scroll-data on scroll event */
+    function onScroll(data: ISurroundingData) {
+        const x = data.target === window ? window.scrollX : (data.target as Element).scrollLeft;
+        const y = data.target === window ? window.scrollY : (data.target as Element).scrollTop;
+
+        currentSurrounding.value = [
+            ...currentSurrounding.value.filter(v => v.id !== data.id),
+            { ...data, scrollX: x, scrollY: y },
+        ];
+    }
+
+    /** Update surrounding after resize event */
+    async function onResize() {
+        if (!targetElement.value || !popoverElement.value) return;
+
+        getElementBounding(targetElement.value).then(rect => (targetRect.value = rect));
+        getElementBounding(popoverElement.value).then(rect => (popoverRect.value = rect));
+
+        surrounding.setup(targetElement.value);
+        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
+    }
+
+    function handleSurroundingResize(): () => void {
+        return getDebounceListener({
+            delay: 200,
+            action: () => (isSurroundingResizing.value = true),
+            debounceAction: () => {
+                if (!isSurroundingResizing.value) return;
+                isSurroundingResizing.value = false;
+                onResize();
+            },
+        });
+    }
+
+    function handleSurroundingScroll(): (data: ISurroundingData) => void {
+        return getDebounceListener<[ISurroundingData]>({
+            delay: 100,
+            debounceAction: () => {
+                if (!isScrolling.value) return;
+                isScrolling.value = false;
+            },
+            action: data => {
+                isScrolling.value = true;
+
+                if (data.target === window || data.target instanceof Element) {
+                    onScroll(data);
+                }
+            },
+        });
+    }
+
+    return {
+        x,
+        y,
+        targetRect,
+        popoverRect,
+        isTargetResizing,
+        isPopoverResizing,
+        isSurroundingResizing,
+        isScrolling,
+        setup,
+        terminate,
+        setTarget,
+        setPopover,
+    };
+}
+
+/** Get popover Y coordinate that limited by screen and target sizes */
+function calculateLimitedY(
+    options: IPopoverOptions,
+    offset: number,
+    targetRect: DOMRect,
+    popoverRect: DOMRect,
+): number {
+    const { y: targetYInitial, height: targetHeight } = targetRect;
+    const { height: popoverHeight } = popoverRect;
+
+    const targetStartY = targetYInitial + offset;
+    const targetEndY = targetStartY + targetHeight;
+
+    const yStart = calculateYForPosition(options, offset, targetRect, popoverRect);
+    const yEnd = yStart + popoverHeight;
+
+    const edgeMargin = options.edgeMargin || 0;
+    const topLimit = edgeMargin;
+    const bottomLimit = window.innerHeight - edgeMargin;
+
+    const oppositeSide = yOppositePositions[options.position];
+    const oppositeOptions = {
+        ...options,
+        position: oppositeSide as E<%camel%>PopoverPosition,
+    };
+
+    const isReplaced = !options.persistent && oppositeSide;
+    const isSticky = options.sticky && !isReplaced;
+
+    // If the popover goes beyond the TOP edge of the screen,
+    // then try to move it to the other side
+    if (isReplaced && yStart < topLimit) {
+        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        return Math.max(yOpposite, yStart);
+    }
+
+    // If the popover goes beyond the TOP edge of the screen and there is nowhere to move it,
+    // then we try to imitate sticky behavior
+    if (isSticky && yStart < topLimit) {
+        const stickyLimit = targetEndY - arrowSize;
+        return Math.min(Math.max(yStart, topLimit), stickyLimit);
+    }
+
+    // If the popover goes beyond the BOTTOM edge of the screen,
+    // then try to move it to the other side
+    if (isReplaced && yEnd > bottomLimit) {
+        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        return Math.min(yOpposite, yStart);
+    }
+
+    // If the popover goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
+    // then we try to imitate sticky behavior
+    if (isSticky && yEnd > bottomLimit) {
+        const stickyLimit = targetStartY + arrowSize;
+        return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - popoverHeight - edgeMargin;
+    }
+
+    return yStart;
+}
+
+/** Get popover X coordinate that limited by screen and target sizes */
+function calculateLimitedX(
+    options: IPopoverOptions,
+    offset: number,
+    targetRect: DOMRect,
+    popoverRect: DOMRect,
+): number {
+    const { x: targetXInitial, width: targetWidth } = targetRect;
+    const { width: popoverWidth } = popoverRect;
+
+    const targetStartX = targetXInitial + offset;
+    const targetEndX = targetStartX + targetWidth;
+
+    const xStart = calculateXForPosition(options, offset, targetRect, popoverRect);
+    const xEnd = xStart + popoverWidth;
+
+    const edgeMargin = options.edgeMargin || 0;
+    const leftLimit = edgeMargin;
+    const rightLimit = window.innerWidth - edgeMargin;
+
+    const oppositeSide = xOppositePositions[options.position];
+    const oppositeOptions = {
+        ...options,
+        position: oppositeSide as E<%camel%>PopoverPosition,
+    };
+
+    const isReplaced = !options.persistent && oppositeSide;
+    const isSticky = options.sticky && !isReplaced;
+
+    // If the popover goes beyond the TOP edge of the screen,
+    // then try to move it to the other side
+    if (isReplaced && xStart < leftLimit) {
+        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        return Math.max(xOpposite, xStart);
+    }
+
+    // If the popover goes beyond the TOP edge of the screen and there is nowhere to move it,
+    // then we try to imitate sticky behavior
+    if (isSticky && xStart < leftLimit) {
+        const stickyLimit = targetEndX - arrowSize;
+        return Math.min(Math.max(xStart, leftLimit), stickyLimit);
+    }
+
+    // If the popover goes beyond the BOTTOM edge of the screen,
+    // then try to move it to the other side
+    if (isReplaced && xEnd > rightLimit) {
+        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        return Math.min(xOpposite, xStart);
+    }
+
+    // If the popover goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
+    // then we try to imitate sticky behavior
+    if (isSticky && xEnd > rightLimit) {
+        const stickyLimit = targetStartX + arrowSize;
+        return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - popoverWidth - edgeMargin;
+    }
+
+    return xStart;
+}
+
+/** Get pure popover Y coordinate, without limited by screen and target sizes */
+function calculateYForPosition(
+    options: IPopoverOptions,
+    offset: number,
+    targetRect: DOMRect,
+    popoverRect: DOMRect,
+): number {
+    const { y: targetYInitial, height: targetHeight } = targetRect;
+    const { height: popoverHeight } = popoverRect;
+    const targetY = targetYInitial + offset;
+
+    switch (options.position) {
+        case <%upper%>_POPOVER_POSITION.TOP_START:
+        case <%upper%>_POPOVER_POSITION.TOP_END:
+        case <%upper%>_POPOVER_POSITION.TOP_CENTER:
+            return targetY - popoverHeight - options.nudge;
+
+        case <%upper%>_POPOVER_POSITION.BOTTOM_START:
+        case <%upper%>_POPOVER_POSITION.BOTTOM_END:
+        case <%upper%>_POPOVER_POSITION.BOTTOM_CENTER:
+            return targetY + targetHeight + options.nudge;
+
+        case <%upper%>_POPOVER_POSITION.RIGHT_START:
+        case <%upper%>_POPOVER_POSITION.LEFT_START:
+            return targetY;
+
+        case <%upper%>_POPOVER_POSITION.RIGHT_END:
+        case <%upper%>_POPOVER_POSITION.LEFT_END:
+            return targetY + targetHeight - popoverHeight;
+
+        case <%upper%>_POPOVER_POSITION.RIGHT_CENTER:
+        case <%upper%>_POPOVER_POSITION.LEFT_CENTER:
+            return targetY + targetHeight / 2 - popoverHeight / 2;
+
+        default:
+            return 0;
+    }
+}
+
+/** Get pure popover X coordinate, without limited by screen and target sizes */
+function calculateXForPosition(
+    options: IPopoverOptions,
+    offset: number,
+    targetRect: DOMRect,
+    popoverRect: DOMRect,
+): number {
+    const { x: targetXInitial, width: targetWidth } = targetRect;
+    const { width: popoverWidth } = popoverRect;
+    const targetX = targetXInitial + offset;
+
+    switch (options.position) {
+        case <%upper%>_POPOVER_POSITION.TOP_CENTER:
+        case <%upper%>_POPOVER_POSITION.BOTTOM_CENTER:
+            return targetX + targetWidth / 2 - popoverWidth / 2;
+
+        case <%upper%>_POPOVER_POSITION.TOP_START:
+        case <%upper%>_POPOVER_POSITION.BOTTOM_START:
+            return targetX;
+
+        case <%upper%>_POPOVER_POSITION.TOP_END:
+        case <%upper%>_POPOVER_POSITION.BOTTOM_END:
+            return targetX + targetWidth - popoverWidth;
+
+        case <%upper%>_POPOVER_POSITION.RIGHT_END:
+        case <%upper%>_POPOVER_POSITION.RIGHT_START:
+        case <%upper%>_POPOVER_POSITION.RIGHT_CENTER:
+            return targetX + targetWidth + options.nudge;
+
+        case <%upper%>_POPOVER_POSITION.LEFT_END:
+        case <%upper%>_POPOVER_POSITION.LEFT_START:
+        case <%upper%>_POPOVER_POSITION.LEFT_CENTER:
+            return targetX - popoverWidth - options.nudge;
+
+        default:
+            return 0;
+    }
+}
+
+/** Get element bounding rect */
+async function getElementBounding(element: Element): Promise<DOMRect | null> {
+    return new Promise(resolve => {
+        const observer = new IntersectionObserver(entries => {
+            resolve(entries?.[0]?.boundingClientRect ?? null);
+            observer.disconnect();
+        });
+        observer.observe(element);
+    });
+}
+
+/** Get debounced listener */
+function getDebounceListener<T extends Array<unknown>>(debounceOptions: {
+    action: (...args: T) => unknown;
+    debounceAction: (...args: T) => unknown;
+    delay: number;
+}): (...args: T) => void {
+    let timeoutId: number;
+
+    return (...args: T) => {
+        clearTimeout(timeoutId);
+        debounceOptions.action(...args);
+
+        timeoutId = setTimeout(
+            () => debounceOptions.debounceAction(...args),
+            debounceOptions.delay,
+        );
+    };
+}

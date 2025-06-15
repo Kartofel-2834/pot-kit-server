@@ -1,14 +1,16 @@
 // Types
 import type { Ref } from 'vue';
 
-export type TDeviceIsMediaQueries<TDevice extends string = string> = Partial<Record<TDevice, MediaQueryList>>
+export type TDeviceIsMediaQueries<TDevice extends string = string> = Partial<
+    Record<TDevice, MediaQueryList>
+>;
 
-export type TDeviceIsState<TDevice extends string = string> = Partial<Record<TDevice, boolean>>
+export type TDeviceIsState<TDevice extends string = string> = Partial<Record<TDevice, boolean>>;
 
 export type TDeviceIs<TDevice extends string = string> = {
-    /** Акутальные статусы всех брейкпоинтов */
+    /** Current statuses of all breakpoints */
     state: Ref<TDeviceIsState<TDevice>>;
 
-    /** Текущий активный брейкпонт */
+    /** Current active breakpoint */
     device: Ref<TDevice | null>;
 };

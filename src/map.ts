@@ -24,6 +24,7 @@ const COMPONENTS_REPLACEMENTS = {
     pot: '<%kebab%>',
     POT: '<%upper%>',
     Pot: '<%camel%>',
+    '@/components/ui': '<%componentsImport%>',
     '@/types': '<%typesImport%>',
     '@/composables': '<%composablesImport%>',
 };

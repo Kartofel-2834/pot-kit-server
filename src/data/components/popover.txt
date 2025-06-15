@@ -1,31 +1,31 @@
 <script lang="ts" setup>
 // Types
 import type { VNode, VNodeProps } from 'vue';
-import type { IPotPopoverProps } from '@/types/components/popover';
-import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
+import type { I<%camel%>PopoverProps } from '<%typesImport%>/components/popover';
+import type { E<%camel%>Color, E<%camel%>Device, E<%camel%>Radius, E<%camel%>Size } from '<%typesImport%>';
 
 // Constants
-import { POT_POPOVER_POSITION } from '@/types/components/popover';
+import { <%upper%>_POPOVER_POSITION } from '<%typesImport%>/components/popover';
 
 // Vue
 import { computed, onUnmounted, ref, watch } from 'vue';
 
 // Components
-import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
+import <%camel%>SlotCatcher from '<%componentsImport%>/<%camel%>SlotCatcher.vue';
 
 // Composables
-import { usePopover } from '@/composables/popover';
-import { useDialog } from '@/composables/dialog';
-import { useDeviceIs } from '@/composables/device-is';
-import { useDeviceProperties } from '@/composables/device-properties';
-import { useClassList } from '@/composables/class-list';
+import { usePopover } from '<%composablesImport%>/popover';
+import { useDialog } from '<%composablesImport%>/dialog';
+import { useDeviceIs } from '<%composablesImport%>/device-is';
+import { useDeviceProperties } from '<%composablesImport%>/device-properties';
+import { useClassList } from '<%composablesImport%>/class-list';
 
 const $props = withDefaults(
-    defineProps<IPotPopoverProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
+    defineProps<I<%camel%>PopoverProps<E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius>>(),
     {
         visible: undefined,
         modelValue: undefined,
-        position: POT_POPOVER_POSITION.TOP_CENTER,
+        position: <%upper%>_POPOVER_POSITION.TOP_CENTER,
         nudge: 10,
         edgeMargin: 10,
         persistent: false,
@@ -58,7 +58,7 @@ const popover = ref<Element | null>(null);
 // Captures target element
 const slotTargetOptions = (vnode: VNode, index: number): VNodeProps => {
     return {
-        key: `pot-popover-target_${index}`,
+        key: `<%kebab%>-popover-target_${index}`,
 
         onVnodeMounted(vnode) {
             if (target.value || !(vnode.el instanceof Element) || typeof vnode.key !== 'string') {
@@ -141,13 +141,13 @@ function close() {
 
 <template>
     <Teleport :to="to">
-        <Transition name="pot-popover-transition">
+        <Transition name="<%kebab%>-popover-transition">
             <div
                 v-if="$dialog.isOpen.value"
                 v-bind="$attrs"
                 ref="popover"
-                :pot-dialog-id="$dialog.id.description"
-                :class="['pot-popover', classList]"
+                :<%kebab%>-dialog-id="$dialog.id.description"
+                :class="['<%kebab%>-popover', classList]"
                 :style="styles"
             >
                 <slot />
@@ -155,13 +155,13 @@ function close() {
         </Transition>
     </Teleport>
 
-    <PotSlotCatcher :options="slotTargetOptions">
+    <<%camel%>SlotCatcher :options="slotTargetOptions">
         <slot name="target" />
-    </PotSlotCatcher>
+    </<%camel%>SlotCatcher>
 </template>
 
 <style>
-.pot-popover {
+.<%kebab%>-popover {
     position: fixed;
     top: 0;
     left: 0;
@@ -169,19 +169,13 @@ function close() {
     transition: opacity 0.2s ease;
 }
 
-.pot-popover-transition-enter-active,
-.pot-popover-transition-leave-active {
+.<%kebab%>-popover-transition-enter-active,
+.<%kebab%>-popover-transition-leave-active {
     transition: opacity 0.2s ease;
 }
 
-.pot-popover-transition-enter-from,
-.pot-popover-transition-leave-to {
+.<%kebab%>-popover-transition-enter-from,
+.<%kebab%>-popover-transition-leave-to {
     opacity: 0;
 }
 </style>
-
-<!-- Styles - START -->
-<style src="@/assets/css/styles/test/popover.css" />
-<style src="@/assets/css/styles/conditions/popover.css" />
-<style src="@/assets/css/styles/configuration/popover.css" />
-<!-- Styles - END -->
