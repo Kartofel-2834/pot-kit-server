@@ -4,10 +4,18 @@ import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import type { IPotTooltipProps } from '@/types/components/tooltip';
 
 // Vue
-import { onUnmounted, readonly, ref, watch } from 'vue';
+import { computed, onUnmounted, readonly, ref, watch } from 'vue';
+
+// Composables
+import { useDialog, useDialogZIndex } from '@/composables/dialog';
+import { useDeviceProperties } from '@/composables/device-properties';
+import { useDeviceIs } from '@/composables/device-is';
+import { useClassList } from '@/composables/class-list';
 
 // Components
-import PotPopover from '@/components/ui/PotPopover.vue';
+import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
+
+const isOpen = ref<boolean>(false);
 
 const $props = withDefaults(
     defineProps<IPotTooltipProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
@@ -29,9 +37,19 @@ const $emit = defineEmits<{
     'trigger:close': [event: Event];
 }>();
 
+const $deviceIs = useDeviceIs();
+
+const $dialog = useDialog({
+    triggers: ['click', 'escape'],
+    isOpen: computed(() => isOpen.value),
+    close: close,
+    open: open,
+});
+
 // Data
-const popoverRef = ref<InstanceType<typeof PotPopover> | null>(null);
-const isOpen = ref<boolean>(false);
+const box = ref<Element | null>(null);
+const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
+
 const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: number }>({
     timeoutId: NaN,
     action: null,
@@ -40,13 +58,43 @@ const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: n
 
 // Lifecycle
 onUnmounted(() => {
-    if (popoverRef.value?.target) terminateTargetTriggers(popoverRef.value.target as Element);
-    if (popoverRef.value?.popover) terminatePopoverListeners(popoverRef.value.popover as Element);
+    if (attachTarget.value?.target) {
+        terminateTargetTriggers(attachTarget.value.target as Element);
+    }
+
+    if (box.value) {
+        terminateBoxListeners(box.value as Element);
+    }
+});
+
+// Computed
+const properties = computed(() => {
+    return useDeviceProperties(
+        {
+            color: $props.color,
+            size: $props.size,
+            radius: $props.radius,
+        },
+        $deviceIs.device.value,
+        $props.devices,
+    );
+});
+
+const classList = computed(() => useClassList({ ...properties.value }));
+
+const currentStyles = computed(() => {
+    const x = attachTarget.value?.x ?? 0;
+    const y = attachTarget.value?.y ?? 0;
+
+    return {
+        zIndex: useDialogZIndex($dialog),
+        transform: `translate(${x}px, ${y}px)`,
+    };
 });
 
 // Watchers
 watch(
-    () => [popoverRef.value?.target, $props.openTriggers, $props.closeTriggers],
+    () => [attachTarget.value?.target, $props.openTriggers, $props.closeTriggers],
     (newValue, oldValue) => {
         const [newTarget] = newValue;
         const [oldTarget] = oldValue;
@@ -57,19 +105,19 @@ watch(
 );
 
 watch(
-    () => [popoverRef.value?.popover, $props.enterable],
+    () => [box.value, $props.enterable],
     (newValue, oldValue) => {
-        const [popoverElement, enterable] = newValue;
-        const [oldPopoverElement] = oldValue;
+        const [boxElement, enterable] = newValue;
+        const [oldBoxElement] = oldValue;
 
         if (!enterable) return;
 
-        if (oldPopoverElement instanceof Element) {
-            terminatePopoverListeners(oldPopoverElement);
+        if (oldBoxElement instanceof Element) {
+            terminateBoxListeners(oldBoxElement);
         }
 
-        if (popoverElement instanceof Element) {
-            setupPopoverListeners(popoverElement);
+        if (boxElement instanceof Element) {
+            setupBoxListeners(boxElement);
         }
     },
 );
@@ -166,14 +214,14 @@ function terminateTargetTriggers(element: Element) {
     $props.openTriggers?.forEach?.(trigger => element.removeEventListener(trigger, delayedOpen));
 }
 
-function setupPopoverListeners(element: Element) {
+function setupBoxListeners(element: Element) {
     if (!element) return;
 
     element.addEventListener('mouseover', pause);
     element.addEventListener('mouseout', resume);
 }
 
-function terminatePopoverListeners(element: Element) {
+function terminateBoxListeners(element: Element) {
     if (!element) return;
 
     element.removeEventListener('mouseover', pause);
@@ -183,8 +231,8 @@ function terminatePopoverListeners(element: Element) {
 // Exports
 defineExpose({
     isOpen: readonly(isOpen),
-    target: popoverRef.value?.target,
-    popover: popoverRef.value?.popover,
+    target: attachTarget.value?.target,
+    tooltip: box.value,
     open,
     close,
     delayedOpen,
@@ -196,29 +244,50 @@ defineExpose({
 </script>
 
 <template>
-    <PotPopover
-        ref="popoverRef"
-        :visible="isOpen"
+    <Transition name="pot-tooltip-transition">
+        <div
+            ref="box"
+            v-if="$dialog.isOpen.value"
+            v-bind="$attrs"
+            :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+            :class="['pot-tooltip', classList]"
+            :style="currentStyles"
+            :pot-dialog-id="$dialog.id.description"
+        >
+            <slot />
+        </div>
+    </Transition>
+
+    <PotAttachTarget
+        ref="attachTarget"
+        :box="box"
+        :position="position"
         :target="target"
         :to="to"
-        :color="color"
-        :size="size"
-        :radius="radius"
-        :devices="devices"
         :sticky="sticky"
         :persistent="persistent"
         :edge-margin="edgeMargin"
         :nudge="nudge"
-        :position="position"
-        @open="open"
-        @close="close"
     >
-        <template #target>
-            <slot name="target" />
-        </template>
-
-        <slot>
-            {{ text }}
-        </slot>
-    </PotPopover>
+        <slot name="target" />
+    </PotAttachTarget>
 </template>
+
+<style>
+.pot-tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-style: solid;
+}
+
+.pot-tooltip-transition-enter-active,
+.pot-tooltip-transition-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.pot-tooltip-transition-enter-from,
+.pot-tooltip-transition-leave-to {
+    opacity: 0;
+}
+</style>

@@ -1,6 +1,6 @@
 // Types
-import type { EPotPopoverPosition } from '@/types/components/popover';
 import type { RendererElement } from 'vue';
+import type { EPotAttachedBoxPosition } from './attached-box';
 
 export interface IPotTooltipProps<
     TDevice extends string = string,
@@ -31,14 +31,8 @@ export interface IPotTooltipProps<
 
     /* ------------------------------------------------------------ */
 
-    /** Tooltip visibility flag */
-    visible?: boolean;
-
-    /** Tooltip visibility flag */
-    modelValue?: boolean;
-
     /** Tooltip position that relative to target */
-    position?: EPotPopoverPosition;
+    position?: EPotAttachedBoxPosition;
 
     /** Distance between tooltip and target */
     nudge?: number;

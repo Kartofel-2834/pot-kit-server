@@ -1,6 +1,9 @@
 <script setup lang="ts">
 // Types
-import type { EPotPopoverPosition } from './types/components/popover';
+import type { EPotAttachedBoxPosition } from './types/components/attached-box';
+
+// Constants
+import { POT_ATTACHED_BOX_POSITION } from './types/components/attached-box';
 
 // Vue
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -8,16 +11,13 @@ import { onMounted, onUnmounted, ref } from 'vue';
 // Components
 import PotButton from './components/ui/PotButton.vue';
 import PotPopover from './components/ui/PotPopover.vue';
-
-// Constants
-import { POT_POPOVER_POSITION } from './types/components/popover';
+import PotTooltip from './components/ui/PotTooltip.vue';
 
 // Composables
 import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
 import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
-import PotTooltip from './components/ui/PotTooltip.vue';
 
-const kamal = ref<EPotPopoverPosition>(POT_POPOVER_POSITION.TOP_CENTER);
+const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
 
 const buttonRef = ref<Element | null>(null);
@@ -38,8 +38,22 @@ onUnmounted(() => {
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
+        <PotPopover v-model="isVisible">
+            <template #target>
+                <PotButton
+                    size="large"
+                    color="pot"
+                    @click="isVisible = !isVisible"
+                >
+                    Test
+                </PotButton>
+            </template>
+
+            Kamal
+        </PotPopover>
+
         <PotTooltip
-            :open-triggers="['click', 'contextmenu']"
+            :open-triggers="['dblclick', 'contextmenu']"
             size="medium"
             color="pot"
             enterable

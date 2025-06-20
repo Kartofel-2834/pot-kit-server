@@ -4,29 +4,35 @@ import type {
     IDialogManager,
     IDialogOptions,
     IDialogsSetupOptions,
-    TDialogTrigger,
 } from '@/types/composables/dialog';
 
 // Vue
 import { computed, ref, watch } from 'vue';
 
-const dialogsQueue = ref<IDialogManager[]>([]);
-const defaultTriggersDelays: Record<TDialogTrigger, number> = {
-    click: 100,
-    escape: 0,
+const defaultConfig: IDialogsSetupOptions = {
+    startZIndex: 1000,
+    triggersStartDelays: {
+        click: 100,
+        escape: 0,
+    },
 };
 
-let triggersDelays: Record<TDialogTrigger, number> = { ...defaultTriggersDelays };
+const config = ref<IDialogsSetupOptions>({ ...defaultConfig });
+const dialogsQueue = ref<IDialogManager[]>([]);
 
 /** Setup dialogs trigger listeners */
-export function setup(options: IDialogsSetupOptions = {}) {
+export function setup(options: Partial<IDialogsSetupOptions> = {}) {
     dialogsQueue.value = [];
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('click', handleClick);
 
-    triggersDelays = {
-        ...defaultTriggersDelays,
-        ...(options.triggersStartDelays ?? {}),
+    config.value = {
+        ...defaultConfig,
+        ...options,
+        triggersStartDelays: {
+            ...defaultConfig.triggersStartDelays,
+            ...(options.triggersStartDelays ?? {}),
+        },
     };
 }
 
@@ -35,7 +41,12 @@ export function terminate() {
     window.removeEventListener('keydown', handleKeydown);
     window.removeEventListener('click', handleClick);
 
-    triggersDelays = { ...defaultTriggersDelays };
+    config.value = { ...defaultConfig };
+}
+
+/** Composable for getting dialog's current z-index */
+export function useDialogZIndex(dialog: IDialog): number {
+    return config.value.startZIndex + Math.max(0, dialog.queueIndex.value);
 }
 
 /** Composable for adding dialogs to global queue with triggers */
@@ -100,8 +111,9 @@ function handleClick(event: MouseEvent) {
     if (dialogIdAttributes.includes(dialogManager.id.description)) return;
 
     const delay = Date.now() - dialogManager.updatedAt;
+    const configDelay = config.value.triggersStartDelays.click;
 
-    if (triggersDelays.click && delay < triggersDelays.click) return;
+    if (configDelay && delay < configDelay) return;
 
     dialogManager.close();
 }
@@ -116,8 +128,9 @@ function handleKeydown(event: KeyboardEvent) {
     if (!dialogManager) return;
 
     const delay = Date.now() - dialogManager.updatedAt;
+    const configDelay = config.value.triggersStartDelays.escape;
 
-    if (triggersDelays.escape && delay < triggersDelays.escape) return;
+    if (configDelay && delay < configDelay) return;
 
     dialogManager.close();
 }

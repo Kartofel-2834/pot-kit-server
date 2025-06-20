@@ -1,25 +1,6 @@
 // Types
 import type { RendererElement } from 'vue';
-
-export const POT_POPOVER_POSITION = {
-    TOP_START: 'top-start',
-    TOP_END: 'top-end',
-    TOP_CENTER: 'top-center',
-
-    BOTTOM_START: 'bottom-start',
-    BOTTOM_END: 'bottom-end',
-    BOTTOM_CENTER: 'bottom-center',
-
-    LEFT_START: 'left-start',
-    LEFT_END: 'left-end',
-    LEFT_CENTER: 'left-center',
-
-    RIGHT_START: 'right-start',
-    RIGHT_END: 'right-end',
-    RIGHT_CENTER: 'right-center',
-} as const;
-
-export type EPotPopoverPosition = (typeof POT_POPOVER_POSITION)[keyof typeof POT_POPOVER_POSITION];
+import type { EPotAttachedBoxPosition } from './attached-box';
 
 export interface IPotPopoverProps<
     TDevice extends string = string,
@@ -34,7 +15,7 @@ export interface IPotPopoverProps<
     modelValue?: boolean;
 
     /** Popover position that relative to target */
-    position?: EPotPopoverPosition;
+    position?: EPotAttachedBoxPosition;
 
     /** Distance between popover and target */
     nudge?: number;

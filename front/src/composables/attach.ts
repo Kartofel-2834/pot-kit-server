@@ -1,10 +1,10 @@
 // Types
-import type { EPotPopoverPosition } from '@/types/components/popover';
-import type { IPopover, IPopoverOptions } from '@/types/composables/popover';
+import type { EPotAttachedBoxPosition } from '@/types/components/attached-box';
+import type { IAttach, IAttachOptions } from '@/types/composables/attach';
 import type { ISurroundingData } from '@/types/composables/surrounding';
 
 // Constants
-import { POT_POPOVER_POSITION } from '@/types/components/popover';
+import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attached-box';
 
 // Vue
 import { computed, ref } from 'vue';
@@ -15,49 +15,49 @@ import { useSurrounding } from '@/composables/surrounding';
 // TODO: add arrow to popups
 const arrowSize = 16;
 
-const xOppositePositions: Record<EPotPopoverPosition, EPotPopoverPosition | null> = {
-    [POT_POPOVER_POSITION.TOP_START]: null,
-    [POT_POPOVER_POSITION.TOP_END]: null,
-    [POT_POPOVER_POSITION.TOP_CENTER]: null,
+const xOppositePositions: Record<EPotAttachedBoxPosition, EPotAttachedBoxPosition | null> = {
+    [POT_ATTACHED_BOX_POSITION.TOP_START]: null,
+    [POT_ATTACHED_BOX_POSITION.TOP_END]: null,
+    [POT_ATTACHED_BOX_POSITION.TOP_CENTER]: null,
 
-    [POT_POPOVER_POSITION.BOTTOM_START]: null,
-    [POT_POPOVER_POSITION.BOTTOM_END]: null,
-    [POT_POPOVER_POSITION.BOTTOM_CENTER]: null,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_START]: null,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_END]: null,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: null,
 
-    [POT_POPOVER_POSITION.LEFT_START]: POT_POPOVER_POSITION.RIGHT_START,
-    [POT_POPOVER_POSITION.LEFT_END]: POT_POPOVER_POSITION.RIGHT_END,
-    [POT_POPOVER_POSITION.LEFT_CENTER]: POT_POPOVER_POSITION.RIGHT_CENTER,
+    [POT_ATTACHED_BOX_POSITION.LEFT_START]: POT_ATTACHED_BOX_POSITION.RIGHT_START,
+    [POT_ATTACHED_BOX_POSITION.LEFT_END]: POT_ATTACHED_BOX_POSITION.RIGHT_END,
+    [POT_ATTACHED_BOX_POSITION.LEFT_CENTER]: POT_ATTACHED_BOX_POSITION.RIGHT_CENTER,
 
-    [POT_POPOVER_POSITION.RIGHT_START]: POT_POPOVER_POSITION.LEFT_START,
-    [POT_POPOVER_POSITION.RIGHT_END]: POT_POPOVER_POSITION.LEFT_END,
-    [POT_POPOVER_POSITION.RIGHT_CENTER]: POT_POPOVER_POSITION.LEFT_CENTER,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_START]: POT_ATTACHED_BOX_POSITION.LEFT_START,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_END]: POT_ATTACHED_BOX_POSITION.LEFT_END,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_CENTER]: POT_ATTACHED_BOX_POSITION.LEFT_CENTER,
 };
 
-const yOppositePositions: Record<EPotPopoverPosition, EPotPopoverPosition | null> = {
-    [POT_POPOVER_POSITION.TOP_START]: POT_POPOVER_POSITION.BOTTOM_START,
-    [POT_POPOVER_POSITION.TOP_END]: POT_POPOVER_POSITION.BOTTOM_END,
-    [POT_POPOVER_POSITION.TOP_CENTER]: POT_POPOVER_POSITION.BOTTOM_CENTER,
+const yOppositePositions: Record<EPotAttachedBoxPosition, EPotAttachedBoxPosition | null> = {
+    [POT_ATTACHED_BOX_POSITION.TOP_START]: POT_ATTACHED_BOX_POSITION.BOTTOM_START,
+    [POT_ATTACHED_BOX_POSITION.TOP_END]: POT_ATTACHED_BOX_POSITION.BOTTOM_END,
+    [POT_ATTACHED_BOX_POSITION.TOP_CENTER]: POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
 
-    [POT_POPOVER_POSITION.BOTTOM_START]: POT_POPOVER_POSITION.TOP_START,
-    [POT_POPOVER_POSITION.BOTTOM_END]: POT_POPOVER_POSITION.TOP_END,
-    [POT_POPOVER_POSITION.BOTTOM_CENTER]: POT_POPOVER_POSITION.TOP_CENTER,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_START]: POT_ATTACHED_BOX_POSITION.TOP_START,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_END]: POT_ATTACHED_BOX_POSITION.TOP_END,
+    [POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
 
-    [POT_POPOVER_POSITION.LEFT_START]: null,
-    [POT_POPOVER_POSITION.LEFT_END]: null,
-    [POT_POPOVER_POSITION.LEFT_CENTER]: null,
+    [POT_ATTACHED_BOX_POSITION.LEFT_START]: null,
+    [POT_ATTACHED_BOX_POSITION.LEFT_END]: null,
+    [POT_ATTACHED_BOX_POSITION.LEFT_CENTER]: null,
 
-    [POT_POPOVER_POSITION.RIGHT_START]: null,
-    [POT_POPOVER_POSITION.RIGHT_END]: null,
-    [POT_POPOVER_POSITION.RIGHT_CENTER]: null,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_START]: null,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_END]: null,
+    [POT_ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
 };
 
-/** Composable for calculating popover position */
-export function usePopover(options: IPopoverOptions): IPopover {
+/** Composable for calculating attached to target box position */
+export function useAttach(options: IAttachOptions): IAttach {
     const x = computed<number>(getX);
     const y = computed<number>(getY);
 
     const targetElement = ref<Element | null>(null);
-    const popoverElement = ref<Element | null>(null);
+    const boxElement = ref<Element | null>(null);
 
     const surrounding = useSurrounding({
         onResize: handleSurroundingResize(),
@@ -65,12 +65,12 @@ export function usePopover(options: IPopoverOptions): IPopover {
     });
 
     const isTargetResizing = ref<boolean>(false);
-    const isPopoverResizing = ref<boolean>(false);
+    const isBoxResizing = ref<boolean>(false);
     const isSurroundingResizing = ref<boolean>(false);
     const isScrolling = ref<boolean>(false);
 
     const targetRect = ref<DOMRect | null>(null);
-    const popoverRect = ref<DOMRect | null>(null);
+    const boxRect = ref<DOMRect | null>(null);
 
     const currentSurrounding = ref<ISurroundingData[]>([]);
 
@@ -93,79 +93,79 @@ export function usePopover(options: IPopoverOptions): IPopover {
         }),
     );
 
-    const popoverResizeObserver = new ResizeObserver(
+    const boxResizeObserver = new ResizeObserver(
         getDebounceListener<[ResizeObserverEntry[]]>({
             delay: 100,
             action: async entries => {
-                if (popoverRect.value === null) {
-                    await updatePopoverRect(entries[0].target);
+                if (boxRect.value === null) {
+                    await updateBoxRect(entries[0].target);
                 } else {
-                    isPopoverResizing.value = true;
+                    isBoxResizing.value = true;
                 }
             },
             debounceAction: async entries => {
-                if (!isPopoverResizing.value) return;
+                if (!isBoxResizing.value) return;
 
-                isPopoverResizing.value = false;
-                await updatePopoverRect(entries[0].target);
+                isBoxResizing.value = false;
+                await updateBoxRect(entries[0].target);
             },
         }),
     );
 
-    /** Set popover target element */
+    /** Set box target element */
     function setTarget(target: Element) {
         targetElement.value = target;
     }
 
-    /** Set popover element */
-    function setPopover(popover: Element) {
-        popoverElement.value = popover;
+    /** Set box element */
+    function setBox(box: Element) {
+        boxElement.value = box;
     }
 
-    /** Setup popover, target and their surrounding observers */
+    /** Setup box, target and their surrounding observers */
     function setup() {
-        if (!targetElement.value || !popoverElement.value) return;
+        if (!targetElement.value || !boxElement.value) return;
 
         targetResizeObserver.observe(targetElement.value);
-        popoverResizeObserver.observe(popoverElement.value);
+        boxResizeObserver.observe(boxElement.value);
 
         surrounding.setup(targetElement.value);
         currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
     }
 
-    /** Terminate popover, target and their surrounding observers */
+    /** Terminate box, target and their surrounding observers */
     function terminate() {
         targetElement.value = null;
-        popoverElement.value = null;
+        boxElement.value = null;
 
         currentSurrounding.value = [];
         targetRect.value = null;
-        popoverRect.value = null;
+        boxRect.value = null;
 
         targetResizeObserver.disconnect();
-        popoverResizeObserver.disconnect();
+        boxResizeObserver.disconnect();
         surrounding.terminate();
     }
 
-    /** Get popover Y coordinate */
+    /** Get box Y coordinate */
     function getY(): number {
-        if (!targetRect.value || !popoverRect.value) return 0;
+        if (!targetRect.value || !boxRect.value) return 0;
 
         const offset = getYOffset();
 
-        return calculateLimitedY(options, offset, targetRect.value, popoverRect.value);
+        return calculateLimitedY(options, offset, targetRect.value, boxRect.value);
     }
 
-    /** Get popover X coordinate */
+    /** Get box X coordinate */
     function getX(): number {
-        if (!targetRect.value || !popoverRect.value) return 0;
+        if (!targetRect.value || !boxRect.value) return 0;
 
         const offset = getXOffset();
 
-        return calculateLimitedX(options, offset, targetRect.value, popoverRect.value);
+        return calculateLimitedX(options, offset, targetRect.value, boxRect.value);
     }
 
-    /** Get popover Y scroll-offset */
+    /** Get box Y scroll-offset */
     function getYOffset(): number {
         return currentSurrounding.value.reduce((res, data, index) => {
             const initialData = surrounding.data.value[index];
@@ -173,7 +173,7 @@ export function usePopover(options: IPopoverOptions): IPopover {
         }, 0);
     }
 
-    /** Get popover X scroll-offset */
+    /** Get box X scroll-offset */
     function getXOffset(): number {
         return currentSurrounding.value.reduce((res, data, index) => {
             const initialData = surrounding.data.value[index];
@@ -186,9 +186,9 @@ export function usePopover(options: IPopoverOptions): IPopover {
         targetRect.value = await getElementBounding(targetElement);
     }
 
-    /** Update popover sizes */
-    async function updatePopoverRect(targetElement: Element) {
-        popoverRect.value = await getElementBounding(targetElement);
+    /** Update box sizes */
+    async function updateBoxRect(targetElement: Element) {
+        boxRect.value = await getElementBounding(targetElement);
     }
 
     /** Update surrounding scroll-data on scroll event */
@@ -204,10 +204,10 @@ export function usePopover(options: IPopoverOptions): IPopover {
 
     /** Update surrounding after resize event */
     async function onResize() {
-        if (!targetElement.value || !popoverElement.value) return;
+        if (!targetElement.value || !boxElement.value) return;
 
         getElementBounding(targetElement.value).then(rect => (targetRect.value = rect));
-        getElementBounding(popoverElement.value).then(rect => (popoverRect.value = rect));
+        getElementBounding(boxElement.value).then(rect => (boxRect.value = rect));
 
         surrounding.setup(targetElement.value);
         currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
@@ -246,33 +246,33 @@ export function usePopover(options: IPopoverOptions): IPopover {
         x,
         y,
         targetRect,
-        popoverRect,
+        boxRect,
         isTargetResizing,
-        isPopoverResizing,
+        isBoxResizing,
         isSurroundingResizing,
         isScrolling,
         setup,
         terminate,
         setTarget,
-        setPopover,
+        setBox,
     };
 }
 
-/** Get popover Y coordinate that limited by screen and target sizes */
+/** Get box Y coordinate that limited by screen and target sizes */
 function calculateLimitedY(
-    options: IPopoverOptions,
+    options: IAttachOptions,
     offset: number,
     targetRect: DOMRect,
-    popoverRect: DOMRect,
+    boxRect: DOMRect,
 ): number {
     const { y: targetYInitial, height: targetHeight } = targetRect;
-    const { height: popoverHeight } = popoverRect;
+    const { height: boxHeight } = boxRect;
 
     const targetStartY = targetYInitial + offset;
     const targetEndY = targetStartY + targetHeight;
 
-    const yStart = calculateYForPosition(options, offset, targetRect, popoverRect);
-    const yEnd = yStart + popoverHeight;
+    const yStart = calculateYForPosition(options, offset, targetRect, boxRect);
+    const yEnd = yStart + boxHeight;
 
     const edgeMargin = options.edgeMargin || 0;
     const topLimit = edgeMargin;
@@ -281,58 +281,58 @@ function calculateLimitedY(
     const oppositeSide = yOppositePositions[options.position];
     const oppositeOptions = {
         ...options,
-        position: oppositeSide as EPotPopoverPosition,
+        position: oppositeSide as EPotAttachedBoxPosition,
     };
 
     const isReplaced = !options.persistent && oppositeSide;
     const isSticky = options.sticky && !isReplaced;
 
-    // If the popover goes beyond the TOP edge of the screen,
+    // If box goes beyond the TOP edge of the screen,
     // then try to move it to the other side
     if (isReplaced && yStart < topLimit) {
-        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, boxRect);
         return Math.max(yOpposite, yStart);
     }
 
-    // If the popover goes beyond the TOP edge of the screen and there is nowhere to move it,
+    // If box goes beyond the TOP edge of the screen and there is nowhere to move it,
     // then we try to imitate sticky behavior
     if (isSticky && yStart < topLimit) {
         const stickyLimit = targetEndY - arrowSize;
         return Math.min(Math.max(yStart, topLimit), stickyLimit);
     }
 
-    // If the popover goes beyond the BOTTOM edge of the screen,
+    // If box goes beyond the BOTTOM edge of the screen,
     // then try to move it to the other side
     if (isReplaced && yEnd > bottomLimit) {
-        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, boxRect);
         return Math.min(yOpposite, yStart);
     }
 
-    // If the popover goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
+    // If box goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
     // then we try to imitate sticky behavior
     if (isSticky && yEnd > bottomLimit) {
         const stickyLimit = targetStartY + arrowSize;
-        return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - popoverHeight - edgeMargin;
+        return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
     }
 
     return yStart;
 }
 
-/** Get popover X coordinate that limited by screen and target sizes */
+/** Get box X coordinate that limited by screen and target sizes */
 function calculateLimitedX(
-    options: IPopoverOptions,
+    options: IAttachOptions,
     offset: number,
     targetRect: DOMRect,
-    popoverRect: DOMRect,
+    boxRect: DOMRect,
 ): number {
     const { x: targetXInitial, width: targetWidth } = targetRect;
-    const { width: popoverWidth } = popoverRect;
+    const { width: boxWidth } = boxRect;
 
     const targetStartX = targetXInitial + offset;
     const targetEndX = targetStartX + targetWidth;
 
-    const xStart = calculateXForPosition(options, offset, targetRect, popoverRect);
-    const xEnd = xStart + popoverWidth;
+    const xStart = calculateXForPosition(options, offset, targetRect, boxRect);
+    const xEnd = xStart + boxWidth;
 
     const edgeMargin = options.edgeMargin || 0;
     const leftLimit = edgeMargin;
@@ -341,115 +341,115 @@ function calculateLimitedX(
     const oppositeSide = xOppositePositions[options.position];
     const oppositeOptions = {
         ...options,
-        position: oppositeSide as EPotPopoverPosition,
+        position: oppositeSide as EPotAttachedBoxPosition,
     };
 
     const isReplaced = !options.persistent && oppositeSide;
     const isSticky = options.sticky && !isReplaced;
 
-    // If the popover goes beyond the TOP edge of the screen,
+    // If box goes beyond the TOP edge of the screen,
     // then try to move it to the other side
     if (isReplaced && xStart < leftLimit) {
-        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, boxRect);
         return Math.max(xOpposite, xStart);
     }
 
-    // If the popover goes beyond the TOP edge of the screen and there is nowhere to move it,
+    // If box goes beyond the TOP edge of the screen and there is nowhere to move it,
     // then we try to imitate sticky behavior
     if (isSticky && xStart < leftLimit) {
         const stickyLimit = targetEndX - arrowSize;
         return Math.min(Math.max(xStart, leftLimit), stickyLimit);
     }
 
-    // If the popover goes beyond the BOTTOM edge of the screen,
+    // If box goes beyond the BOTTOM edge of the screen,
     // then try to move it to the other side
     if (isReplaced && xEnd > rightLimit) {
-        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, popoverRect);
+        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, boxRect);
         return Math.min(xOpposite, xStart);
     }
 
-    // If the popover goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
+    // If box goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
     // then we try to imitate sticky behavior
     if (isSticky && xEnd > rightLimit) {
         const stickyLimit = targetStartX + arrowSize;
-        return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - popoverWidth - edgeMargin;
+        return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
     }
 
     return xStart;
 }
 
-/** Get pure popover Y coordinate, without limited by screen and target sizes */
+/** Get pure box Y coordinate, without limited by screen and target sizes */
 function calculateYForPosition(
-    options: IPopoverOptions,
+    options: IAttachOptions,
     offset: number,
     targetRect: DOMRect,
-    popoverRect: DOMRect,
+    boxRect: DOMRect,
 ): number {
     const { y: targetYInitial, height: targetHeight } = targetRect;
-    const { height: popoverHeight } = popoverRect;
+    const { height: boxHeight } = boxRect;
     const targetY = targetYInitial + offset;
 
     switch (options.position) {
-        case POT_POPOVER_POSITION.TOP_START:
-        case POT_POPOVER_POSITION.TOP_END:
-        case POT_POPOVER_POSITION.TOP_CENTER:
-            return targetY - popoverHeight - options.nudge;
+        case POT_ATTACHED_BOX_POSITION.TOP_START:
+        case POT_ATTACHED_BOX_POSITION.TOP_END:
+        case POT_ATTACHED_BOX_POSITION.TOP_CENTER:
+            return targetY - boxHeight - options.nudge;
 
-        case POT_POPOVER_POSITION.BOTTOM_START:
-        case POT_POPOVER_POSITION.BOTTOM_END:
-        case POT_POPOVER_POSITION.BOTTOM_CENTER:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_START:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_END:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
             return targetY + targetHeight + options.nudge;
 
-        case POT_POPOVER_POSITION.RIGHT_START:
-        case POT_POPOVER_POSITION.LEFT_START:
+        case POT_ATTACHED_BOX_POSITION.RIGHT_START:
+        case POT_ATTACHED_BOX_POSITION.LEFT_START:
             return targetY;
 
-        case POT_POPOVER_POSITION.RIGHT_END:
-        case POT_POPOVER_POSITION.LEFT_END:
-            return targetY + targetHeight - popoverHeight;
+        case POT_ATTACHED_BOX_POSITION.RIGHT_END:
+        case POT_ATTACHED_BOX_POSITION.LEFT_END:
+            return targetY + targetHeight - boxHeight;
 
-        case POT_POPOVER_POSITION.RIGHT_CENTER:
-        case POT_POPOVER_POSITION.LEFT_CENTER:
-            return targetY + targetHeight / 2 - popoverHeight / 2;
+        case POT_ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case POT_ATTACHED_BOX_POSITION.LEFT_CENTER:
+            return targetY + targetHeight / 2 - boxHeight / 2;
 
         default:
             return 0;
     }
 }
 
-/** Get pure popover X coordinate, without limited by screen and target sizes */
+/** Get pure box X coordinate, without limited by screen and target sizes */
 function calculateXForPosition(
-    options: IPopoverOptions,
+    options: IAttachOptions,
     offset: number,
     targetRect: DOMRect,
-    popoverRect: DOMRect,
+    boxRect: DOMRect,
 ): number {
     const { x: targetXInitial, width: targetWidth } = targetRect;
-    const { width: popoverWidth } = popoverRect;
+    const { width: boxWidth } = boxRect;
     const targetX = targetXInitial + offset;
 
     switch (options.position) {
-        case POT_POPOVER_POSITION.TOP_CENTER:
-        case POT_POPOVER_POSITION.BOTTOM_CENTER:
-            return targetX + targetWidth / 2 - popoverWidth / 2;
+        case POT_ATTACHED_BOX_POSITION.TOP_CENTER:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+            return targetX + targetWidth / 2 - boxWidth / 2;
 
-        case POT_POPOVER_POSITION.TOP_START:
-        case POT_POPOVER_POSITION.BOTTOM_START:
+        case POT_ATTACHED_BOX_POSITION.TOP_START:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_START:
             return targetX;
 
-        case POT_POPOVER_POSITION.TOP_END:
-        case POT_POPOVER_POSITION.BOTTOM_END:
-            return targetX + targetWidth - popoverWidth;
+        case POT_ATTACHED_BOX_POSITION.TOP_END:
+        case POT_ATTACHED_BOX_POSITION.BOTTOM_END:
+            return targetX + targetWidth - boxWidth;
 
-        case POT_POPOVER_POSITION.RIGHT_END:
-        case POT_POPOVER_POSITION.RIGHT_START:
-        case POT_POPOVER_POSITION.RIGHT_CENTER:
+        case POT_ATTACHED_BOX_POSITION.RIGHT_END:
+        case POT_ATTACHED_BOX_POSITION.RIGHT_START:
+        case POT_ATTACHED_BOX_POSITION.RIGHT_CENTER:
             return targetX + targetWidth + options.nudge;
 
-        case POT_POPOVER_POSITION.LEFT_END:
-        case POT_POPOVER_POSITION.LEFT_START:
-        case POT_POPOVER_POSITION.LEFT_CENTER:
-            return targetX - popoverWidth - options.nudge;
+        case POT_ATTACHED_BOX_POSITION.LEFT_END:
+        case POT_ATTACHED_BOX_POSITION.LEFT_START:
+        case POT_ATTACHED_BOX_POSITION.LEFT_CENTER:
+            return targetX - boxWidth - options.nudge;
 
         default:
             return 0;

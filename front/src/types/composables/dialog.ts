@@ -4,8 +4,11 @@ import type { ComputedRef, DeepReadonly, Ref } from 'vue';
 export type TDialogTrigger = 'click' | 'escape';
 
 export interface IDialogsSetupOptions {
+    /** Start z-index for dialogs */
+    startZIndex: number;
+
     /** Time after the dialog is created, after which triggers will start working */
-    triggersStartDelays?: Partial<Record<TDialogTrigger, number>>;
+    triggersStartDelays: Partial<Record<TDialogTrigger, number>>;
 }
 
 export interface IDialogOptions {

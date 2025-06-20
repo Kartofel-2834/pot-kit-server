@@ -1,31 +1,29 @@
 <script lang="ts" setup>
 // Types
-import type { VNode } from 'vue';
 import type { IPotPopoverProps } from '@/types/components/popover';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 
 // Constants
-import { POT_POPOVER_POSITION } from '@/types/components/popover';
+import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attached-box';
 
 // Vue
-import { cloneVNode, computed, isVNode, onUnmounted, readonly, ref, watch } from 'vue';
-
-// Components
-import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
+import { computed, onUnmounted, readonly, ref } from 'vue';
 
 // Composables
-import { usePopover } from '@/composables/popover';
-import { useDialog } from '@/composables/dialog';
+import { useDialog, useDialogZIndex } from '@/composables/dialog';
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useClassList } from '@/composables/class-list';
+
+// Components
+import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
 
 const $props = withDefaults(
     defineProps<IPotPopoverProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
     {
         visible: undefined,
         modelValue: undefined,
-        position: POT_POPOVER_POSITION.TOP_CENTER,
+        position: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
         nudge: 10,
         edgeMargin: 10,
         persistent: false,
@@ -40,8 +38,6 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
-const $popover = usePopover($props);
-
 const $dialog = useDialog({
     triggers: ['click', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
@@ -52,19 +48,13 @@ const $dialog = useDialog({
 const $deviceIs = useDeviceIs();
 
 // Data
-const targetKey = ref<Symbol | null>(null);
-const target = ref<Element | null>(null);
-const popover = ref<Element | null>(null);
+const box = ref<Element | null>(null);
+const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
 
 // Lifecycle
-onUnmounted(() => {
-    $dialog.terminate();
-    $popover.terminate();
-});
+onUnmounted(() => $dialog.terminate());
 
 // Computed
-const currentTarget = computed(() => $props.target ?? target.value ?? null);
-
 const properties = computed(() => {
     return useDeviceProperties(
         {
@@ -79,34 +69,15 @@ const properties = computed(() => {
 
 const classList = computed(() => useClassList({ ...properties.value }));
 
-const styles = computed(() => {
-    const isResizing =
-        $popover.isTargetResizing.value ||
-        $popover.isSurroundingResizing.value ||
-        $popover.isPopoverResizing.value;
+const currentStyles = computed(() => {
+    const x = attachTarget.value?.x ?? 0;
+    const y = attachTarget.value?.y ?? 0;
 
     return {
-        ...(isResizing ? { opacity: 0 } : {}),
-        transform: `translate(${$popover.x.value}px, ${$popover.y.value}px)`,
+        zIndex: useDialogZIndex($dialog),
+        transform: `translate(${x}px, ${y}px)`,
     };
 });
-
-// Watchers
-watch(
-    () => [popover.value, currentTarget.value],
-    newValue => {
-        const [newPopover, newTarget] = newValue ?? [];
-
-        if (newPopover && newTarget) {
-            $popover.setPopover(newPopover);
-            $popover.setTarget(newTarget);
-            $popover.setup();
-        } else {
-            $popover.terminate();
-        }
-    },
-    { immediate: true },
-);
 
 // Methods
 function open() {
@@ -119,61 +90,46 @@ function close() {
     $emit('update:modelValue', false);
 }
 
-function findTarget(vnode: VNode): VNode | null {
-    if (!isVNode(vnode)) return vnode;
-
-    const id = Symbol(`pot-popover-target_${Math.random().toString(36).slice(2, 9)}`);
-
-    if (Array.isArray(vnode.children)) {
-        vnode.children = vnode.children.map(v => (isVNode(v) ? findTarget(v) : v));
-    }
-
-    return cloneVNode(vnode, {
-        onVnodeMounted(vnode) {
-            if (target.value || !(vnode.el instanceof Element)) return;
-
-            target.value = vnode.el as Element;
-            targetKey.value = id;
-        },
-
-        onVnodeBeforeUnmount() {
-            target.value = null;
-            targetKey.value = null;
-        },
-    });
-}
-
 // Exports
 defineExpose({
-    x: readonly($popover.x),
-    y: readonly($popover.y),
     isOpen: readonly($dialog.isOpen),
-    target: readonly(currentTarget),
-    popover: readonly(popover),
+    x: attachTarget.value?.x,
+    y: attachTarget.value?.y,
+    target: attachTarget.value?.target,
+    popover: box.value,
     open: () => $dialog.open(),
     close: () => $dialog.close(),
 });
 </script>
 
 <template>
-    <Teleport :to="to">
-        <Transition name="pot-popover-transition">
-            <div
-                v-if="$dialog.isOpen.value"
-                v-bind="$attrs"
-                ref="popover"
-                :pot-dialog-id="$dialog.id.description"
-                :class="['pot-popover', classList]"
-                :style="styles"
-            >
-                <slot />
-            </div>
-        </Transition>
-    </Teleport>
+    <Transition name="pot-popover-transition">
+        <div
+            ref="box"
+            v-if="$dialog.isOpen.value"
+            v-bind="$attrs"
+            :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+            :class="['pot-popover', classList]"
+            :style="currentStyles"
+            :pot-dialog-id="$dialog.id.description"
+        >
+            <slot />
+        </div>
+    </Transition>
 
-    <PotSlotCatcher :map-v-node="findTarget">
+    <PotAttachTarget
+        ref="attachTarget"
+        :box="box"
+        :position="position"
+        :target="target"
+        :to="to"
+        :sticky="sticky"
+        :persistent="persistent"
+        :edge-margin="edgeMargin"
+        :nudge="nudge"
+    >
         <slot name="target" />
-    </PotSlotCatcher>
+    </PotAttachTarget>
 </template>
 
 <style>
