@@ -46,10 +46,13 @@ onUnmounted(() => {
 
 // Watchers
 watch(
-    () => popoverRef.value?.target,
+    () => [popoverRef.value?.target, $props.openTriggers, $props.closeTriggers],
     (newValue, oldValue) => {
-        if (oldValue instanceof Element) terminateTargetTriggers(oldValue);
-        if (newValue instanceof Element) setupTargetTriggers(newValue);
+        const [newTarget] = newValue;
+        const [oldTarget] = oldValue;
+
+        if (oldTarget instanceof Element) terminateTargetTriggers(oldTarget);
+        if (newTarget instanceof Element) setupTargetTriggers(newTarget);
     },
 );
 
@@ -61,16 +64,20 @@ watch(
 
         if (!enterable) return;
 
+        if (oldPopoverElement instanceof Element) {
+            terminatePopoverListeners(oldPopoverElement);
+        }
+
         if (popoverElement instanceof Element) {
             setupPopoverListeners(popoverElement);
-        } else if (oldPopoverElement instanceof Element) {
-            terminatePopoverListeners(oldPopoverElement);
         }
     },
 );
 
 // Methods
 function open() {
+    if (isOpen.value) return;
+
     clearDelayedAction();
     isOpen.value = true;
     $emit('open');
@@ -78,6 +85,8 @@ function open() {
 }
 
 function close() {
+    if (!isOpen.value) return;
+
     clearDelayedAction();
     isOpen.value = false;
     $emit('close');

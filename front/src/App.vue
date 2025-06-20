@@ -39,8 +39,7 @@ onUnmounted(() => {
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
         <PotTooltip
-            :open-triggers="['contextmenu']"
-            :auto-close-delay="1000"
+            :open-triggers="['click', 'contextmenu']"
             size="medium"
             color="pot"
             enterable
