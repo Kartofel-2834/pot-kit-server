@@ -4,49 +4,28 @@ import type { IPotSlotCatcherProps } from '@/types/components/slot-catcher';
 import type { VNode } from 'vue';
 
 // Vue
-import { cloneVNode, defineComponent } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent<IPotSlotCatcherProps>({
     inheritAttrs: false,
 
     props: {
-        options: {
+        mapVNode: {
             type: Function,
             required: true,
+            default: (v: VNode) => v,
         },
     },
 
     setup(props, { slots }) {
         return () => {
-            if (!slots?.default) {
+            const slotContent = slots.default?.() ?? null;
+
+            if (!Array.isArray(slotContent)) {
                 return null;
             }
 
-            // Unwrapping fragments nodes
-            const vnodesList = slots
-                .default()
-                .map(vnode => {
-                    const isFragment =
-                        typeof vnode.type === 'symbol' && vnode.type.description === 'v-fgt';
-
-                    return isFragment && Array.isArray(vnode.children)
-                        ? (vnode.children as VNode[])
-                        : vnode;
-                })
-                .flat(Infinity) as VNode[];
-
-            // Deleting comments
-            const vnodesListCleared = vnodesList.filter(
-                vnode => typeof vnode.type !== 'symbol' || vnode.type.description !== 'v-cmt',
-            );
-
-            if (!Array.isArray(vnodesListCleared) || !vnodesListCleared.length) {
-                return vnodesListCleared;
-            }
-
-            return vnodesListCleared.map((vnode, index) => {
-                return cloneVNode(vnode, props.options(vnode, index));
-            });
+            return slotContent.map(vnode => props.mapVNode?.(vnode) ?? vnode) as VNode[];
         };
     },
 });

@@ -15,10 +15,12 @@ import { POT_POPOVER_POSITION } from './types/components/popover';
 // Composables
 import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
 import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
+import PotTooltip from './components/ui/PotTooltip.vue';
 
 const kamal = ref<EPotPopoverPosition>(POT_POPOVER_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
-const isVisible2 = ref<boolean>(false);
+
+const buttonRef = ref<Element | null>(null);
 
 onMounted(() => {
     setupDialogs();
@@ -34,75 +36,26 @@ onUnmounted(() => {
 <template>
     <main
         class="main"
-        style="display: flex; flex-direction: column; justify-content: center; width: 400vw"
+        style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotPopover
-            v-model="isVisible"
+        <PotTooltip
+            :open-triggers="['contextmenu']"
+            size="medium"
             color="pot"
-            size="small"
-            radius="medium"
-            :position="kamal"
+            enterable
+            @trigger:open.prevent
         >
             <template #target>
-                <div style="background-color: aquamarine">
-                    <PotButton
-                        size="large"
-                        color="pot"
-                        @click="isVisible = !isVisible"
-                    >
-                        Toggle
-                    </PotButton>
-                </div>
-            </template>
-
-            <template #default>
-                <div
-                    style="
-                        display: flex;
-                        flex-direction: column;
-                        gap: 2rem;
-                        justify-content: center;
-                        align-items: center;
-                        width: 20rem;
-                        height: 20rem;
-                    "
+                <PotButton
+                    color="pot"
+                    size="medium"
                 >
                     Test
-                </div>
+                </PotButton>
             </template>
-        </PotPopover>
 
-        <div style="display: flex; gap: 2rem">
-            <!-- Top -->
-            <PotButton @click="kamal = POT_POPOVER_POSITION.TOP_CENTER"> TOP_CENTER </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.TOP_START"> TOP_START </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.TOP_END"> TOP_END </PotButton>
-
-            <!-- Bottom -->
-            <PotButton @click="kamal = POT_POPOVER_POSITION.BOTTOM_CENTER">
-                BOTTOM_CENTER
-            </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.BOTTOM_START"> BOTTOM_START </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.BOTTOM_END"> BOTTOM_END </PotButton>
-
-            <!-- Left -->
-            <PotButton @click="kamal = POT_POPOVER_POSITION.LEFT_CENTER"> LEFT_CENTER </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.LEFT_START"> LEFT_START </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.LEFT_END"> LEFT_END </PotButton>
-
-            <!-- Right -->
-            <PotButton @click="kamal = POT_POPOVER_POSITION.RIGHT_CENTER"> RIGHT_CENTER </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.RIGHT_START"> RIGHT_START </PotButton>
-
-            <PotButton @click="kamal = POT_POPOVER_POSITION.RIGHT_END"> RIGHT_END </PotButton>
-        </div>
+            Test
+        </PotTooltip>
     </main>
 </template>
 
@@ -112,7 +65,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: left;
     align-items: center;
-    min-height: 300vh;
+    min-height: 100vh;
     gap: 4rem;
     /* background-color: var(--pot-base-600); */
 }

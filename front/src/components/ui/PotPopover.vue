@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Types
-import type { VNode, VNodeProps } from 'vue';
+import type { VNode } from 'vue';
 import type { IPotPopoverProps } from '@/types/components/popover';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 
@@ -8,7 +8,7 @@ import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import { POT_POPOVER_POSITION } from '@/types/components/popover';
 
 // Vue
-import { computed, onUnmounted, ref, watch } from 'vue';
+import { cloneVNode, computed, isVNode, onUnmounted, readonly, ref, watch } from 'vue';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
@@ -51,35 +51,16 @@ const $dialog = useDialog({
 
 const $deviceIs = useDeviceIs();
 
-const targetKey = ref<string | null>('');
+// Data
+const targetKey = ref<Symbol | null>(null);
 const target = ref<Element | null>(null);
 const popover = ref<Element | null>(null);
 
-// Captures target element
-const slotTargetOptions = (vnode: VNode, index: number): VNodeProps => {
-    return {
-        key: `pot-popover-target_${index}`,
-
-        onVnodeMounted(vnode) {
-            if (target.value || !(vnode.el instanceof Element) || typeof vnode.key !== 'string') {
-                return;
-            }
-
-            target.value = vnode.el as Element;
-            targetKey.value = vnode.key;
-        },
-
-        onVnodeBeforeUnmount(vnode) {
-            if (targetKey.value !== vnode.key) return;
-
-            target.value = null;
-            targetKey.value = null;
-        },
-    };
-};
-
 // Lifecycle
-onUnmounted(() => $dialog.terminate());
+onUnmounted(() => {
+    $dialog.terminate();
+    $popover.terminate();
+});
 
 // Computed
 const currentTarget = computed(() => $props.target ?? target.value ?? null);
@@ -137,6 +118,41 @@ function close() {
     $emit('close');
     $emit('update:modelValue', false);
 }
+
+function findTarget(vnode: VNode): VNode | null {
+    if (!isVNode(vnode)) return vnode;
+
+    const id = Symbol(`pot-popover-target_${Math.random().toString(36).slice(2, 9)}`);
+
+    if (Array.isArray(vnode.children)) {
+        vnode.children = vnode.children.map(v => (isVNode(v) ? findTarget(v) : v));
+    }
+
+    return cloneVNode(vnode, {
+        onVnodeMounted(vnode) {
+            if (target.value || !(vnode.el instanceof Element)) return;
+
+            target.value = vnode.el as Element;
+            targetKey.value = id;
+        },
+
+        onVnodeBeforeUnmount() {
+            target.value = null;
+            targetKey.value = null;
+        },
+    });
+}
+
+// Exports
+defineExpose({
+    x: readonly($popover.x),
+    y: readonly($popover.y),
+    isOpen: readonly($dialog.isOpen),
+    target: readonly(currentTarget),
+    popover: readonly(popover),
+    open: () => $dialog.open(),
+    close: () => $dialog.close(),
+});
 </script>
 
 <template>
@@ -155,7 +171,7 @@ function close() {
         </Transition>
     </Teleport>
 
-    <PotSlotCatcher :options="slotTargetOptions">
+    <PotSlotCatcher :map-v-node="findTarget">
         <slot name="target" />
     </PotSlotCatcher>
 </template>
@@ -166,7 +182,6 @@ function close() {
     top: 0;
     left: 0;
     border-style: solid;
-    transition: opacity 0.2s ease;
 }
 
 .pot-popover-transition-enter-active,

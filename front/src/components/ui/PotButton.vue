@@ -20,6 +20,7 @@ const $props = withDefaults(
 
 const $deviceIs = useDeviceIs();
 
+// Computed
 const properties = computed(() => {
     return useDeviceProperties(
         {
