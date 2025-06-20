@@ -23,6 +23,9 @@ export interface IPotTooltipProps<
     /** Tooltip close delay in milliseconds */
     closeDelay?: number;
 
+    /** Tooltip will close after this delay in milliseconds, if delay greater than zero */
+    autoCloseDelay?: number;
+
     /** Tooltip will not close, when mouse is over it */
     enterable?: boolean;
 

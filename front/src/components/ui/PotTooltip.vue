@@ -14,7 +14,8 @@ const $props = withDefaults(
     {
         text: '',
         openDelay: 0,
-        closeDelay: 400,
+        closeDelay: 200,
+        autoCloseDelay: 0,
         openTriggers: () => ['mouseover'],
         closeTriggers: () => ['mouseout'],
         enterable: false,
@@ -70,11 +71,14 @@ watch(
 
 // Methods
 function open() {
+    clearDelayedAction();
     isOpen.value = true;
     $emit('open');
+    if ($props.autoCloseDelay > 0) startAutoClose();
 }
 
 function close() {
+    clearDelayedAction();
     isOpen.value = false;
     $emit('close');
 }
@@ -95,6 +99,17 @@ function delayedClose(event: Event): number {
         $emit('trigger:close', event);
         close();
     }, $props.closeDelay);
+}
+
+function startAutoClose(): number {
+    if ($props.autoCloseDelay <= 0 || isNaN($props.autoCloseDelay)) return NaN;
+
+    return setDelayedAction(() => {
+        if (!isOpen.value) return;
+
+        isOpen.value = false;
+        $emit('close');
+    }, $props.autoCloseDelay);
 }
 
 function pause() {

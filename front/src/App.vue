@@ -40,6 +40,7 @@ onUnmounted(() => {
     >
         <PotTooltip
             :open-triggers="['contextmenu']"
+            :auto-close-delay="1000"
             size="medium"
             color="pot"
             enterable
