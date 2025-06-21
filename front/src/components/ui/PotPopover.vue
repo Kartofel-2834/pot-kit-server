@@ -39,7 +39,7 @@ const $emit = defineEmits<{
 }>();
 
 const $dialog = useDialog({
-    triggers: ['click', 'escape'],
+    triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
     close: close,
     open: open,

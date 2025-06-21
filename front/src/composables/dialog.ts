@@ -12,7 +12,7 @@ import { computed, ref, watch } from 'vue';
 const defaultConfig: IDialogsSetupOptions = {
     startZIndex: 1000,
     triggersStartDelays: {
-        click: 100,
+        clickoutside: 100,
         escape: 0,
     },
 };
@@ -96,9 +96,9 @@ function generateDialogId(): Symbol {
     return Symbol(Math.random().toString(36).slice(2, 9));
 }
 
-/*** Handle click event */
+/** Handle clickoutside event */
 function handleClick(event: MouseEvent) {
-    const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('click'));
+    const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('clickoutside'));
     const dialogManager = clickTriggerDialogs[clickTriggerDialogs.length - 1] ?? null;
 
     if (!dialogManager || !dialogManager.id.description) return;
@@ -111,7 +111,7 @@ function handleClick(event: MouseEvent) {
     if (dialogIdAttributes.includes(dialogManager.id.description)) return;
 
     const delay = Date.now() - dialogManager.updatedAt;
-    const configDelay = config.value.triggersStartDelays.click;
+    const configDelay = config.value.triggersStartDelays.clickoutside;
 
     if (configDelay && delay < configDelay) return;
 

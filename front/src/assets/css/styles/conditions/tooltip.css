@@ -1,0 +1,11 @@
+/* CONDITION:base - START */
+.pot-tooltip {
+    --pot-tooltip-color-base-background: initial;
+    --pot-tooltip-color-base-border: initial;
+    --pot-tooltip-color-base-text: initial;
+
+    background-color: var(--pot-tooltip-color-base-background);
+    border-color: var(--pot-tooltip-color-base-border);
+    color: var(--pot-tooltip-color-base-text);
+}
+/* CONDITION:base - END */

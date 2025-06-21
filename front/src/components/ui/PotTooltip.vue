@@ -40,7 +40,7 @@ const $emit = defineEmits<{
 const $deviceIs = useDeviceIs();
 
 const $dialog = useDialog({
-    triggers: ['click', 'escape'],
+    triggers: ['escape'],
     isOpen: computed(() => isOpen.value),
     close: close,
     open: open,
@@ -291,3 +291,9 @@ defineExpose({
     opacity: 0;
 }
 </style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/tooltip.css" />
+<style src="@/assets/css/styles/conditions/tooltip.css" />
+<style src="@/assets/css/styles/configuration/tooltip.css" />
+<!-- Styles - END -->

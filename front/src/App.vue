@@ -53,7 +53,6 @@ onUnmounted(() => {
         </PotPopover>
 
         <PotTooltip
-            :open-triggers="['dblclick', 'contextmenu']"
             size="medium"
             color="pot"
             enterable

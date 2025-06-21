@@ -1,0 +1,21 @@
+/* CONFIGURATION:size - START */
+.pot-tooltip {
+    --pot-tooltip-size-border: initial;
+    --pot-tooltip-size-padding: initial;
+    --pot-tooltip-size-shadow: initial;
+    --pot-tooltip-size-text: initial;
+
+    border-width: var(--pot-tooltip-size-border);
+    padding: var(--pot-tooltip-size-padding);
+    box-shadow: var(--pot-tooltip-size-shadow);
+    font-size: var(--pot-tooltip-size-text);
+}
+/* CONFIGURATION:size - END */
+
+/* CONFIGURATION:radius - START */
+.pot-tooltip {
+    --pot-tooltip-radius: initial;
+
+    border-radius: var(--pot-tooltip-radius);
+}
+/* CONFIGURATION:radius - END */

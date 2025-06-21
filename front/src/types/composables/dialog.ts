@@ -1,7 +1,7 @@
 // Types
 import type { ComputedRef, DeepReadonly, Ref } from 'vue';
 
-export type TDialogTrigger = 'click' | 'escape';
+export type TDialogTrigger = 'clickoutside' | 'escape';
 
 export interface IDialogsSetupOptions {
     /** Start z-index for dialogs */

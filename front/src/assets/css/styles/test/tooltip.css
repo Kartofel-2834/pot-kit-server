@@ -1,0 +1,45 @@
+.pot-tooltip._color-pot {
+    --pot-tooltip-color-base-background: var(--pot-base-0);
+    --pot-tooltip-color-base-border: var(--pot-base-400);
+    --pot-tooltip-color-base-text: inherit;
+}
+
+.pot-tooltip._size-tiny {
+    --pot-tooltip-size-border: 1px;
+    --pot-tooltip-size-padding: var(--pot-spacer-1-200);
+    --pot-tooltip-size-shadow: var(--pot-shadow-200);
+    --pot-tooltip-size-text: var(--pot-font-size-200);
+}
+
+.pot-tooltip._size-small {
+    --pot-tooltip-size-border: 1px;
+    --pot-tooltip-size-padding: var(--pot-spacer-1-800);
+    --pot-tooltip-size-shadow: var(--pot-shadow-200);
+    --pot-tooltip-size-text: var(--pot-font-size-200);
+}
+
+.pot-tooltip._size-medium {
+    --pot-tooltip-size-border: 1px;
+    --pot-tooltip-size-padding: var(--pot-spacer-2-400);
+    --pot-tooltip-size-shadow: var(--pot-shadow-300);
+    --pot-tooltip-size-text: var(--pot-font-size-200);
+}
+
+.pot-tooltip._size-large {
+    --pot-tooltip-size-border: 1px;
+    --pot-tooltip-size-padding: var(--pot-spacer-3-200);
+    --pot-tooltip-size-shadow: var(--pot-shadow-300);
+    --pot-tooltip-size-text: var(--pot-font-size-200);
+}
+
+.pot-tooltip._radius-circle,
+.pot-tooltip._radius-large,
+.pot-tooltip._radius-medium,
+.pot-tooltip._radius-small,
+.pot-tooltip._radius-tiny,
+.pot-tooltip._radius-radius--8,
+.pot-tooltip._radius-radius--6,
+.pot-tooltip._radius-radius--4,
+.pot-tooltip._radius-radius--2 {
+    --pot-tooltip-radius: var(--radius);
+}
