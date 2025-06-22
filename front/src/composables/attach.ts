@@ -11,6 +11,7 @@ import { computed, ref } from 'vue';
 
 // Composables
 import { useSurrounding } from '@/composables/surrounding';
+import { useDebounce } from '@/composables/timer';
 
 // TODO: add arrow to popups
 const arrowSize = 16;
@@ -75,16 +76,16 @@ export function useAttach(options: IAttachOptions): IAttach {
     const currentSurrounding = ref<ISurroundingData[]>([]);
 
     const targetResizeObserver = new ResizeObserver(
-        getDebounceListener<[ResizeObserverEntry[]]>({
+        useDebounce<[ResizeObserverEntry[]]>({
             delay: 100,
-            action: async entries => {
+            immediateAction: async entries => {
                 if (targetRect.value === null) {
                     await updateTargetRect(entries[0].target);
                 } else {
                     isTargetResizing.value = true;
                 }
             },
-            debounceAction: async entries => {
+            action: async entries => {
                 if (!isTargetResizing.value) return;
 
                 isTargetResizing.value = false;
@@ -94,16 +95,16 @@ export function useAttach(options: IAttachOptions): IAttach {
     );
 
     const boxResizeObserver = new ResizeObserver(
-        getDebounceListener<[ResizeObserverEntry[]]>({
+        useDebounce<[ResizeObserverEntry[]]>({
             delay: 100,
-            action: async entries => {
+            immediateAction: async entries => {
                 if (boxRect.value === null) {
                     await updateBoxRect(entries[0].target);
                 } else {
                     isBoxResizing.value = true;
                 }
             },
-            debounceAction: async entries => {
+            action: async entries => {
                 if (!isBoxResizing.value) return;
 
                 isBoxResizing.value = false;
@@ -214,10 +215,10 @@ export function useAttach(options: IAttachOptions): IAttach {
     }
 
     function handleSurroundingResize(): () => void {
-        return getDebounceListener({
+        return useDebounce({
             delay: 200,
-            action: () => (isSurroundingResizing.value = true),
-            debounceAction: () => {
+            immediateAction: () => (isSurroundingResizing.value = true),
+            action: () => {
                 if (!isSurroundingResizing.value) return;
                 isSurroundingResizing.value = false;
                 onResize();
@@ -226,18 +227,18 @@ export function useAttach(options: IAttachOptions): IAttach {
     }
 
     function handleSurroundingScroll(): (data: ISurroundingData) => void {
-        return getDebounceListener<[ISurroundingData]>({
+        return useDebounce<[ISurroundingData]>({
             delay: 100,
-            debounceAction: () => {
-                if (!isScrolling.value) return;
-                isScrolling.value = false;
-            },
-            action: data => {
+            immediateAction: data => {
                 isScrolling.value = true;
 
                 if (data.target === window || data.target instanceof Element) {
                     onScroll(data);
                 }
+            },
+            action: () => {
+                if (!isScrolling.value) return;
+                isScrolling.value = false;
             },
         });
     }
@@ -465,23 +466,4 @@ async function getElementBounding(element: Element): Promise<DOMRect | null> {
         });
         observer.observe(element);
     });
-}
-
-/** Get debounced listener */
-function getDebounceListener<T extends Array<unknown>>(debounceOptions: {
-    action: (...args: T) => unknown;
-    debounceAction: (...args: T) => unknown;
-    delay: number;
-}): (...args: T) => void {
-    let timeoutId: number;
-
-    return (...args: T) => {
-        clearTimeout(timeoutId);
-        debounceOptions.action(...args);
-
-        timeoutId = setTimeout(
-            () => debounceOptions.debounceAction(...args),
-            debounceOptions.delay,
-        );
-    };
 }

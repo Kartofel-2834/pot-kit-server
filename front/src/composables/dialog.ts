@@ -98,6 +98,8 @@ function generateDialogId(): Symbol {
 
 /** Handle clickoutside event */
 function handleClick(event: MouseEvent) {
+    if (!dialogsQueue.value.length) return;
+
     const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('clickoutside'));
     const dialogManager = clickTriggerDialogs[clickTriggerDialogs.length - 1] ?? null;
 
@@ -120,7 +122,7 @@ function handleClick(event: MouseEvent) {
 
 /** Handle keydown event */
 function handleKeydown(event: KeyboardEvent) {
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || !dialogsQueue.value.length) return;
 
     const escapeTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('escape'));
     const dialogManager = escapeTriggerDialogs[escapeTriggerDialogs.length - 1] ?? null;
