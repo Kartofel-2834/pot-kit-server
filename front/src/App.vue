@@ -16,6 +16,7 @@ import PotTooltip from './components/ui/PotTooltip.vue';
 // Composables
 import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
 import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
+import PotDrawer from './components/ui/PotDrawer.vue';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
@@ -38,37 +39,42 @@ onUnmounted(() => {
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotPopover v-model="isVisible">
-            <template #target>
-                <PotButton
-                    size="large"
-                    color="pot"
-                    @click="isVisible = !isVisible"
-                >
-                    Test
-                </PotButton>
-            </template>
-
-            Kamal
-        </PotPopover>
-
-        <PotTooltip
-            size="medium"
-            color="pot"
-            enterable
-            @trigger:open.prevent
+        <PotDrawer
+            v-model="isVisible"
+            :position="['left', 'right', 'bottom', 'top']"
         >
-            <template #target>
-                <PotButton
+            <div
+                style="
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 4rem;
+                    height: 100%;
+                    width: 100%;
+                "
+            >
+                <PotTooltip
                     color="pot"
-                    size="medium"
+                    size="large"
+                    text="lox"
                 >
-                    Test
-                </PotButton>
-            </template>
+                    <PotButton
+                        color="pot"
+                        size="large"
+                    >
+                        Jabuk
+                    </PotButton>
+                </PotTooltip>
+            </div>
+        </PotDrawer>
 
-            Test
-        </PotTooltip>
+        <PotButton
+            color="pot"
+            size="medium"
+            @click="isVisible = !isVisible"
+        >
+            TOGGLE
+        </PotButton>
     </main>
 </template>
 

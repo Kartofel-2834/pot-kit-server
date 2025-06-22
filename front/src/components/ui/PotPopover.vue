@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Types
-import type { IPotPopoverProps } from '@/types/components/popover';
+import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 
 // Constants
@@ -29,6 +29,7 @@ const $props = withDefaults(
         persistent: false,
         sticky: true,
         to: 'body',
+        transition: 'pot-popover-transition',
     },
 );
 
@@ -55,6 +56,8 @@ const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
 onUnmounted(() => $dialog.terminate());
 
 // Computed
+const teleportTo = computed(() => $props.to ?? 'body');
+
 const properties = computed(() => {
     return useDeviceProperties(
         {
@@ -91,11 +94,11 @@ function close() {
 }
 
 // Exports
-defineExpose({
+defineExpose<IPotPopoverExpose>({
     isOpen: readonly($dialog.isOpen),
     x: attachTarget.value?.x,
     y: attachTarget.value?.y,
-    target: attachTarget.value?.target,
+    target: attachTarget.value?.target as Element,
     popover: box.value,
     open: () => $dialog.open(),
     close: () => $dialog.close(),
@@ -103,26 +106,30 @@ defineExpose({
 </script>
 
 <template>
-    <Transition name="pot-popover-transition">
-        <div
-            ref="box"
-            v-if="$dialog.isOpen.value"
-            v-bind="$attrs"
-            :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-            :class="['pot-popover', classList]"
-            :style="currentStyles"
-            :pot-dialog-id="$dialog.id.description"
-        >
-            <slot />
-        </div>
-    </Transition>
+    <Teleport
+        :to="teleportTo"
+        :disabled="!to"
+    >
+        <Transition :name="transition">
+            <div
+                ref="box"
+                v-if="$dialog.isOpen.value"
+                v-bind="$attrs"
+                :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+                :class="['pot-popover', classList]"
+                :style="currentStyles"
+                :pot-dialog-id="$dialog.id.description"
+            >
+                <slot />
+            </div>
+        </Transition>
+    </Teleport>
 
     <PotAttachTarget
         ref="attachTarget"
         :box="box"
         :position="position"
         :target="target"
-        :to="to"
         :sticky="sticky"
         :persistent="persistent"
         :edge-margin="edgeMargin"

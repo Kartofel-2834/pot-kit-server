@@ -1,6 +1,6 @@
 // Types
-import type { RendererElement } from 'vue';
-import type { EPotAttachedBoxPosition } from './attached-box';
+import type { Ref, RendererElement } from 'vue';
+import type { EPotAttachedBoxPosition } from '@/types/components/attached-box';
 
 export interface IPotPopoverProps<
     TDevice extends string = string,
@@ -46,4 +46,17 @@ export interface IPotPopoverProps<
 
     /** Breakpoints names for responsive design */
     devices?: TDevice[];
+
+    /** Popover transition name */
+    transition?: string;
+}
+
+export interface IPotPopoverExpose {
+    isOpen: Readonly<Ref<boolean>>;
+    x?: number;
+    y?: number;
+    target?: Element | null;
+    popover?: Element | null;
+    open: () => void;
+    close: () => void;
 }

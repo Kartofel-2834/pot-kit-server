@@ -1,6 +1,3 @@
-// Types
-import type { RendererElement } from 'vue';
-
 export const POT_ATTACHED_BOX_POSITION = {
     TOP_START: 'top-start',
     TOP_END: 'top-end',
@@ -40,9 +37,6 @@ export interface IPotAttachedBoxProps {
 
     /** Sticky box that will follow target */
     sticky?: boolean;
-
-    /** Place where box will be mounted */
-    to?: string | RendererElement | null;
 
     /** Target element */
     target?: Element | null;

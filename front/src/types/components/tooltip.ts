@@ -1,5 +1,5 @@
 // Types
-import type { RendererElement } from 'vue';
+import type { Ref, RendererElement } from 'vue';
 import type { EPotAttachedBoxPosition } from './attached-box';
 
 export interface IPotTooltipProps<
@@ -10,6 +10,9 @@ export interface IPotTooltipProps<
 > {
     /** Tooltip text (may be replaced by slot) */
     text?: string;
+
+    /** Place where tooltip will be mounted */
+    to?: string | RendererElement | null;
 
     /** Target events names, that will open tooltip */
     openTriggers?: string[];
@@ -29,6 +32,9 @@ export interface IPotTooltipProps<
     /** Tooltip will not close, when mouse is over it */
     enterable?: boolean;
 
+    /** Tooltip transition name */
+    transition?: string;
+
     /* ------------------------------------------------------------ */
 
     /** Tooltip position that relative to target */
@@ -46,9 +52,6 @@ export interface IPotTooltipProps<
     /** Sticky tooltip that will follow target */
     sticky?: boolean;
 
-    /** Place where tooltip will be mounted */
-    to?: string | RendererElement | null;
-
     /** Target element */
     target?: Element | null;
 
@@ -63,4 +66,17 @@ export interface IPotTooltipProps<
 
     /** Breakpoints names for responsive design */
     devices?: TDevice[];
+}
+
+export interface IPotTooltipExpose {
+    isOpen: Readonly<Ref<boolean>>;
+    target?: Element | null;
+    tooltip?: Element | null;
+    open: () => void;
+    close: () => void;
+    delayedOpen: (event: Event) => number;
+    delayedClose: (event: Event) => number;
+    pause: () => void;
+    resume: () => void;
+    clearDelayedAction: () => void;
 }

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Types
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
-import type { IPotTooltipProps } from '@/types/components/tooltip';
+import type { IPotTooltipExpose, IPotTooltipProps } from '@/types/components/tooltip';
 
 // Vue
 import { computed, onUnmounted, readonly, ref, watch } from 'vue';
@@ -21,12 +21,14 @@ const $props = withDefaults(
     defineProps<IPotTooltipProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
     {
         text: '',
+        to: 'body',
         openDelay: 0,
         closeDelay: 200,
         autoCloseDelay: 0,
         openTriggers: () => ['mouseover'],
         closeTriggers: () => ['mouseout'],
         enterable: false,
+        transition: 'pot-tooltip-transition',
     },
 );
 
@@ -68,6 +70,8 @@ onUnmounted(() => {
 });
 
 // Computed
+const teleportTo = computed(() => $props.to ?? 'body');
+
 const properties = computed(() => {
     return useDeviceProperties(
         {
@@ -229,9 +233,9 @@ function terminateBoxListeners(element: Element) {
 }
 
 // Exports
-defineExpose({
+defineExpose<IPotTooltipExpose>({
     isOpen: readonly(isOpen),
-    target: attachTarget.value?.target,
+    target: attachTarget.value?.target as Element,
     tooltip: box.value,
     open,
     close,
@@ -244,19 +248,26 @@ defineExpose({
 </script>
 
 <template>
-    <Transition name="pot-tooltip-transition">
-        <div
-            ref="box"
-            v-if="$dialog.isOpen.value"
-            v-bind="$attrs"
-            :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-            :class="['pot-tooltip', classList]"
-            :style="currentStyles"
-            :pot-dialog-id="$dialog.id.description"
-        >
-            <slot />
-        </div>
-    </Transition>
+    <Teleport
+        :to="teleportTo"
+        :disabled="!to"
+    >
+        <Transition :name="transition">
+            <div
+                ref="box"
+                v-if="$dialog.isOpen.value"
+                v-bind="$attrs"
+                :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+                :class="['pot-tooltip', classList]"
+                :style="currentStyles"
+                :pot-dialog-id="$dialog.id.description"
+            >
+                <slot name="content">
+                    {{ text }}
+                </slot>
+            </div>
+        </Transition>
+    </Teleport>
 
     <PotAttachTarget
         ref="attachTarget"
@@ -269,7 +280,7 @@ defineExpose({
         :edge-margin="edgeMargin"
         :nudge="nudge"
     >
-        <slot name="target" />
+        <slot />
     </PotAttachTarget>
 </template>
 

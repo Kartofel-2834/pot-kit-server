@@ -21,7 +21,6 @@ const $props = withDefaults(defineProps<IPotAttachedBoxProps>(), {
     edgeMargin: 10,
     persistent: false,
     sticky: true,
-    to: 'body',
 });
 
 const $emit = defineEmits<{
@@ -34,9 +33,6 @@ const $attach = useAttach($props);
 // Data
 const target = ref<Element | null>(null);
 const targetKey = ref<Symbol | null>(null);
-
-const box = ref<Element | null>(null);
-const boxKey = ref<Symbol | null>(null);
 
 // Lifecycle
 onUnmounted(() => $attach.terminate());
