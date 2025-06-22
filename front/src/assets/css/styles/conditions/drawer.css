@@ -1,0 +1,11 @@
+/* CONDITION:base - START */
+.pot-drawer {
+    --pot-drawer-color-base-background: initial;
+    --pot-drawer-color-base-border: initial;
+}
+
+.pot-drawer .pot-drawer__container {
+    border-color: var(--pot-button-color-base-border);
+    background-color: var(--pot-drawer-color-base-background);
+}
+/* CONDITION:base - END */

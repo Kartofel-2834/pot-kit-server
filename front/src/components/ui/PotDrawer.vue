@@ -44,6 +44,8 @@ const properties = computed(() => {
     return useDeviceProperties(
         {
             position: $props.position,
+            color: $props.color,
+            radius: $props.radius,
         },
         $deviceIs.device.value,
         $props.devices,
@@ -104,7 +106,6 @@ function close() {
 
 .pot-drawer__container {
     position: absolute;
-    background: white;
 }
 
 .pot-drawer__overlay {
@@ -173,3 +174,9 @@ function close() {
     transform: var(--pot-drawer-position-transform);
 }
 </style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/drawer.css" />
+<style src="@/assets/css/styles/conditions/drawer.css" />
+<style src="@/assets/css/styles/configuration/drawer.css" />
+<!-- Styles - END -->

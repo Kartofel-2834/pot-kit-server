@@ -1,0 +1,16 @@
+.pot-drawer._color-pot {
+    --pot-drawer-color-base-background: var(--pot-base-0);
+    --pot-drawer-color-base-border: var(--pot-base-400);
+}
+
+.pot-drawer._radius-circle,
+.pot-drawer._radius-large,
+.pot-drawer._radius-medium,
+.pot-drawer._radius-small,
+.pot-drawer._radius-tiny,
+.pot-drawer._radius-radius--8,
+.pot-drawer._radius-radius--6,
+.pot-drawer._radius-radius--4,
+.pot-drawer._radius-radius--2 {
+    --pot-drawer-radius: var(--radius);
+}

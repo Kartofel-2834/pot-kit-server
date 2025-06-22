@@ -42,6 +42,8 @@ onUnmounted(() => {
         <PotDrawer
             v-model="isVisible"
             :position="['left', 'right', 'bottom', 'top']"
+            radius="large"
+            color="pot"
         >
             <div
                 style="
