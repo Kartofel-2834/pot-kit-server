@@ -85,8 +85,8 @@ export function useDialog(options: IDialogOptions): IDialog {
         close: () => options.close(),
         open: () => options.open(),
         terminate: () => {
-            options.close();
             unwatch();
+            dialogsQueue.value = dialogsQueue.value.filter(v => v.id !== newDialogId);
         },
     };
 }

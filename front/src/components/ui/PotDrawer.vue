@@ -7,7 +7,7 @@ import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/draw
 import { POT_DRAWER_POSITION } from '@/types/components/drawer';
 
 // Vue
-import { computed, readonly } from 'vue';
+import { computed, onUnmounted, readonly } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -18,8 +18,9 @@ import { useDialog, useDialogZIndex } from '@/composables/dialog';
 const $props = withDefaults(defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotRadius>>(), {
     visible: undefined,
     modelValue: undefined,
-    position: POT_DRAWER_POSITION.RIGHT,
+    position: POT_DRAWER_POSITION.LEFT,
     to: 'body',
+    noOverlay: false,
 });
 
 const $emit = defineEmits<{
@@ -29,13 +30,16 @@ const $emit = defineEmits<{
 }>();
 
 const $dialog = useDialog({
-    triggers: ['clickoutside', 'escape'],
+    triggers: ['escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
     close,
     open,
 });
 
 const $deviceIs = useDeviceIs();
+
+// Lifecycle
+onUnmounted(() => $dialog.terminate());
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
@@ -90,6 +94,7 @@ defineExpose<IPotDrawerExports>({
                 :style="currentStyles"
             >
                 <div
+                    v-if="!noOverlay"
                     class="pot-drawer__overlay"
                     @click="close"
                 />
@@ -105,24 +110,22 @@ defineExpose<IPotDrawerExports>({
 <style>
 .pot-drawer {
     position: fixed;
+}
+
+.pot-drawer__container {
+    position: relative;
+}
+
+.pot-drawer__overlay {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
 }
 
-.pot-drawer__container {
-    position: absolute;
-}
-
-.pot-drawer__overlay {
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-/* --- Positions --- */
-.pot-drawer._position-left .pot-drawer__container {
+/* --- Position - Left --- */
+.pot-drawer._position-left {
     --pot-drawer-position-transform: translateX(-100%);
 
     top: 0;
@@ -130,7 +133,12 @@ defineExpose<IPotDrawerExports>({
     height: 100%;
 }
 
-.pot-drawer._position-right .pot-drawer__container {
+.pot-drawer._position-left .pot-drawer__container {
+    height: 100%;
+}
+
+/* --- Position - Right --- */
+.pot-drawer._position-right {
     --pot-drawer-position-transform: translateX(100%);
 
     top: 0;
@@ -138,7 +146,12 @@ defineExpose<IPotDrawerExports>({
     height: 100%;
 }
 
-.pot-drawer._position-top .pot-drawer__container {
+.pot-drawer._position-right .pot-drawer__container {
+    height: 100%;
+}
+
+/* --- Position - Top --- */
+.pot-drawer._position-top {
     --pot-drawer-position-transform: translateY(-100%);
 
     top: 0;
@@ -146,11 +159,20 @@ defineExpose<IPotDrawerExports>({
     width: 100%;
 }
 
-.pot-drawer._position-bottom .pot-drawer__container {
+.pot-drawer._position-top .pot-drawer__container {
+    width: 100%;
+}
+
+/* --- Position - Bottom --- */
+.pot-drawer._position-bottom {
     --pot-drawer-position-transform: translateY(100%);
 
     bottom: 0;
     left: 0;
+    width: 100%;
+}
+
+.pot-drawer._position-bottom .pot-drawer__container {
     width: 100%;
 }
 

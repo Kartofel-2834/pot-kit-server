@@ -2,10 +2,15 @@
 .pot-drawer {
     --pot-drawer-color-base-background: initial;
     --pot-drawer-color-base-border: initial;
+    --pot-drawer-color-base-overlay: rgba(0, 0, 0, 0.3);
 }
 
-.pot-drawer .pot-drawer__container {
+.pot-drawer__container {
     border-color: var(--pot-button-color-base-border);
     background-color: var(--pot-drawer-color-base-background);
+}
+
+.pot-drawer__overlay {
+    background-color: var(--pot-drawer-color-base-overlay);
 }
 /* CONDITION:base - END */

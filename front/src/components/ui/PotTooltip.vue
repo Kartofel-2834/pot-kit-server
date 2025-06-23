@@ -60,6 +60,8 @@ const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: n
 
 // Lifecycle
 onUnmounted(() => {
+    $dialog.terminate();
+
     if (attachTarget.value?.target) {
         terminateTargetTriggers(attachTarget.value.target as Element);
     }

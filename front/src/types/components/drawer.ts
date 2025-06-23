@@ -27,6 +27,9 @@ export interface IPotDrawerProps<
     /** Drawer position */
     position?: EPotDrawerPosition | EPotDrawerPosition[] | null;
 
+    /** Drawer will not have overlay */
+    noOverlay?: boolean;
+
     /** Drawer color */
     color?: TColor | TColor[] | null;
 

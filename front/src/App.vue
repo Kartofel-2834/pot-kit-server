@@ -52,7 +52,6 @@ onUnmounted(() => {
                     align-items: center;
                     padding: 4rem;
                     height: 100%;
-                    width: 100%;
                 "
             >
                 <PotTooltip
