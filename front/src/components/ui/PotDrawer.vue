@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 // Types
 import type { EPotColor, EPotDevice, EPotRadius } from '@/types';
-import type { IPotDrawerProps } from '@/types/components/drawer';
+import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
 
 // Constants
 import { POT_DRAWER_POSITION } from '@/types/components/drawer';
 
 // Vue
-import { computed } from 'vue';
+import { computed, readonly } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -31,8 +31,8 @@ const $emit = defineEmits<{
 const $dialog = useDialog({
     triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    close: close,
-    open: open,
+    close,
+    open,
 });
 
 const $deviceIs = useDeviceIs();
@@ -68,6 +68,13 @@ function close() {
     $emit('close');
     $emit('update:modelValue', false);
 }
+
+// Exports
+defineExpose<IPotDrawerExports>({
+    isOpen: readonly($dialog.isOpen),
+    open,
+    close,
+});
 </script>
 
 <template>

@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 // Types
-import type { VNode } from 'vue';
-import type { IPotAttachedBoxProps } from '@/types/components/attached-box';
+import type { Ref, VNode } from 'vue';
+import type {
+    IPotAttachTargetExpose,
+    IPotAttachTargetProps,
+} from '@/types/components/attach-target';
 
 // Constants
-import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attached-box';
+import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
 
 // Vue
 import { cloneVNode, computed, isVNode, onUnmounted, readonly, ref, watch } from 'vue';
@@ -15,18 +18,13 @@ import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
 // Composables
 import { useAttach } from '@/composables/attach';
 
-const $props = withDefaults(defineProps<IPotAttachedBoxProps>(), {
+const $props = withDefaults(defineProps<IPotAttachTargetProps>(), {
     position: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
     nudge: 10,
     edgeMargin: 10,
     persistent: false,
     sticky: true,
 });
-
-const $emit = defineEmits<{
-    open: [];
-    close: [];
-}>();
 
 const $attach = useAttach($props);
 
@@ -58,14 +56,6 @@ watch(
 );
 
 // Methods
-function open() {
-    $emit('open');
-}
-
-function close() {
-    $emit('close');
-}
-
 function findTarget(vnode: VNode): VNode | null {
     if (!isVNode(vnode)) return vnode;
 
@@ -91,12 +81,10 @@ function findTarget(vnode: VNode): VNode | null {
 }
 
 // Exports
-defineExpose({
-    x: readonly($attach.x),
-    y: readonly($attach.y),
-    target: readonly(currentTarget),
-    open,
-    close,
+defineExpose<IPotAttachTargetExpose>({
+    boxX: readonly($attach.x),
+    boxY: readonly($attach.y),
+    target: readonly(currentTarget) as Readonly<Ref<Element | null>>,
 });
 </script>
 

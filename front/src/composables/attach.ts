@@ -1,10 +1,10 @@
 // Types
-import type { EPotAttachedBoxPosition } from '@/types/components/attached-box';
+import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
 import type { IAttach, IAttachOptions } from '@/types/composables/attach';
 import type { ISurroundingData } from '@/types/composables/surrounding';
 
 // Constants
-import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attached-box';
+import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
 
 // Vue
 import { computed, ref } from 'vue';

@@ -1,6 +1,6 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
-import type { EPotAttachedBoxPosition } from './attached-box';
+import type { EPotAttachedBoxPosition } from './attach-target';
 
 export interface IPotTooltipProps<
     TDevice extends string = string,
@@ -69,14 +69,39 @@ export interface IPotTooltipProps<
 }
 
 export interface IPotTooltipExpose {
+    /** Tooltip visibility flag */
     isOpen: Readonly<Ref<boolean>>;
+
+    /** Tooltip left-top corner X coordinate */
+    x?: number;
+
+    /** Tooltip left-top corner Y coordinate */
+    y?: number;
+
+    /** Target element */
     target?: Element | null;
+
+    /** Tooltip element */
     tooltip?: Element | null;
+
+    /** Open tooltip */
     open: () => void;
+
+    /** Close tooltip */
     close: () => void;
+
+    /** Tooltip will open after openDelay prop value in milliseconds, if delay greater than zero */
     delayedOpen: (event: Event) => number;
+
+    /** Tooltip will open after closeDelay prop value in milliseconds, if delay greater than zero */
     delayedClose: (event: Event) => number;
+
+    /** Pause delayed tooltip open action */
     pause: () => void;
+
+    /** Resume delayed tooltip open action */
     resume: () => void;
+
+    /** Clear delayed tooltip open action */
     clearDelayedAction: () => void;
 }

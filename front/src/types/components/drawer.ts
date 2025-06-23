@@ -1,5 +1,5 @@
 // Types
-import type { RendererElement } from 'vue';
+import type { Ref, RendererElement } from 'vue';
 
 export const POT_DRAWER_POSITION = {
     TOP: 'top',
@@ -35,4 +35,15 @@ export interface IPotDrawerProps<
 
     /** Breakpoints names for responsive design */
     devices?: TDevice[];
+}
+
+export interface IPotDrawerExports {
+    /** Drawer visibility flag */
+    isOpen: Readonly<Ref<boolean>>;
+
+    /** Open drawer */
+    open: () => void;
+
+    /** Close drawer */
+    close: () => void;
 }

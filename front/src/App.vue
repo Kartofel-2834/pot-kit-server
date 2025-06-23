@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Types
-import type { EPotAttachedBoxPosition } from './types/components/attached-box';
+import type { EPotAttachedBoxPosition } from './types/components/attach-target';
 
 // Constants
-import { POT_ATTACHED_BOX_POSITION } from './types/components/attached-box';
+import { POT_ATTACHED_BOX_POSITION } from './types/components/attach-target';
 
 // Vue
 import { onMounted, onUnmounted, ref } from 'vue';

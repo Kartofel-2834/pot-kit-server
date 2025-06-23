@@ -1,3 +1,5 @@
+import type { Ref } from 'vue';
+
 export const POT_ATTACHED_BOX_POSITION = {
     TOP_START: 'top-start',
     TOP_END: 'top-end',
@@ -19,7 +21,7 @@ export const POT_ATTACHED_BOX_POSITION = {
 export type EPotAttachedBoxPosition =
     (typeof POT_ATTACHED_BOX_POSITION)[keyof typeof POT_ATTACHED_BOX_POSITION];
 
-export interface IPotAttachedBoxProps {
+export interface IPotAttachTargetProps {
     /** Box element */
     box: Element | null;
 
@@ -40,4 +42,15 @@ export interface IPotAttachedBoxProps {
 
     /** Target element */
     target?: Element | null;
+}
+
+export interface IPotAttachTargetExpose {
+    /** Box top-left corner X coordinate on screen */
+    boxX: Readonly<Ref<number>>;
+
+    /** Box top-left corner Y coordinate on screen */
+    boxY: Readonly<Ref<number>>;
+
+    /** Target element */
+    target: Readonly<Ref<Element | null>>;
 }

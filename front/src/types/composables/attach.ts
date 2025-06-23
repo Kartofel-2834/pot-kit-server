@@ -1,6 +1,6 @@
 // Types
 import type { ComputedRef, Ref } from 'vue';
-import type { EPotAttachedBoxPosition } from '../components/attached-box';
+import type { EPotAttachedBoxPosition } from '../components/attach-target';
 
 export interface IAttachOptions {
     /** Position of box relative to the target */

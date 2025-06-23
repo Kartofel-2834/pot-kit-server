@@ -4,7 +4,7 @@ import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/pop
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 
 // Constants
-import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attached-box';
+import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
 
 // Vue
 import { computed, onUnmounted, readonly, ref } from 'vue';
@@ -73,8 +73,8 @@ const properties = computed(() => {
 const classList = computed(() => useClassList({ ...properties.value }));
 
 const currentStyles = computed(() => {
-    const x = attachTarget.value?.x ?? 0;
-    const y = attachTarget.value?.y ?? 0;
+    const x = attachTarget.value?.boxX ?? 0;
+    const y = attachTarget.value?.boxY ?? 0;
 
     return {
         zIndex: useDialogZIndex($dialog),
@@ -96,8 +96,8 @@ function close() {
 // Exports
 defineExpose<IPotPopoverExpose>({
     isOpen: readonly($dialog.isOpen),
-    x: attachTarget.value?.x,
-    y: attachTarget.value?.y,
+    x: attachTarget.value?.boxX,
+    y: attachTarget.value?.boxY,
     target: attachTarget.value?.target as Element,
     popover: box.value,
     open: () => $dialog.open(),

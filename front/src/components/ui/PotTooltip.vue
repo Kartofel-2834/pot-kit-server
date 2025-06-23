@@ -87,8 +87,8 @@ const properties = computed(() => {
 const classList = computed(() => useClassList({ ...properties.value }));
 
 const currentStyles = computed(() => {
-    const x = attachTarget.value?.x ?? 0;
-    const y = attachTarget.value?.y ?? 0;
+    const x = attachTarget.value?.boxX ?? 0;
+    const y = attachTarget.value?.boxY ?? 0;
 
     return {
         zIndex: useDialogZIndex($dialog),
@@ -235,6 +235,8 @@ function terminateBoxListeners(element: Element) {
 // Exports
 defineExpose<IPotTooltipExpose>({
     isOpen: readonly(isOpen),
+    x: attachTarget.value?.boxX,
+    y: attachTarget.value?.boxY,
     target: attachTarget.value?.target as Element,
     tooltip: box.value,
     open,
