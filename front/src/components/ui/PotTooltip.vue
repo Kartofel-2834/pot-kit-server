@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 // Types
-import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
+import type { Ref } from 'vue';
 import type { IPotTooltipExpose, IPotTooltipProps } from '@/types/components/tooltip';
+import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
+import type { EPotDialogLayers } from '@/types/composables/dialog';
+
+// Constants
+import { POT_DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, onUnmounted, readonly, ref, watch } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
 
 // Composables
-import { useDialog, useDialogZIndex } from '@/composables/dialog';
+import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDeviceIs } from '@/composables/device-is';
 import { useClassList } from '@/composables/class-list';
@@ -16,6 +21,9 @@ import { useClassList } from '@/composables/class-list';
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
 
 const isOpen = ref<boolean>(false);
+
+const $layer = POT_DIALOG_LAYERS.POPOVER as EPotDialogLayers;
+const $parentLayer = inject<Ref<EPotDialogLayers>>('pot-dialog-layer', ref(POT_DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(
     defineProps<IPotTooltipProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
@@ -35,8 +43,8 @@ const $props = withDefaults(
 const $emit = defineEmits<{
     open: [];
     close: [];
-    'trigger:open': [event: Event];
-    'trigger:close': [event: Event];
+    'trigger:open': [event: Event, trigger: string];
+    'trigger:close': [event: Event, trigger: string];
 }>();
 
 const $deviceIs = useDeviceIs();
@@ -44,6 +52,7 @@ const $deviceIs = useDeviceIs();
 const $dialog = useDialog({
     triggers: ['escape'],
     isOpen: computed(() => isOpen.value),
+    layer: computed(() => useDialogLayer($layer, $parentLayer?.value)),
     close: close,
     open: open,
 });
@@ -146,21 +155,23 @@ function close() {
     $emit('close');
 }
 
-function delayedOpen(event: Event): number {
+function delayedOpen(event: Event, trigger: string): number {
     return setDelayedAction(() => {
         if (isOpen.value) return;
+        console.log('open tooltip trigger', trigger, $props.closeDelay);
 
-        $emit('trigger:open', event);
+        $emit('trigger:open', event, trigger);
         open();
     }, $props.openDelay);
 }
 
-function delayedClose(event: Event): number {
+function delayedClose(event: Event, trigger: string): number {
     return setDelayedAction(() => {
         if (!isOpen.value) return;
 
-        $emit('trigger:close', event);
+        $emit('trigger:close', event, trigger);
         close();
+        console.log('close tooltip trigger', trigger, $props.closeDelay);
     }, $props.closeDelay);
 }
 
@@ -209,15 +220,23 @@ function setDelayedAction(action: Function | null, delay: number): number {
 function setupTargetTriggers(element: Element) {
     if (!element) return;
 
-    $props.closeTriggers?.forEach?.(trigger => element.addEventListener(trigger, delayedClose));
-    $props.openTriggers?.forEach?.(trigger => element.addEventListener(trigger, delayedOpen));
+    $props.closeTriggers?.forEach?.(trigger =>
+        element.addEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
+    );
+    $props.openTriggers?.forEach?.(trigger =>
+        element.addEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
+    );
 }
 
 function terminateTargetTriggers(element: Element) {
     if (!element) return;
 
-    $props.closeTriggers?.forEach?.(trigger => element.removeEventListener(trigger, delayedClose));
-    $props.openTriggers?.forEach?.(trigger => element.removeEventListener(trigger, delayedOpen));
+    $props.closeTriggers?.forEach?.(trigger =>
+        element.removeEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
+    );
+    $props.openTriggers?.forEach?.(trigger =>
+        element.removeEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
+    );
 }
 
 function setupBoxListeners(element: Element) {
@@ -235,6 +254,8 @@ function terminateBoxListeners(element: Element) {
 }
 
 // Exports
+provide('pot-dialog-layer', $dialog.layer);
+
 defineExpose<IPotTooltipExpose>({
     isOpen: readonly(isOpen),
     x: attachTarget.value?.boxX,

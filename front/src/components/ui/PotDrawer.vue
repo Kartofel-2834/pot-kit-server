@@ -1,19 +1,25 @@
 <script lang="ts" setup>
 // Types
-import type { EPotColor, EPotDevice, EPotRadius } from '@/types';
+import type { Ref } from 'vue';
 import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
+import type { EPotColor, EPotDevice, EPotRadius } from '@/types';
+import type { EPotDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { POT_DRAWER_POSITION } from '@/types/components/drawer';
+import { POT_DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, onUnmounted, readonly } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
-import { useDialog, useDialogZIndex } from '@/composables/dialog';
+import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+
+const $layer = POT_DIALOG_LAYERS.DIALOG as EPotDialogLayers;
+const $parentLayer = inject<Ref<EPotDialogLayers>>('pot-dialog-layer', ref(POT_DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotRadius>>(), {
     visible: undefined,
@@ -32,6 +38,7 @@ const $emit = defineEmits<{
 const $dialog = useDialog({
     triggers: ['escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
     close,
     open,
 });
@@ -74,6 +81,8 @@ function close() {
 }
 
 // Exports
+provide('pot-dialog-layer', $dialog.layer);
+
 defineExpose<IPotDrawerExports>({
     isOpen: readonly($dialog.isOpen),
     open,
@@ -114,6 +123,7 @@ defineExpose<IPotDrawerExports>({
 
 .pot-drawer__container {
     position: relative;
+    overflow: auto;
 }
 
 .pot-drawer__overlay {
@@ -122,6 +132,8 @@ defineExpose<IPotDrawerExports>({
     left: 0;
     width: 100%;
     height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* --- Position - Left --- */

@@ -17,6 +17,7 @@ import PotTooltip from './components/ui/PotTooltip.vue';
 import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
 import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
 import PotDrawer from './components/ui/PotDrawer.vue';
+import PotDialog from './components/ui/PotDialog.vue';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
@@ -41,7 +42,38 @@ onUnmounted(() => {
     >
         <PotDrawer
             v-model="isVisible"
-            :position="['left', 'right', 'bottom', 'top']"
+            position="left"
+            radius="large"
+            color="pot"
+        >
+            <div
+                style="
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 4rem;
+                    height: 100%;
+                "
+            >
+                <PotTooltip
+                    color="pot"
+                    size="large"
+                    text="lox"
+                    enterable
+                >
+                    <PotButton
+                        color="pot"
+                        size="large"
+                    >
+                        Jabuk
+                    </PotButton>
+                </PotTooltip>
+            </div>
+        </PotDrawer>
+
+        <!-- <PotDialog
+            v-model="isVisible"
+            position="center"
             radius="large"
             color="pot"
         >
@@ -67,7 +99,7 @@ onUnmounted(() => {
                     </PotButton>
                 </PotTooltip>
             </div>
-        </PotDrawer>
+        </PotDialog> -->
 
         <PotButton
             color="pot"

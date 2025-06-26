@@ -91,10 +91,10 @@ export interface IPotTooltipExpose {
     close: () => void;
 
     /** Tooltip will open after openDelay prop value in milliseconds, if delay greater than zero */
-    delayedOpen: (event: Event) => number;
+    delayedOpen: (event: Event, trigger: string) => number;
 
     /** Tooltip will open after closeDelay prop value in milliseconds, if delay greater than zero */
-    delayedClose: (event: Event) => number;
+    delayedClose: (event: Event, trigger: string) => number;
 
     /** Pause delayed tooltip open action */
     pause: () => void;

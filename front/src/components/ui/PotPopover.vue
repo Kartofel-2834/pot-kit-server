@@ -1,22 +1,28 @@
 <script lang="ts" setup>
 // Types
+import type { Ref } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
+import type { EPotDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
+import { POT_DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, onUnmounted, readonly, ref } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
 
 // Composables
-import { useDialog, useDialogZIndex } from '@/composables/dialog';
+import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useClassList } from '@/composables/class-list';
 
 // Components
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
+
+const $layer = POT_DIALOG_LAYERS.DIALOG as EPotDialogLayers;
+const $parentLayer = inject<Ref<EPotDialogLayers>>('pot-dialog-layer', ref(POT_DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(
     defineProps<IPotPopoverProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
@@ -42,6 +48,7 @@ const $emit = defineEmits<{
 const $dialog = useDialog({
     triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
     close: close,
     open: open,
 });
@@ -94,6 +101,8 @@ function close() {
 }
 
 // Exports
+provide('pot-dialog-layer', $dialog.layer);
+
 defineExpose<IPotPopoverExpose>({
     isOpen: readonly($dialog.isOpen),
     x: attachTarget.value?.boxX,
