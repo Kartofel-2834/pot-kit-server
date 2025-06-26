@@ -3,11 +3,11 @@
 import type { Ref } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
-import type { EPotDialogLayers } from '@/types/composables/dialog';
+import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
-import { POT_DIALOG_LAYERS } from '@/types/composables/dialog';
+import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
 import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
@@ -21,8 +21,8 @@ import { useClassList } from '@/composables/class-list';
 // Components
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
 
-const $layer = POT_DIALOG_LAYERS.DIALOG as EPotDialogLayers;
-const $parentLayer = inject<Ref<EPotDialogLayers>>('pot-dialog-layer', ref(POT_DIALOG_LAYERS.NONE));
+const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
+const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(
     defineProps<IPotPopoverProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),

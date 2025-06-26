@@ -3,6 +3,8 @@ import type { Ref, RendererElement } from 'vue';
 import type { EPotAttachedBoxPosition } from './attach-target';
 
 export interface IPotTooltipProps<
+    TOpenTriggers extends string[],
+    TCloseTriggers extends string[],
     TDevice extends string = string,
     TColor extends string = string,
     TSize extends string = string,
@@ -15,10 +17,14 @@ export interface IPotTooltipProps<
     to?: string | RendererElement | null;
 
     /** Target events names, that will open tooltip */
-    openTriggers?: string[];
+    openTriggers?: TOpenTriggers;
 
     /** Target events names, that will close tooltip */
-    closeTriggers?: string[];
+    closeTriggers?: TCloseTriggers;
+
+    openTriggersDelay?: { [key in TOpenTriggers[number]]?: number };
+
+    closeTriggersDelay?: { [key in TCloseTriggers[number]]?: number };
 
     /** Tooltip open delay in milliseconds */
     openDelay?: number;

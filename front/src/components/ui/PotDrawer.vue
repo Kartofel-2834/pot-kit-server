@@ -3,11 +3,11 @@
 import type { Ref } from 'vue';
 import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
 import type { EPotColor, EPotDevice, EPotRadius } from '@/types';
-import type { EPotDialogLayers } from '@/types/composables/dialog';
+import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { POT_DRAWER_POSITION } from '@/types/components/drawer';
-import { POT_DIALOG_LAYERS } from '@/types/composables/dialog';
+import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
 import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
@@ -18,8 +18,8 @@ import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 
-const $layer = POT_DIALOG_LAYERS.DIALOG as EPotDialogLayers;
-const $parentLayer = inject<Ref<EPotDialogLayers>>('pot-dialog-layer', ref(POT_DIALOG_LAYERS.NONE));
+const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
+const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotRadius>>(), {
     visible: undefined,

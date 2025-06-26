@@ -3,14 +3,14 @@ import type { Ref } from 'vue';
 
 export type TDialogTrigger = 'clickoutside' | 'escape';
 
-export const POT_DIALOG_LAYERS = {
+export const DIALOG_LAYERS = {
     NONE: 1,
     POPOVER: 500,
     DIALOG: 1000,
     TOAST: 2000,
 } as const;
 
-export type EPotDialogLayers = (typeof POT_DIALOG_LAYERS)[keyof typeof POT_DIALOG_LAYERS];
+export type EDialogLayers = (typeof DIALOG_LAYERS)[keyof typeof DIALOG_LAYERS];
 
 export interface IDialogsSetupOptions {
     /** Time after the dialog is created, after which triggers will start working */
@@ -22,7 +22,7 @@ export interface IDialogOptions {
     isOpen: Ref<boolean>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EPotDialogLayers>;
+    layer: Ref<EDialogLayers>;
 
     /** Close dialog */
     close: () => void;
@@ -45,7 +45,7 @@ export interface IDialog {
     isOpen: Ref<boolean>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EPotDialogLayers>;
+    layer: Ref<EDialogLayers>;
 
     /** Close dialog */
     close: () => void;
@@ -62,7 +62,7 @@ export interface IDialogManager {
     id: Symbol;
 
     /** Dialog layer z-index value */
-    layer: EPotDialogLayers;
+    layer: EDialogLayers;
 
     /** Open dialog */
     open: () => void;
@@ -73,8 +73,9 @@ export interface IDialogManager {
     /** Triggers that will close dialog */
     triggers: TDialogTrigger[];
 
-    /** The time in ms when the dialog state changed */
+    /** The time in ms when the dialog was created changed */
+    createdAt: number;
+
+    /** The time in ms when the dialog open state changed */
     updatedAt: number;
 }
-
-export type TDialogsQueue = Partial<Record<EPotDialogLayers, IDialogManager[]>>;

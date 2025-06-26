@@ -1,13 +1,14 @@
 // Types
-import {
-    POT_DIALOG_LAYERS,
-    type EPotDialogLayers,
-    type IDialog,
-    type IDialogManager,
-    type IDialogOptions,
-    type IDialogsSetupOptions,
-    type TDialogsQueue,
+import type {
+    EDialogLayers,
+    IDialog,
+    IDialogManager,
+    IDialogOptions,
+    IDialogsSetupOptions,
 } from '@/types/composables/dialog';
+
+// Constants
+import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
 import { ref, watch } from 'vue';
@@ -21,7 +22,7 @@ const defaultConfig: IDialogsSetupOptions = {
 
 const config = ref<IDialogsSetupOptions>({ ...defaultConfig });
 // const dialogsQueue = ref<TDialogsQueue>({});
-const layers = Object.values(POT_DIALOG_LAYERS).sort((a, b) => a - b);
+const layers = Object.values(DIALOG_LAYERS).sort((a, b) => a - b);
 
 const dialogsQueue = ref<IDialogManager[]>([]);
 
@@ -62,8 +63,8 @@ export function useDialogZIndex(dialog: IDialog): number {
     return zIndex < nextLayer ? zIndex : nextLayer;
 }
 
-export function useDialogLayer(...layers: Array<EPotDialogLayers | undefined>): EPotDialogLayers {
-    return Math.max(...layers.filter(v => v !== undefined)) as EPotDialogLayers;
+export function useDialogLayer(...layers: Array<EDialogLayers | undefined>): EDialogLayers {
+    return Math.max(...layers.filter(v => v !== undefined)) as EDialogLayers;
 }
 
 /** Composable for adding dialogs to global queue with triggers */
@@ -74,6 +75,7 @@ export function useDialog(options: IDialogOptions): IDialog {
         layer: options.layer.value,
         triggers: options.triggers ?? ['escape'],
         updatedAt: Date.now(),
+        createdAt: Date.now(),
         open: () => options.open(),
         close: () => options.close(),
     };
@@ -81,7 +83,7 @@ export function useDialog(options: IDialogOptions): IDialog {
     const unwatch = watch(
         () => [options.isOpen.value, options.layer.value],
         (newValue, oldValue) => {
-            const [newIsOpen, newLayer] = newValue as [boolean, EPotDialogLayers];
+            const [newIsOpen, newLayer] = newValue as [boolean, EDialogLayers];
             const [oldIsOpen] = oldValue ?? [false, 0];
 
             if (newIsOpen === oldIsOpen) return;
@@ -93,15 +95,11 @@ export function useDialog(options: IDialogOptions): IDialog {
 
             if (newIsOpen) {
                 updatedQueue.push(dialogManager);
-            } else {
-                console.log('close', newDialogId);
             }
 
             dialogsQueue.value = updatedQueue.sort(
-                (a, b) => a.layer - b.layer || a.updatedAt - b.updatedAt,
+                (a, b) => a.layer - b.layer || a.createdAt - b.createdAt,
             );
-
-            console.log('dialogsQueue', JSON.parse(JSON.stringify(dialogsQueue.value)));
         },
         { immediate: true },
     );
@@ -145,7 +143,7 @@ function handleClick(event: MouseEvent) {
     const configDelay = config.value.triggersStartDelays.clickoutside;
 
     if (configDelay && delay < configDelay) return;
-    console.log('clickoutside', dialogManager);
+
     dialogManager.close();
 }
 
@@ -163,6 +161,5 @@ function handleKeydown(event: KeyboardEvent) {
 
     if (configDelay && delay < configDelay) return;
 
-    console.log('escape', dialogManager);
     dialogManager.close();
 }

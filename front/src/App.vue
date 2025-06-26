@@ -40,40 +40,9 @@ onUnmounted(() => {
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotDrawer
+        <PotDialog
             v-model="isVisible"
-            position="left"
-            radius="large"
-            color="pot"
-        >
-            <div
-                style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 4rem;
-                    height: 100%;
-                "
-            >
-                <PotTooltip
-                    color="pot"
-                    size="large"
-                    text="lox"
-                    enterable
-                >
-                    <PotButton
-                        color="pot"
-                        size="large"
-                    >
-                        Jabuk
-                    </PotButton>
-                </PotTooltip>
-            </div>
-        </PotDrawer>
-
-        <!-- <PotDialog
-            v-model="isVisible"
-            position="center"
+            :position="['top-left', 'top-right', 'bottom-right', 'bottom-left']"
             radius="large"
             color="pot"
         >
@@ -99,7 +68,7 @@ onUnmounted(() => {
                     </PotButton>
                 </PotTooltip>
             </div>
-        </PotDialog> -->
+        </PotDialog>
 
         <PotButton
             color="pot"
