@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Types
 import type { Ref } from 'vue';
-import type { IPotDialogProps } from '@/types/components/dialog';
+import type { IPotDialogExports, IPotDialogProps } from '@/types/components/dialog';
 import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
@@ -10,7 +10,7 @@ import { POT_DIALOG_POSITION } from '@/types/components/dialog';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, ref } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -86,6 +86,12 @@ function close() {
 
 // Exports
 provide('pot-dialog-layer', $dialog.layer);
+
+defineExpose<IPotDialogExports>({
+    isOpen: readonly($dialog.isOpen),
+    open,
+    close,
+});
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 // Types
-import type { RendererElement } from 'vue';
+import type { Ref, RendererElement } from 'vue';
 
 export const POT_DIALOG_POSITION = {
     TOP_RIGHT: 'top-right',
@@ -52,4 +52,15 @@ export interface IPotDialogProps<
 
     /** Breakpoints names for responsive design */
     devices?: TDevice[];
+}
+
+export interface IPotDialogExports {
+    /** Dialog visibility flag */
+    isOpen: Readonly<Ref<boolean>>;
+
+    /** Open dialog */
+    open: () => void;
+
+    /** Close dialog */
+    close: () => void;
 }
