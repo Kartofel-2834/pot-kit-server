@@ -28,6 +28,7 @@ const $props = withDefaults(
         modelValue: undefined,
         position: POT_DIALOG_POSITION.CENTER,
         to: 'body',
+        transition: 'pot-dialog-transition',
         noOverlay: false,
     },
 );
@@ -92,7 +93,7 @@ provide('pot-dialog-layer', $dialog.layer);
         :to="teleportTo"
         :disabled="!to"
     >
-        <Transition name="pot-dialog-transition">
+        <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
                 :pot-dialog-id="$dialog.id.description"
@@ -135,7 +136,7 @@ provide('pot-dialog-layer', $dialog.layer);
 
 /* --- Position - Center --- */
 .pot-dialog._position-center {
-    --pot-dialog-position-transform: scale(0) translate(-50%, -50%);
+    --pot-dialog-position-transform: scale(0.5) translate(-50%, -50%);
 
     top: 50%;
     left: 50%;
@@ -245,11 +246,14 @@ provide('pot-dialog-layer', $dialog.layer);
 /* --- Container - Transition --- */
 .pot-dialog-transition-enter-active .pot-dialog__container,
 .pot-dialog-transition-leave-active .pot-dialog__container {
-    transition: transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .pot-dialog.pot-dialog-transition-enter-from .pot-dialog__container,
 .pot-dialog.pot-dialog-transition-leave-to .pot-dialog__container {
+    opacity: 0;
     transform: var(--pot-dialog-position-transform);
 }
 </style>

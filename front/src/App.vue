@@ -42,7 +42,7 @@ onUnmounted(() => {
     >
         <PotDialog
             v-model="isVisible"
-            :position="['top-left', 'top-right', 'bottom-right', 'bottom-left']"
+            position="center"
             radius="large"
             color="pot"
         >

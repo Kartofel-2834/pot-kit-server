@@ -26,6 +26,7 @@ const $props = withDefaults(defineProps<IPotDrawerProps<EPotDevice, EPotColor, E
     modelValue: undefined,
     position: POT_DRAWER_POSITION.LEFT,
     to: 'body',
+    transition: 'pot-drawer-transition',
     noOverlay: false,
 });
 
@@ -95,7 +96,7 @@ defineExpose<IPotDrawerExports>({
         :to="teleportTo"
         :disabled="!to"
     >
-        <Transition name="pot-drawer-transition">
+        <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
                 :pot-dialog-id="$dialog.id.description"

@@ -30,6 +30,9 @@ export interface IPotDrawerProps<
     /** Drawer will not have overlay */
     noOverlay?: boolean;
 
+    /** Drawer transition name */
+    transition?: string;
+
     /** Drawer color */
     color?: TColor | TColor[] | null;
 

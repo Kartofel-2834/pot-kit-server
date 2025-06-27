@@ -38,6 +38,9 @@ export interface IPotDialogProps<
     /** Dialog will not have overlay */
     noOverlay?: boolean;
 
+    /** Dialog transition name */
+    transition?: string;
+
     /** Dialog size */
     size?: TSize | TSize[] | null;
 

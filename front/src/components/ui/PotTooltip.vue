@@ -13,7 +13,7 @@ import type { EDialogLayers } from '@/types/composables/dialog';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
+import { computed, inject, onMounted, onUnmounted, provide, readonly, ref, watch } from 'vue';
 
 // Composables
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
@@ -41,7 +41,7 @@ const $props = withDefaults(
         autoCloseDelay: 0,
         openTriggers: () => ['mouseover'] as TOpenTriggers,
         closeTriggers: () => ['mouseout'] as TCloseTriggers,
-        openTriggersDelay: () => ({}),
+        openTriggersDelay: () => ({ mouseover: 200 }),
         closeTriggersDelay: () => ({ mouseover: 400 }),
         enterable: false,
         transition: 'pot-tooltip-transition',
@@ -66,6 +66,9 @@ const $dialog = useDialog({
 });
 
 // Data
+const openTriggersTimeouts = ref<Partial<Record<TOpenTriggers[number], number>>>({});
+const closeTriggersTimeouts = ref<Partial<Record<TCloseTriggers[number], number>>>({});
+
 const box = ref<Element | null>(null);
 const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
 
@@ -76,6 +79,10 @@ const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: n
 });
 
 // Lifecycle
+onMounted(() => {
+    $props.openTriggers?.forEach?.(trigger => toggleOpenTrigger(trigger));
+});
+
 onUnmounted(() => {
     $dialog.terminate();
 
@@ -164,22 +171,56 @@ function close() {
     $emit('close');
 }
 
-function delayedOpen(event: Event, trigger: string): number {
+function delayedOpen(event: Event, trigger: TOpenTriggers[number]): number {
     return setDelayedAction(() => {
         if (isOpen.value) return;
+        if (!toggleOpenTrigger(trigger)) return;
 
         $emit('trigger:open', event, trigger);
         open();
     }, $props.openDelay);
 }
 
+function toggleOpenTrigger(trigger: TOpenTriggers[number]): boolean {
+    const timeoutId = openTriggersTimeouts.value[trigger] ?? NaN;
+    const triggerAvailableDelay = $props.openTriggersDelay?.[trigger] ?? 0;
+
+    if (!triggerAvailableDelay) return true;
+    if (timeoutId) return false;
+
+    const newTimeoutId = setTimeout(() => {
+        openTriggersTimeouts.value = { ...openTriggersTimeouts.value, [trigger]: NaN };
+    }, triggerAvailableDelay);
+
+    openTriggersTimeouts.value = { ...openTriggersTimeouts.value, [trigger]: newTimeoutId };
+
+    return true;
+}
+
 function delayedClose(event: Event, trigger: string): number {
     return setDelayedAction(() => {
         if (!isOpen.value) return;
+        if (!toggleCloseTrigger(trigger)) return;
 
         $emit('trigger:close', event, trigger);
         close();
     }, $props.closeDelay);
+}
+
+function toggleCloseTrigger(trigger: TCloseTriggers[number]): boolean {
+    const timeoutId = closeTriggersTimeouts.value[trigger] ?? NaN;
+    const triggerAvailableDelay = $props.closeTriggersDelay?.[trigger] ?? 0;
+
+    if (!triggerAvailableDelay) return true;
+    if (timeoutId) return false;
+
+    const newTimeoutId = setTimeout(() => {
+        closeTriggersTimeouts.value = { ...closeTriggersTimeouts.value, [trigger]: NaN };
+    }, triggerAvailableDelay);
+
+    closeTriggersTimeouts.value = { ...closeTriggersTimeouts.value, [trigger]: newTimeoutId };
+
+    return true;
 }
 
 function startAutoClose(): number {
