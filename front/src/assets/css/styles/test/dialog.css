@@ -1,0 +1,41 @@
+.pot-dialog._color-pot {
+    --pot-dialog-color-base-background: var(--pot-base-0);
+    --pot-dialog-color-base-border: var(--pot-base-400);
+}
+
+.pot-dialog._radius-circle,
+.pot-dialog._radius-large,
+.pot-dialog._radius-medium,
+.pot-dialog._radius-small,
+.pot-dialog._radius-tiny,
+.pot-dialog._radius-radius--8,
+.pot-dialog._radius-radius--6,
+.pot-dialog._radius-radius--4,
+.pot-dialog._radius-radius--2 {
+    --pot-dialog-radius: var(--radius);
+}
+
+
+.pot-dialog._size-tiny {
+    --pot-dialog-size-text: var(--pot-font-size-200);
+    --pot-dialog-size-padding: var(--pot-spacer-1-200);
+    --pot-dialog-size-border: 1px;
+}
+
+.pot-dialog._size-small {
+    --pot-dialog-size-text: var(--pot-font-size-200);
+    --pot-dialog-size-padding: var(--pot-spacer-1-600);
+    --pot-dialog-size-border: 1px;
+}
+
+.pot-dialog._size-medium {
+    --pot-dialog-size-text: var(--pot-font-size-200);
+    --pot-dialog-size-padding: var(--pot-spacer-2);
+    --pot-dialog-size-border: 1px;
+}
+
+.pot-dialog._size-large {
+    --pot-dialog-size-text: var(--pot-font-size-300);
+    --pot-dialog-size-padding: var(--pot-spacer-2-800);
+    --pot-dialog-size-border: 1px;
+}

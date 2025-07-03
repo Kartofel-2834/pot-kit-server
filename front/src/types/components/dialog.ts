@@ -38,8 +38,20 @@ export interface IPotDialogProps<
     /** Dialog will not have overlay */
     noOverlay?: boolean;
 
+    /** Dialog will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Dialog will not lock focus outside of container */
+    noFocusTrap?: boolean;
+
     /** Dialog transition name */
     transition?: string;
+
+    /** Semantic aria-aria-labelledby attribute value */
+    ariaLabelledby?: string;
+
+    /** Semantic aria-describedby attribute value */
+    ariaDescribedby?: string;
 
     /** Dialog size */
     size?: TSize | TSize[] | null;

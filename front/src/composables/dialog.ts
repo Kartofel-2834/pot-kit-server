@@ -21,7 +21,6 @@ const defaultConfig: IDialogsSetupOptions = {
 };
 
 const config = ref<IDialogsSetupOptions>({ ...defaultConfig });
-// const dialogsQueue = ref<TDialogsQueue>({});
 const layers = Object.values(DIALOG_LAYERS).sort((a, b) => a - b);
 
 const dialogsQueue = ref<IDialogManager[]>([]);

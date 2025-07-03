@@ -6,7 +6,7 @@
 }
 
 .pot-drawer__container {
-    border-color: var(--pot-button-color-base-border);
+    border-color: var(--pot-drawer-color-base-border);
     background-color: var(--pot-drawer-color-base-background);
 }
 

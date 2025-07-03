@@ -1,0 +1,16 @@
+/* CONDITION:base - START */
+.pot-dialog {
+    --pot-dialog-color-base-background: initial;
+    --pot-dialog-color-base-border: initial;
+    --pot-dialog-color-base-overlay: rgba(0, 0, 0, 0.3);
+}
+
+.pot-dialog__container {
+    border-color: var(--pot-dialog-color-base-border);
+    background-color: var(--pot-dialog-color-base-background);
+}
+
+.pot-dialog__overlay {
+    background-color: var(--pot-dialog-color-base-overlay);
+}
+/* CONDITION:base - END */

@@ -1,0 +1,24 @@
+/* CONFIGURATION:size - START */
+.pot-dialog {
+    --pot-dialog-size-padding: initial;
+    --pot-dialog-size-border: initial;
+    --pot-dialog-size-text: inherit;
+    --pot-dialog-size-shadow: initial;
+    --pot-dialog-edge-margin: 2rem;
+
+    padding: var(--pot-dialog-size-padding);
+    border-width: var(--pot-dialog-size-border);
+    font-size: var(--pot-dialog-size-text);
+    box-shadow: var(--pot-dialog-size-shadow);
+}
+/* CONFIGURATION:size - END */
+
+/* CONFIGURATION:radius - START */
+.pot-dialog {
+    --pot-dialog-radius: initial;
+}
+
+.pot-dialog .pot-dialog__container {
+    border-radius: var(--pot-dialog-radius);
+}
+/* CONFIGURATION:radius - END */

@@ -1,8 +1,22 @@
+/* CONFIGURATION:size - START */
+.pot-drawer {
+    --pot-drawer-size-padding: initial;
+    --pot-drawer-size-border: initial;
+    --pot-drawer-size-text: inherit;
+    --pot-drawer-size-shadow: initial;
+}
+
+.pot-drawer .pot-drawer__container {
+    padding: var(--pot-drawer-size-padding);
+    border-width: var(--pot-drawer-size-border);
+    font-size: var(--pot-drawer-size-text);
+    box-shadow: var(--pot-drawer-size-shadow);
+}
+/* CONFIGURATION:size - END */
+
 /* CONFIGURATION:radius - START */
 .pot-drawer {
     --pot-drawer-radius: initial;
-
-    border-radius: var(--pot-drawer-radius);
 }
 
 .pot-drawer._position-left .pot-drawer__container {

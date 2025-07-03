@@ -2,7 +2,7 @@
 // Types
 import type { Ref } from 'vue';
 import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
-import type { EPotColor, EPotDevice, EPotRadius } from '@/types';
+import type { EPotSize, EPotColor, EPotDevice, EPotRadius } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -10,25 +10,29 @@ import { POT_DRAWER_POSITION } from '@/types/components/drawer';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+import { useFocusTrap } from '@/composables/focus-trap';
 
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotRadius>>(), {
-    visible: undefined,
-    modelValue: undefined,
-    position: POT_DRAWER_POSITION.LEFT,
-    to: 'body',
-    transition: 'pot-drawer-transition',
-    noOverlay: false,
-});
+const $props = withDefaults(
+    defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
+    {
+        visible: undefined,
+        modelValue: undefined,
+        position: POT_DRAWER_POSITION.LEFT,
+        to: 'body',
+        transition: 'pot-drawer-transition',
+        noOverlay: false,
+    },
+);
 
 const $emit = defineEmits<{
     open: [];
@@ -46,6 +50,11 @@ const $dialog = useDialog({
 
 const $deviceIs = useDeviceIs();
 
+const $focusTrap = useFocusTrap();
+
+// Data
+const container = ref<Element | null>(null);
+
 // Lifecycle
 onUnmounted(() => $dialog.terminate());
 
@@ -56,6 +65,7 @@ const properties = computed(() => {
     return useDeviceProperties(
         {
             position: $props.position,
+            size: $props.size,
             color: $props.color,
             radius: $props.radius,
         },
@@ -69,6 +79,23 @@ const classList = computed(() => useClassList({ ...properties.value }));
 const currentStyles = computed(() => ({
     zIndex: useDialogZIndex($dialog),
 }));
+
+// Watchers
+watch(
+    () => [container.value, $props.noFocusTrap],
+    newValue => {
+        const [container] = newValue;
+
+        if (container instanceof Element) {
+            $focusTrap.setup(container, {
+                trap: !$props.noFocusTrap,
+                autofocus: !$props.noAutoFocus,
+            });
+        } else {
+            $focusTrap.terminate();
+        }
+    },
+);
 
 // Methods
 function open() {
@@ -109,7 +136,14 @@ defineExpose<IPotDrawerExports>({
                     @click="close"
                 />
 
-                <div class="pot-drawer__container">
+                <div
+                    ref="container"
+                    class="pot-drawer__container"
+                    role="dialog"
+                    aria-modal="true"
+                    :aria-labelledby="ariaLabelledby"
+                    :aria-describedby="ariaDescribedby"
+                >
                     <slot />
                 </div>
             </div>
@@ -125,6 +159,7 @@ defineExpose<IPotDrawerExports>({
 .pot-drawer__container {
     position: relative;
     overflow: auto;
+    border-style: solid;
 }
 
 .pot-drawer__overlay {
@@ -133,8 +168,6 @@ defineExpose<IPotDrawerExports>({
     left: 0;
     width: 100%;
     height: 100%;
-
-    background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* --- Position - Left --- */

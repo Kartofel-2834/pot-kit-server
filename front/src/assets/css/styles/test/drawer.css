@@ -1,6 +1,7 @@
 .pot-drawer._color-pot {
     --pot-drawer-color-base-background: var(--pot-base-0);
     --pot-drawer-color-base-border: var(--pot-base-400);
+    --pot-drawer-color-base-overlay: rgba(0, 0, 0, 0.3);
 }
 
 .pot-drawer._radius-circle,
@@ -13,4 +14,28 @@
 .pot-drawer._radius-radius--4,
 .pot-drawer._radius-radius--2 {
     --pot-drawer-radius: var(--radius);
+}
+
+.pot-drawer._size-tiny {
+    --pot-drawer-size-text: var(--pot-font-size-200);
+    --pot-drawer-size-padding: var(--pot-spacer-1-200);
+    --pot-drawer-size-border: 1px;
+}
+
+.pot-drawer._size-small {
+    --pot-drawer-size-text: var(--pot-font-size-200);
+    --pot-drawer-size-padding: var(--pot-spacer-1-600);
+    --pot-drawer-size-border: 1px;
+}
+
+.pot-drawer._size-medium {
+    --pot-drawer-size-text: var(--pot-font-size-200);
+    --pot-drawer-size-padding: var(--pot-spacer-2);
+    --pot-drawer-size-border: 1px;
+}
+
+.pot-drawer._size-large {
+    --pot-drawer-size-text: var(--pot-font-size-300);
+    --pot-drawer-size-padding: var(--pot-spacer-2-800);
+    --pot-drawer-size-border: 1px;
 }

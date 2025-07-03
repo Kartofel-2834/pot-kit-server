@@ -12,16 +12,17 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import PotButton from './components/ui/PotButton.vue';
 import PotPopover from './components/ui/PotPopover.vue';
 import PotTooltip from './components/ui/PotTooltip.vue';
+import PotDrawer from './components/ui/PotDrawer.vue';
+import PotDialog from './components/ui/PotDialog.vue';
 
 // Composables
 import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
 import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
-import PotDrawer from './components/ui/PotDrawer.vue';
-import PotDialog from './components/ui/PotDialog.vue';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
 
+const mainRef = ref<Element | null>(null);
 const buttonRef = ref<Element | null>(null);
 
 onMounted(() => {
@@ -37,14 +38,18 @@ onUnmounted(() => {
 
 <template>
     <main
+        ref="mainRef"
+        id="main"
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotDialog
+        <PotDrawer
             v-model="isVisible"
-            position="center"
+            position="right"
             radius="large"
             color="pot"
+            size="medium"
+            aria-labelledby="dialog-header"
         >
             <div
                 style="
@@ -55,6 +60,8 @@ onUnmounted(() => {
                     height: 100%;
                 "
             >
+                <h2 id="dialog-header">Header</h2>
+
                 <PotTooltip
                     color="pot"
                     size="large"
@@ -67,8 +74,9 @@ onUnmounted(() => {
                         Jabuk
                     </PotButton>
                 </PotTooltip>
+                <input />
             </div>
-        </PotDialog>
+        </PotDrawer>
 
         <PotButton
             color="pot"
