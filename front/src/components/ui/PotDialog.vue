@@ -157,8 +157,6 @@ defineExpose<IPotDialogExports>({
 
 <style>
 .pot-dialog {
-    --pot-dialog-edge-margin: 2rem;
-
     position: fixed;
 }
 

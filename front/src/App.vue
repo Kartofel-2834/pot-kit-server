@@ -21,6 +21,7 @@ import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/compos
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
+const isPopoverVisible = ref<boolean>(false);
 
 const mainRef = ref<Element | null>(null);
 const buttonRef = ref<Element | null>(null);
@@ -43,7 +44,7 @@ onUnmounted(() => {
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotDrawer
+        <PotDialog
             v-model="isVisible"
             position="right"
             radius="large"
@@ -60,23 +61,27 @@ onUnmounted(() => {
                     height: 100%;
                 "
             >
-                <h2 id="dialog-header">Header</h2>
-
-                <PotTooltip
+                <PotPopover
+                    v-model="isPopoverVisible"
+                    size="medium"
                     color="pot"
-                    size="large"
-                    text="lox"
                 >
-                    <PotButton
-                        color="pot"
-                        size="large"
-                    >
-                        Jabuk
-                    </PotButton>
-                </PotTooltip>
-                <input />
+                    <div style="background-color: red; color: white; padding: 10rem">
+                        <input />
+                    </div>
+
+                    <template #target>
+                        <PotButton
+                            color="pot"
+                            size="large"
+                            @click="isPopoverVisible = !isPopoverVisible"
+                        >
+                            Popover
+                        </PotButton>
+                    </template>
+                </PotPopover>
             </div>
-        </PotDrawer>
+        </PotDialog>
 
         <PotButton
             color="pot"

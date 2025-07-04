@@ -44,7 +44,7 @@ export function useFocusTrap(): IFocusTrap {
         }
 
         if (currentOptions.autofocus) {
-            focusFirst();
+            setTimeout(focusFirst, 1);
         }
     }
 

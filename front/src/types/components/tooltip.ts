@@ -41,22 +41,20 @@ export interface IPotTooltipProps<
     /** Tooltip transition name */
     transition?: string;
 
-    /* ------------------------------------------------------------ */
-
     /** Tooltip position that relative to target */
-    position?: EPotAttachedBoxPosition;
+    position?: EPotAttachedBoxPosition | EPotAttachedBoxPosition[];
 
     /** Distance between tooltip and target */
-    nudge?: number;
+    nudge?: number | number[];
 
     /** Distance between tooltip and edge */
-    edgeMargin?: number;
+    edgeMargin?: number | number[];
 
     /** Fixed tooltip position without moving to opposite sides */
     persistent?: boolean;
 
-    /** Sticky tooltip that will follow target */
-    sticky?: boolean;
+    /** Tooltip will not be sticky and will not follow target on scroll */
+    noSticky?: boolean;
 
     /** Target element */
     target?: Element | null;

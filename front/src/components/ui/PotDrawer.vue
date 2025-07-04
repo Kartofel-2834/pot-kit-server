@@ -31,6 +31,8 @@ const $props = withDefaults(
         to: 'body',
         transition: 'pot-drawer-transition',
         noOverlay: false,
+        noAutoFocus: false,
+        noFocusTrap: false,
     },
 );
 

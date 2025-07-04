@@ -10,7 +10,7 @@ import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref } from 'vue';
+import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
 
 // Composables
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
@@ -20,6 +20,7 @@ import { useClassList } from '@/composables/class-list';
 
 // Components
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
+import { useFocusTrap } from '@/composables/focus-trap';
 
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
@@ -33,7 +34,9 @@ const $props = withDefaults(
         nudge: 10,
         edgeMargin: 10,
         persistent: false,
-        sticky: true,
+        noSticky: false,
+        noAutoFocus: false,
+        noFocusTrap: false,
         to: 'body',
         transition: 'pot-popover-transition',
     },
@@ -55,6 +58,8 @@ const $dialog = useDialog({
 
 const $deviceIs = useDeviceIs();
 
+const $focusTrap = useFocusTrap();
+
 // Data
 const box = ref<Element | null>(null);
 const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
@@ -68,6 +73,9 @@ const teleportTo = computed(() => $props.to ?? 'body');
 const properties = computed(() => {
     return useDeviceProperties(
         {
+            position: $props.position,
+            nudge: $props.nudge,
+            edgeMargin: $props.edgeMargin,
             color: $props.color,
             size: $props.size,
             radius: $props.radius,
@@ -88,6 +96,23 @@ const currentStyles = computed(() => {
         transform: `translate(${x}px, ${y}px)`,
     };
 });
+
+// Watchers
+watch(
+    () => [box.value, $props.noFocusTrap],
+    newValue => {
+        const [box] = newValue;
+
+        if (box instanceof Element) {
+            $focusTrap.setup(box, {
+                trap: !$props.noFocusTrap,
+                autofocus: !$props.noAutoFocus,
+            });
+        } else {
+            $focusTrap.terminate();
+        }
+    },
+);
 
 // Methods
 function open() {
@@ -137,12 +162,12 @@ defineExpose<IPotPopoverExpose>({
     <PotAttachTarget
         ref="attachTarget"
         :box="box"
-        :position="position"
+        :position="properties.position"
+        :edge-margin="properties.edgeMargin"
+        :nudge="properties.nudge"
         :target="target"
-        :sticky="sticky"
+        :sticky="!noSticky"
         :persistent="persistent"
-        :edge-margin="edgeMargin"
-        :nudge="nudge"
     >
         <slot name="target" />
     </PotAttachTarget>

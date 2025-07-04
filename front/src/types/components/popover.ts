@@ -15,25 +15,31 @@ export interface IPotPopoverProps<
     modelValue?: boolean;
 
     /** Popover position that relative to target */
-    position?: EPotAttachedBoxPosition;
+    position?: EPotAttachedBoxPosition | EPotAttachedBoxPosition[];
 
     /** Distance between popover and target */
-    nudge?: number;
+    nudge?: number | number[];
 
     /** Distance between popover and edge */
-    edgeMargin?: number;
+    edgeMargin?: number | number[];
 
     /** Fixed popover position without moving to opposite sides */
     persistent?: boolean;
 
-    /** Sticky popover that will follow target */
-    sticky?: boolean;
+    /** Popover will not be sticky and will not follow target on scroll */
+    noSticky?: boolean;
 
     /** Place where popover will be mounted */
     to?: string | RendererElement | null;
 
     /** Target element */
     target?: Element | null;
+
+    /** Popover will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Popover will not lock focus outside of container */
+    noFocusTrap?: boolean;
 
     /** Popover size */
     size?: TSize | TSize[] | null;

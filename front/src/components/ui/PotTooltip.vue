@@ -39,8 +39,8 @@ const $props = withDefaults(
         openDelay: 0,
         closeDelay: 200,
         autoCloseDelay: 0,
-        openTriggers: () => ['mouseover'] as TOpenTriggers,
-        closeTriggers: () => ['mouseout'] as TCloseTriggers,
+        openTriggers: () => ['mouseover', 'focus'] as TOpenTriggers,
+        closeTriggers: () => ['mouseout', 'blur'] as TCloseTriggers,
         openTriggersDelay: () => ({ mouseover: 200 }),
         closeTriggersDelay: () => ({ mouseover: 400 }),
         enterable: false,
@@ -101,6 +101,9 @@ const teleportTo = computed(() => $props.to ?? 'body');
 const properties = computed(() => {
     return useDeviceProperties(
         {
+            position: $props.position,
+            nudge: $props.nudge,
+            edgeMargin: $props.edgeMargin,
             color: $props.color,
             size: $props.size,
             radius: $props.radius,
@@ -345,13 +348,13 @@ defineExpose<IPotTooltipExpose>({
     <PotAttachTarget
         ref="attachTarget"
         :box="box"
-        :position="position"
+        :position="properties.position"
+        :edge-margin="properties.edgeMargin"
+        :nudge="properties.nudge"
         :target="target"
         :to="to"
-        :sticky="sticky"
+        :sticky="!noSticky"
         :persistent="persistent"
-        :edge-margin="edgeMargin"
-        :nudge="nudge"
     >
         <slot />
     </PotAttachTarget>
