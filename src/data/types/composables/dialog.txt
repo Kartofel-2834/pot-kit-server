@@ -1,16 +1,28 @@
 // Types
-import type { ComputedRef, DeepReadonly, Ref } from 'vue';
+import type { Ref } from 'vue';
 
-export type TDialogTrigger = 'click' | 'escape';
+export type TDialogTrigger = 'clickoutside' | 'escape';
+
+export const DIALOG_LAYERS = {
+    NONE: 1,
+    POPOVER: 500,
+    DIALOG: 1000,
+    TOAST: 2000,
+} as const;
+
+export type EDialogLayers = (typeof DIALOG_LAYERS)[keyof typeof DIALOG_LAYERS];
 
 export interface IDialogsSetupOptions {
     /** Time after the dialog is created, after which triggers will start working */
-    triggersStartDelays?: Partial<Record<TDialogTrigger, number>>;
+    triggersStartDelays: Partial<Record<TDialogTrigger, number>>;
 }
 
 export interface IDialogOptions {
     /** Flag that indicates whether dialog is open */
     isOpen: Ref<boolean>;
+
+    /** Dialog layer z-index value */
+    layer: Ref<EDialogLayers>;
 
     /** Close dialog */
     close: () => void;
@@ -29,11 +41,11 @@ export interface IDialog {
     /** Triggers that will close dialog */
     readonly triggers: TDialogTrigger[];
 
-    /** Dialog's position in the queue */
-    readonly queueIndex: DeepReadonly<ComputedRef<number>>;
-
     /** Flag that indicates whether dialog is open */
     isOpen: Ref<boolean>;
+
+    /** Dialog layer z-index value */
+    layer: Ref<EDialogLayers>;
 
     /** Close dialog */
     close: () => void;
@@ -49,6 +61,9 @@ export interface IDialogManager {
     /** Dialog unique id */
     id: Symbol;
 
+    /** Dialog layer z-index value */
+    layer: EDialogLayers;
+
     /** Open dialog */
     open: () => void;
 
@@ -58,6 +73,9 @@ export interface IDialogManager {
     /** Triggers that will close dialog */
     triggers: TDialogTrigger[];
 
-    /** The time in ms when the dialog state changed */
+    /** The time in ms when the dialog was created changed */
+    createdAt: number;
+
+    /** The time in ms when the dialog open state changed */
     updatedAt: number;
 }

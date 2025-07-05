@@ -5,6 +5,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
     "map-data": "bun run src/map.ts",
+    "collect-dependencies": "bun run src/collect-dependencies.ts",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy"
   },

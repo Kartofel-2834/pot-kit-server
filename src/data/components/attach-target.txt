@@ -1,0 +1,95 @@
+<script lang="ts" setup>
+// Types
+import type { Ref, VNode } from 'vue';
+import type {
+    I<%camel%>AttachTargetExpose,
+    I<%camel%>AttachTargetProps,
+} from '<%typesImport%>/components/attach-target';
+
+// Constants
+import { <%upper%>_ATTACHED_BOX_POSITION } from '<%typesImport%>/components/attach-target';
+
+// Vue
+import { cloneVNode, computed, isVNode, onUnmounted, readonly, ref, watch } from 'vue';
+
+// Components
+import <%camel%>SlotCatcher from '<%componentsImport%>/<%camel%>SlotCatcher.vue';
+
+// Composables
+import { useAttach } from '<%composablesImport%>/attach';
+
+const $props = withDefaults(defineProps<I<%camel%>AttachTargetProps>(), {
+    position: <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER,
+    nudge: 10,
+    edgeMargin: 10,
+    persistent: false,
+    sticky: true,
+});
+
+const $attach = useAttach($props);
+
+// Data
+const target = ref<Element | null>(null);
+const targetKey = ref<Symbol | null>(null);
+
+// Lifecycle
+onUnmounted(() => $attach.terminate());
+
+// Computed
+const currentTarget = computed(() => $props.target ?? target.value ?? null);
+
+// Watchers
+watch(
+    () => [$props.box, currentTarget.value],
+    newValue => {
+        const [newBox, newTarget] = newValue ?? [];
+
+        if (newBox && newTarget) {
+            $attach.setBox(newBox);
+            $attach.setTarget(newTarget);
+            $attach.setup();
+        } else {
+            $attach.terminate();
+        }
+    },
+    { immediate: true },
+);
+
+// Methods
+function findTarget(vnode: VNode): VNode | null {
+    if (!isVNode(vnode)) return vnode;
+
+    const id = Symbol(`<%kebab%>-attach-target_${Math.random().toString(36).slice(2, 9)}`);
+
+    if (Array.isArray(vnode.children)) {
+        vnode.children = vnode.children.map(v => (isVNode(v) ? findTarget(v) : v));
+    }
+
+    return cloneVNode(vnode, {
+        onVnodeMounted(vnode) {
+            if (target.value || !(vnode.el instanceof Element)) return;
+
+            target.value = vnode.el as Element;
+            targetKey.value = id;
+        },
+
+        onVnodeBeforeUnmount() {
+            target.value = null;
+            targetKey.value = null;
+        },
+    });
+}
+
+// Exports
+defineExpose<I<%camel%>AttachTargetExpose>({
+    boxX: readonly($attach.x),
+    boxY: readonly($attach.y),
+    target: readonly(currentTarget) as Readonly<Ref<Element | null>>,
+});
+</script>
+
+<template>
+    <<%camel%>SlotCatcher :map-v-node="findTarget">
+        <slot />
+    </<%camel%>SlotCatcher>
+</template>

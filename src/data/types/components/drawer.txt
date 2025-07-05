@@ -1,0 +1,79 @@
+// Types
+import type { Ref, RendererElement } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_DRAWER_POSITION = {
+    TOP: 'top',
+    BOTTOM: 'bottom',
+    LEFT: 'left',
+    RIGHT: 'right',
+} as const;
+
+export const <%upper%>_DRAWER_SIZE = {} as const;
+
+export const <%upper%>_DRAWER_COLOR = {} as const;
+
+export const <%upper%>_DRAWER_RADIUS = {} as const;
+
+export type E<%camel%>DrawerPosition = (typeof <%upper%>_DRAWER_POSITION)[keyof typeof <%upper%>_DRAWER_POSITION];
+
+export type E<%camel%>DrawerSize = (typeof <%upper%>_DRAWER_SIZE)[keyof typeof <%upper%>_DRAWER_SIZE];
+
+export type E<%camel%>DrawerColor = (typeof <%upper%>_DRAWER_COLOR)[keyof typeof <%upper%>_DRAWER_COLOR];
+
+export type E<%camel%>DrawerRadius = (typeof <%upper%>_DRAWER_RADIUS)[keyof typeof <%upper%>_DRAWER_COLOR];
+
+export interface I<%camel%>DrawerProps {
+    /** Drawer visibility flag */
+    visible?: boolean;
+
+    /** Drawer visibility flag */
+    modelValue?: boolean;
+
+    /** Place where drawer will be mounted */
+    to?: string | RendererElement | null;
+
+    /** Drawer position */
+    position?: E<%camel%>DrawerPosition | E<%camel%>DrawerPosition[] | null;
+
+    /** Drawer will not have overlay */
+    noOverlay?: boolean;
+
+    /** Drawer will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Drawer will not lock focus outside of container */
+    noFocusTrap?: boolean;
+
+    /** Drawer transition name */
+    transition?: string;
+
+    /** Semantic aria-aria-labelledby attribute value */
+    ariaLabelledby?: string;
+
+    /** Semantic aria-describedby attribute value */
+    ariaDescribedby?: string;
+
+    /** Drawer size */
+    size?: E<%camel%>DrawerSize | E<%camel%>DrawerSize[] | null;
+
+    /** Drawer color */
+    color?: E<%camel%>DrawerColor | E<%camel%>DrawerColor[] | null;
+
+    /** Drawer border radius */
+    radius?: E<%camel%>DrawerRadius | E<%camel%>DrawerRadius[] | null;
+
+    /** Breakpoints names for responsive design */
+    devices?: E<%camel%>Device[];
+}
+
+export interface I<%camel%>DrawerExports {
+    /** Drawer visibility flag */
+    isOpen: Readonly<Ref<boolean>>;
+
+    /** Open drawer */
+    open: () => void;
+
+    /** Close drawer */
+    close: () => void;
+}

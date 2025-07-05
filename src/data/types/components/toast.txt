@@ -1,0 +1,54 @@
+// Types
+import type { RendererElement } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+import type { IToast } from '<%typesImport%>/composables/toast';
+
+export const <%upper%>_TOAST_SIZE = {} as const;
+
+export const <%upper%>_TOAST_COLOR = {} as const;
+
+export const <%upper%>_TOAST_RADIUS = {} as const;
+
+export const <%upper%>_TOAST_POSITION = {
+    TOP_LEFT: 'top-left',
+    TOP_RIGHT: 'top-right',
+    BOTTOM_LEFT: 'bottom-left',
+    BOTTOM_RIGHT: 'bottom-right',
+} as const;
+
+export type E<%camel%>ToastPosition = (typeof <%upper%>_TOAST_POSITION)[keyof typeof <%upper%>_TOAST_POSITION];
+
+export type E<%camel%>ToastSize = (typeof <%upper%>_TOAST_SIZE)[keyof typeof <%upper%>_TOAST_SIZE];
+
+export type E<%camel%>ToastColor = (typeof <%upper%>_TOAST_COLOR)[keyof typeof <%upper%>_TOAST_COLOR];
+
+export type E<%camel%>ToastRadius = (typeof <%upper%>_TOAST_RADIUS)[keyof typeof <%upper%>_TOAST_COLOR];
+
+export interface I<%camel%>ToastProps<T = unknown> {
+    /** Toast composable instance, use this prop for share your toast type to toast slot data */
+    toast?: IToast<T>;
+
+    /** Toast group name */
+    group?: string;
+
+    /** Toast position */
+    position?: E<%camel%>ToastPosition;
+
+    /** Toasts group teleport target */
+    to?: string | RendererElement | null;
+
+    /** Toasts transition name */
+    transition?: string;
+
+    /** Toast size */
+    size?: E<%camel%>ToastSize | E<%camel%>ToastSize[] | null;
+
+    /** Toast color */
+    color?: E<%camel%>ToastColor | E<%camel%>ToastColor[] | null;
+
+    /** Toast border radius */
+    radius?: E<%camel%>ToastRadius | E<%camel%>ToastRadius[] | null;
+
+    /** Breakpoints names for responsive design */
+    devices?: E<%camel%>Device[];
+}

@@ -1,0 +1,188 @@
+{
+    "components": {
+        "attach-target": {
+            "components": [
+                "slot-catcher"
+            ],
+            "composables": [
+                "attach"
+            ],
+            "types": [
+                "components/attach-target"
+            ]
+        },
+        "button": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-properties",
+                "device-is"
+            ],
+            "types": [
+                "components/button"
+            ]
+        },
+        "dialog": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-is",
+                "device-properties",
+                "dialog",
+                "focus-trap"
+            ],
+            "types": [
+                "components/dialog",
+                "composables/dialog"
+            ]
+        },
+        "drawer": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-is",
+                "device-properties",
+                "dialog",
+                "focus-trap"
+            ],
+            "types": [
+                "components/drawer",
+                "composables/dialog"
+            ]
+        },
+        "popover": {
+            "components": [
+                "attach-target"
+            ],
+            "composables": [
+                "dialog",
+                "device-is",
+                "device-properties",
+                "class-list",
+                "focus-trap"
+            ],
+            "types": [
+                "components/popover",
+                "composables/dialog",
+                "components/attach-target"
+            ]
+        },
+        "slot-catcher": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "components/slot-catcher"
+            ]
+        },
+        "toast": {
+            "components": [],
+            "composables": [
+                "toast",
+                "class-list",
+                "device-properties",
+                "device-is"
+            ],
+            "types": [
+                "components/toast",
+                "composables/toast"
+            ]
+        },
+        "tooltip": {
+            "components": [
+                "attach-target"
+            ],
+            "composables": [
+                "dialog",
+                "device-properties",
+                "device-is",
+                "class-list"
+            ],
+            "types": [
+                "components/tooltip",
+                "composables/dialog"
+            ]
+        }
+    },
+    "composables": {
+        "attach": {
+            "components": [],
+            "composables": [
+                "surrounding",
+                "timer"
+            ],
+            "types": [
+                "components/attach-target",
+                "composables/attach",
+                "composables/surrounding"
+            ]
+        },
+        "class-list": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "device-is": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/device-is"
+            ]
+        },
+        "device-properties": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/device-properties"
+            ]
+        },
+        "dialog": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/dialog"
+            ]
+        },
+        "focus-trap": {
+            "components": [],
+            "composables": [
+                "timer"
+            ],
+            "types": [
+                "composables/focus-trap"
+            ]
+        },
+        "surrounding": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/surrounding"
+            ]
+        },
+        "timer": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "toast": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/toast"
+            ]
+        }
+    },
+    "types": {
+        "composables/toast": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "components/toast": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/toast"
+            ]
+        }
+    }
+}

@@ -1,6 +1,7 @@
-import type { VNode, VNodeProps } from 'vue';
+// Types
+import type { VNode } from 'vue';
 
 export interface I<%camel%>SlotCatcherProps {
-    /** Settings to add to VNodes */
-    options: (vnode: VNode, index: number) => VNodeProps;
+    /** Map VNode */
+    mapVNode?: (vnode: VNode) => VNode | null;
 }

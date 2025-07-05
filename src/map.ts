@@ -4,10 +4,13 @@ import path from 'node:path';
 
 // Utils
 import { cutData, multiReplace } from './utils/template-utils';
+import { splitCamelCase } from './utils/string-utils';
 
 // Logger
 import { logger } from './logger';
-import { splitCamelCase } from './utils/string-utils';
+
+// Dependencies collection
+import { writeDeps } from './collect-dependencies';
 
 const STYLES_PATH = path.join(process.cwd(), 'front', 'src', 'assets', 'css', 'styles');
 const COMPONENTS_PATH = path.join(process.cwd(), 'front', 'src', 'components', 'ui');
@@ -198,6 +201,8 @@ async function init() {
     logger.time('Mapping duration');
 
     await Promise.all([mapAllStyles(), mapAllComponents(), mapAllComposables(), mapTypes()]);
+
+    await writeDeps();
 
     logger.timeEnd('Mapping duration');
 }

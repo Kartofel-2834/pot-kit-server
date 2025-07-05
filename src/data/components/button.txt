@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 // Types
 import type { I<%camel%>ButtonProps } from '<%typesImport%>/components/button';
-import type { E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius } from '<%typesImport%>';
 
 // Vue
 import { computed } from 'vue';
@@ -11,15 +10,13 @@ import { useClassList } from '<%composablesImport%>/class-list';
 import { useDeviceProperties } from '<%composablesImport%>/device-properties';
 import { useDeviceIs } from '<%composablesImport%>/device-is';
 
-const $props = withDefaults(
-    defineProps<I<%camel%>ButtonProps<E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius>>(),
-    {
-        tag: 'button',
-    },
-);
+const $props = withDefaults(defineProps<I<%camel%>ButtonProps>(), {
+    tag: 'button',
+});
 
 const $deviceIs = useDeviceIs();
 
+// Computed
 const properties = computed(() => {
     return useDeviceProperties(
         {

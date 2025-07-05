@@ -1,0 +1,122 @@
+<script lang="ts" generic="T = unknown" setup>
+// Types
+import type { I<%camel%>ToastProps } from '<%typesImport%>/components/toast';
+import type { IToastDialog } from '<%typesImport%>/composables/toast';
+
+// Constants
+import { <%upper%>_TOAST_POSITION } from '<%typesImport%>/components/toast';
+
+// Vue
+import { computed, ref } from 'vue';
+
+// Composables
+import { useToast } from '<%composablesImport%>/toast';
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-properties';
+import { useDeviceIs } from '<%composablesImport%>/device-is';
+
+const $props = withDefaults(defineProps<I<%camel%>ToastProps<T>>(), {
+    group: undefined,
+    position: <%upper%>_TOAST_POSITION.BOTTOM_RIGHT,
+    to: 'body',
+    transition: '<%kebab%>-toast-transition',
+});
+
+const $deviceIs = useDeviceIs();
+
+const $toast = useToast();
+
+// Data
+const toastDialogsList = ref<HTMLElement[]>([]);
+
+// Computed
+const toastsList = computed(() => $toast.list.value.filter(toast => toast.group === $props.group));
+
+const teleportTo = computed(() => $props.to ?? 'body');
+
+const properties = computed(() => {
+    return useDeviceProperties(
+        {
+            position: $props.position,
+            size: $props.size,
+            color: $props.color,
+            radius: $props.radius,
+        },
+        $deviceIs.device.value,
+        $props.devices,
+    );
+});
+
+const classList = computed(() => useClassList({ ...properties.value }));
+
+// Methods
+function getData(toast: IToastDialog): T {
+    return toast.data as T;
+}
+</script>
+
+<template>
+    <Teleport
+        :to="teleportTo"
+        :disabled="!to"
+    >
+        <TransitionGroup
+            :name="transition"
+            class="<%kebab%>-toast"
+            tag="div"
+        >
+            <div
+                v-for="(toastDialog, index) in toastsList"
+                :key="toastDialog.id.description"
+                ref="toastDialogsList"
+                class="<%kebab%>-toast__container"
+            >
+                <slot
+                    :id="toastDialog.id"
+                    :data="getData(toastDialog)"
+                    :index="index"
+                    :close="() => $toast.remove(toastDialog.id)"
+                >
+                    {{ toastDialog.data }}
+                </slot>
+            </div>
+        </TransitionGroup>
+    </Teleport>
+</template>
+
+<style>
+.<%kebab%>-toast {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    top: 0;
+    left: 0;
+}
+
+.<%kebab%>-toast__container {
+    position: relative;
+    max-height: 1000px;
+
+    background-color: cadetblue;
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* --- Transition - Toast --- */
+.<%kebab%>-toast-transition-enter-active,
+.<%kebab%>-toast-transition-leave-active {
+    transition:
+        max-height 0.45s cubic-bezier(0, 1, 0, 1),
+        opacity 0.2s,
+        margin-bottom 0.4s;
+}
+
+.<%kebab%>-toast-transition-enter-from,
+.<%kebab%>-toast-transition-leave-to {
+    opacity: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    max-height: 0;
+}
+</style>

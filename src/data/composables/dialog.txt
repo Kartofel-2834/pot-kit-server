@@ -1,32 +1,43 @@
 // Types
 import type {
+    EDialogLayers,
     IDialog,
     IDialogManager,
     IDialogOptions,
     IDialogsSetupOptions,
-    TDialogTrigger,
 } from '<%typesImport%>/composables/dialog';
 
-// Vue
-import { computed, ref, watch } from 'vue';
+// Constants
+import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
-const dialogsQueue = ref<IDialogManager[]>([]);
-const defaultTriggersDelays: Record<TDialogTrigger, number> = {
-    click: 100,
-    escape: 0,
+// Vue
+import { ref, watch } from 'vue';
+
+const defaultConfig: IDialogsSetupOptions = {
+    triggersStartDelays: {
+        clickoutside: 100,
+        escape: 0,
+    },
 };
 
-let triggersDelays: Record<TDialogTrigger, number> = { ...defaultTriggersDelays };
+const config = ref<IDialogsSetupOptions>({ ...defaultConfig });
+const layers = Object.values(DIALOG_LAYERS).sort((a, b) => a - b);
+
+const dialogsQueue = ref<IDialogManager[]>([]);
 
 /** Setup dialogs trigger listeners */
-export function setup(options: IDialogsSetupOptions = {}) {
+export function setup(options: Partial<IDialogsSetupOptions> = {}) {
     dialogsQueue.value = [];
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('click', handleClick);
 
-    triggersDelays = {
-        ...defaultTriggersDelays,
-        ...(options.triggersStartDelays ?? {}),
+    config.value = {
+        ...defaultConfig,
+        ...options,
+        triggersStartDelays: {
+            ...defaultConfig.triggersStartDelays,
+            ...(options.triggersStartDelays ?? {}),
+        },
     };
 }
 
@@ -35,7 +46,24 @@ export function terminate() {
     window.removeEventListener('keydown', handleKeydown);
     window.removeEventListener('click', handleClick);
 
-    triggersDelays = { ...defaultTriggersDelays };
+    config.value = { ...defaultConfig };
+}
+
+/** Composable for getting dialog's current z-index */
+export function useDialogZIndex(dialog: IDialog): number {
+    const currentLayer = dialog.layer.value;
+    const nextLayer = layers[layers.indexOf(currentLayer) + 1] ?? Infinity;
+
+    const layerQueue = dialogsQueue.value.filter(v => v.layer === currentLayer);
+    const index = layerQueue.findIndex(v => v.id === dialog.id);
+
+    const zIndex = currentLayer + Math.max(0, index);
+
+    return zIndex < nextLayer ? zIndex : nextLayer;
+}
+
+export function useDialogLayer(...layers: Array<EDialogLayers | undefined>): EDialogLayers {
+    return Math.max(...layers.filter(v => v !== undefined)) as EDialogLayers;
 }
 
 /** Composable for adding dialogs to global queue with triggers */
@@ -43,25 +71,34 @@ export function useDialog(options: IDialogOptions): IDialog {
     const newDialogId = generateDialogId();
     const dialogManager: IDialogManager = {
         id: newDialogId,
+        layer: options.layer.value,
         triggers: options.triggers ?? ['escape'],
         updatedAt: Date.now(),
+        createdAt: Date.now(),
         open: () => options.open(),
         close: () => options.close(),
     };
 
     const unwatch = watch(
-        () => options.isOpen.value,
+        () => [options.isOpen.value, options.layer.value],
         (newValue, oldValue) => {
-            if (newValue === oldValue) return;
+            const [newIsOpen, newLayer] = newValue as [boolean, EDialogLayers];
+            const [oldIsOpen] = oldValue ?? [false, 0];
+
+            if (newIsOpen === oldIsOpen) return;
 
             dialogManager.updatedAt = Date.now();
+            dialogManager.layer = newLayer;
+
             const updatedQueue = dialogsQueue.value.filter(v => v.id !== newDialogId);
 
-            if (newValue) {
+            if (newIsOpen) {
                 updatedQueue.push(dialogManager);
             }
 
-            dialogsQueue.value = updatedQueue;
+            dialogsQueue.value = updatedQueue.sort(
+                (a, b) => a.layer - b.layer || a.createdAt - b.createdAt,
+            );
         },
         { immediate: true },
     );
@@ -70,12 +107,12 @@ export function useDialog(options: IDialogOptions): IDialog {
         id: newDialogId,
         isOpen: options.isOpen,
         triggers: options.triggers,
-        queueIndex: computed(() => dialogsQueue.value.findIndex(v => v.id === newDialogId)),
+        layer: options.layer,
         close: () => options.close(),
         open: () => options.open(),
         terminate: () => {
-            options.close();
             unwatch();
+            dialogsQueue.value = dialogsQueue.value.filter(v => v.id !== newDialogId);
         },
     };
 }
@@ -85,9 +122,11 @@ function generateDialogId(): Symbol {
     return Symbol(Math.random().toString(36).slice(2, 9));
 }
 
-/*** Handle click event */
+/** Handle clickoutside event */
 function handleClick(event: MouseEvent) {
-    const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('click'));
+    if (!dialogsQueue.value.length) return;
+
+    const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('clickoutside'));
     const dialogManager = clickTriggerDialogs[clickTriggerDialogs.length - 1] ?? null;
 
     if (!dialogManager || !dialogManager.id.description) return;
@@ -100,8 +139,9 @@ function handleClick(event: MouseEvent) {
     if (dialogIdAttributes.includes(dialogManager.id.description)) return;
 
     const delay = Date.now() - dialogManager.updatedAt;
+    const configDelay = config.value.triggersStartDelays.clickoutside;
 
-    if (triggersDelays.click && delay < triggersDelays.click) return;
+    if (configDelay && delay < configDelay) return;
 
     dialogManager.close();
 }
@@ -116,8 +156,9 @@ function handleKeydown(event: KeyboardEvent) {
     if (!dialogManager) return;
 
     const delay = Date.now() - dialogManager.updatedAt;
+    const configDelay = config.value.triggersStartDelays.escape;
 
-    if (triggersDelays.escape && delay < triggersDelays.escape) return;
+    if (configDelay && delay < configDelay) return;
 
     dialogManager.close();
 }

@@ -1,0 +1,86 @@
+// Types
+import type { Ref, RendererElement } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_DIALOG_POSITION = {
+    TOP_RIGHT: 'top-right',
+    TOP_LEFT: 'top-left',
+    TOP: 'top',
+
+    BOTTOM_RIGHT: 'bottom-right',
+    BOTTOM_LEFT: 'bottom-left',
+    BOTTOM: 'bottom',
+
+    RIGHT: 'right',
+    LEFT: 'left',
+    CENTER: 'center',
+} as const;
+
+export const <%upper%>_DIALOG_SIZE = {} as const;
+
+export const <%upper%>_DIALOG_COLOR = {} as const;
+
+export const <%upper%>_DIALOG_RADIUS = {} as const;
+
+export type E<%camel%>DialogPosition = (typeof <%upper%>_DIALOG_POSITION)[keyof typeof <%upper%>_DIALOG_POSITION];
+
+export type E<%camel%>DialogSize = (typeof <%upper%>_DIALOG_SIZE)[keyof typeof <%upper%>_DIALOG_SIZE];
+
+export type E<%camel%>DialogColor = (typeof <%upper%>_DIALOG_COLOR)[keyof typeof <%upper%>_DIALOG_COLOR];
+
+export type E<%camel%>DialogRadius = (typeof <%upper%>_DIALOG_RADIUS)[keyof typeof <%upper%>_DIALOG_COLOR];
+
+export interface I<%camel%>DialogProps {
+    /** Dialog visibility flag */
+    visible?: boolean;
+
+    /** Dialog visibility flag */
+    modelValue?: boolean;
+
+    /** Dialog position */
+    position?: E<%camel%>DialogPosition | E<%camel%>DialogPosition[] | null;
+
+    /** Dialog teleport target */
+    to?: string | RendererElement | null;
+
+    /** Dialog will not have overlay */
+    noOverlay?: boolean;
+
+    /** Dialog will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Dialog will not lock focus outside of container */
+    noFocusTrap?: boolean;
+
+    /** Dialog transition name */
+    transition?: string;
+
+    /** Semantic aria-aria-labelledby attribute value */
+    ariaLabelledby?: string;
+
+    /** Semantic aria-describedby attribute value */
+    ariaDescribedby?: string;
+
+    /** Dialog size */
+    size?: E<%camel%>DialogSize | E<%camel%>DialogSize[] | null;
+
+    /** Dialog color */
+    color?: E<%camel%>DialogColor | E<%camel%>DialogColor[] | null;
+
+    /** Dialog border radius */
+    radius?: E<%camel%>DialogRadius | E<%camel%>DialogRadius[] | null;
+
+    /** Breakpoints names for responsive design */
+    devices?: E<%camel%>Device[];
+}
+
+export interface I<%camel%>DialogExports {
+    /** Dialog visibility flag */
+    isOpen: Readonly<Ref<boolean>>;
+
+    /** Open dialog */
+    open: () => void;
+
+    /** Close dialog */
+    close: () => void;
+}

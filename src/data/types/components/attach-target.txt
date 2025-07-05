@@ -1,7 +1,7 @@
 // Types
 import type { Ref } from 'vue';
 
-export const POT_ATTACHED_BOX_POSITION = {
+export const <%upper%>_ATTACHED_BOX_POSITION = {
     TOP_START: 'top-start',
     TOP_END: 'top-end',
     TOP_CENTER: 'top-center',
@@ -19,15 +19,15 @@ export const POT_ATTACHED_BOX_POSITION = {
     RIGHT_CENTER: 'right-center',
 } as const;
 
-export type EPotAttachedBoxPosition =
-    (typeof POT_ATTACHED_BOX_POSITION)[keyof typeof POT_ATTACHED_BOX_POSITION];
+export type E<%camel%>AttachedBoxPosition =
+    (typeof <%upper%>_ATTACHED_BOX_POSITION)[keyof typeof <%upper%>_ATTACHED_BOX_POSITION];
 
-export interface IPotAttachTargetProps {
+export interface I<%camel%>AttachTargetProps {
     /** Box element */
     box: Element | null;
 
     /** Box position that relative to target */
-    position?: EPotAttachedBoxPosition;
+    position?: E<%camel%>AttachedBoxPosition;
 
     /** Distance between box and target */
     nudge?: number;
@@ -45,7 +45,7 @@ export interface IPotAttachTargetProps {
     target?: Element | null;
 }
 
-export interface IPotAttachTargetExpose {
+export interface I<%camel%>AttachTargetExpose {
     /** Box top-left corner X coordinate on screen */
     boxX: Readonly<Ref<number>>;
 

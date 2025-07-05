@@ -1,38 +1,42 @@
 <script lang="ts" setup>
 // Types
-import type { VNode, VNodeProps } from 'vue';
-import type { I<%camel%>PopoverProps } from '<%typesImport%>/components/popover';
-import type { E<%camel%>Color, E<%camel%>Device, E<%camel%>Radius, E<%camel%>Size } from '<%typesImport%>';
+import type { Ref } from 'vue';
+import type { I<%camel%>PopoverExpose, I<%camel%>PopoverProps } from '<%typesImport%>/components/popover';
+import type { EDialogLayers } from '<%typesImport%>/composables/dialog';
 
 // Constants
-import { <%upper%>_POPOVER_POSITION } from '<%typesImport%>/components/popover';
+import { <%upper%>_ATTACHED_BOX_POSITION } from '<%typesImport%>/components/attach-target';
+import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
 // Vue
-import { computed, onUnmounted, ref, watch } from 'vue';
-
-// Components
-import <%camel%>SlotCatcher from '<%componentsImport%>/<%camel%>SlotCatcher.vue';
+import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
 
 // Composables
-import { usePopover } from '<%composablesImport%>/popover';
-import { useDialog } from '<%composablesImport%>/dialog';
+import { useDialog, useDialogLayer, useDialogZIndex } from '<%composablesImport%>/dialog';
 import { useDeviceIs } from '<%composablesImport%>/device-is';
 import { useDeviceProperties } from '<%composablesImport%>/device-properties';
 import { useClassList } from '<%composablesImport%>/class-list';
+import { useFocusTrap } from '<%composablesImport%>/focus-trap';
 
-const $props = withDefaults(
-    defineProps<I<%camel%>PopoverProps<E<%camel%>Device, E<%camel%>Color, E<%camel%>Size, E<%camel%>Radius>>(),
-    {
-        visible: undefined,
-        modelValue: undefined,
-        position: <%upper%>_POPOVER_POSITION.TOP_CENTER,
-        nudge: 10,
-        edgeMargin: 10,
-        persistent: false,
-        sticky: true,
-        to: 'body',
-    },
-);
+// Components
+import <%camel%>AttachTarget from '<%componentsImport%>/<%camel%>AttachTarget.vue';
+
+const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
+const $parentLayer = inject<Ref<EDialogLayers>>('<%kebab%>-dialog-layer', ref(DIALOG_LAYERS.NONE));
+
+const $props = withDefaults(defineProps<I<%camel%>PopoverProps>(), {
+    visible: undefined,
+    modelValue: undefined,
+    position: <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER,
+    nudge: 10,
+    edgeMargin: 10,
+    persistent: false,
+    noSticky: false,
+    noAutoFocus: false,
+    noFocusTrap: false,
+    to: 'body',
+    transition: '<%kebab%>-popover-transition',
+});
 
 const $emit = defineEmits<{
     open: [];
@@ -40,53 +44,34 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
-const $popover = usePopover($props);
-
 const $dialog = useDialog({
-    triggers: ['click', 'escape'],
+    triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
     close: close,
     open: open,
 });
 
 const $deviceIs = useDeviceIs();
 
-const targetKey = ref<string | null>('');
-const target = ref<Element | null>(null);
-const popover = ref<Element | null>(null);
+const $focusTrap = useFocusTrap();
 
-// Captures target element
-const slotTargetOptions = (vnode: VNode, index: number): VNodeProps => {
-    return {
-        key: `<%kebab%>-popover-target_${index}`,
-
-        onVnodeMounted(vnode) {
-            if (target.value || !(vnode.el instanceof Element) || typeof vnode.key !== 'string') {
-                return;
-            }
-
-            target.value = vnode.el as Element;
-            targetKey.value = vnode.key;
-        },
-
-        onVnodeBeforeUnmount(vnode) {
-            if (targetKey.value !== vnode.key) return;
-
-            target.value = null;
-            targetKey.value = null;
-        },
-    };
-};
+// Data
+const box = ref<Element | null>(null);
+const attachTarget = ref<InstanceType<typeof <%camel%>AttachTarget> | null>(null);
 
 // Lifecycle
 onUnmounted(() => $dialog.terminate());
 
 // Computed
-const currentTarget = computed(() => $props.target ?? target.value ?? null);
+const teleportTo = computed(() => $props.to ?? 'body');
 
 const properties = computed(() => {
     return useDeviceProperties(
         {
+            position: $props.position,
+            nudge: $props.nudge,
+            edgeMargin: $props.edgeMargin,
             color: $props.color,
             size: $props.size,
             radius: $props.radius,
@@ -98,33 +83,31 @@ const properties = computed(() => {
 
 const classList = computed(() => useClassList({ ...properties.value }));
 
-const styles = computed(() => {
-    const isResizing =
-        $popover.isTargetResizing.value ||
-        $popover.isSurroundingResizing.value ||
-        $popover.isPopoverResizing.value;
+const currentStyles = computed(() => {
+    const x = attachTarget.value?.boxX ?? 0;
+    const y = attachTarget.value?.boxY ?? 0;
 
     return {
-        ...(isResizing ? { opacity: 0 } : {}),
-        transform: `translate(${$popover.x.value}px, ${$popover.y.value}px)`,
+        zIndex: useDialogZIndex($dialog),
+        transform: `translate(${x}px, ${y}px)`,
     };
 });
 
 // Watchers
 watch(
-    () => [popover.value, currentTarget.value],
+    () => [box.value, $props.noFocusTrap],
     newValue => {
-        const [newPopover, newTarget] = newValue ?? [];
+        const [box] = newValue;
 
-        if (newPopover && newTarget) {
-            $popover.setPopover(newPopover);
-            $popover.setTarget(newTarget);
-            $popover.setup();
+        if (box instanceof Element) {
+            $focusTrap.setup(box, {
+                trap: !$props.noFocusTrap,
+                autofocus: !$props.noAutoFocus,
+            });
         } else {
-            $popover.terminate();
+            $focusTrap.terminate();
         }
     },
-    { immediate: true },
 );
 
 // Methods
@@ -137,27 +120,53 @@ function close() {
     $emit('close');
     $emit('update:modelValue', false);
 }
+
+// Exports
+provide('<%kebab%>-dialog-layer', $dialog.layer);
+
+defineExpose<I<%camel%>PopoverExpose>({
+    isOpen: readonly($dialog.isOpen),
+    x: attachTarget.value?.boxX,
+    y: attachTarget.value?.boxY,
+    target: attachTarget.value?.target as Element,
+    popover: box.value,
+    open: () => $dialog.open(),
+    close: () => $dialog.close(),
+});
 </script>
 
 <template>
-    <Teleport :to="to">
-        <Transition name="<%kebab%>-popover-transition">
+    <Teleport
+        :to="teleportTo"
+        :disabled="!to"
+    >
+        <Transition :name="transition">
             <div
+                ref="box"
                 v-if="$dialog.isOpen.value"
                 v-bind="$attrs"
-                ref="popover"
-                :<%kebab%>-dialog-id="$dialog.id.description"
+                :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                 :class="['<%kebab%>-popover', classList]"
-                :style="styles"
+                :style="currentStyles"
+                :<%kebab%>-dialog-id="$dialog.id.description"
             >
                 <slot />
             </div>
         </Transition>
     </Teleport>
 
-    <<%camel%>SlotCatcher :options="slotTargetOptions">
+    <<%camel%>AttachTarget
+        ref="attachTarget"
+        :box="box"
+        :position="properties.position"
+        :edge-margin="properties.edgeMargin"
+        :nudge="properties.nudge"
+        :target="target"
+        :sticky="!noSticky"
+        :persistent="persistent"
+    >
         <slot name="target" />
-    </<%camel%>SlotCatcher>
+    </<%camel%>AttachTarget>
 </template>
 
 <style>
@@ -166,7 +175,6 @@ function close() {
     top: 0;
     left: 0;
     border-style: solid;
-    transition: opacity 0.2s ease;
 }
 
 .<%kebab%>-popover-transition-enter-active,

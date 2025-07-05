@@ -1,4 +1,5 @@
-import type { VNode, VNodeProps } from 'vue';
+// Types
+import type { VNode } from 'vue';
 
 export interface IPotSlotCatcherProps {
     /** Map VNode */

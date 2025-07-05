@@ -1,23 +1,33 @@
-export interface I<%camel%>ButtonProps<
-    TDevice extends string = string,
-    TColor extends string = string,
-    TSize extends string = string,
-    TRadius extends string = string,
-> {
+// Types
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_BUTTON_SIZE = {} as const;
+
+export const <%upper%>_BUTTON_COLOR = {} as const;
+
+export const <%upper%>_BUTTON_RADIUS = {} as const;
+
+export type E<%camel%>ButtonSize = (typeof <%upper%>_BUTTON_SIZE)[keyof typeof <%upper%>_BUTTON_SIZE];
+
+export type E<%camel%>ButtonColor = (typeof <%upper%>_BUTTON_COLOR)[keyof typeof <%upper%>_BUTTON_COLOR];
+
+export type E<%camel%>ButtonRadius = (typeof <%upper%>_BUTTON_RADIUS)[keyof typeof <%upper%>_BUTTON_COLOR];
+
+export interface I<%camel%>ButtonProps {
     /** Button HTML-tag */
     tag?: string;
 
     /** Button size */
-    size?: TSize | TSize[] | null;
+    size?: E<%camel%>ButtonSize | E<%camel%>ButtonSize[] | null;
 
     /** Button color */
-    color?: TColor | TColor[] | null;
+    color?: E<%camel%>ButtonColor | E<%camel%>ButtonColor[] | null;
 
     /** Button border radius */
-    radius?: TRadius | TRadius[] | null;
+    radius?: E<%camel%>ButtonRadius | E<%camel%>ButtonRadius[] | null;
 
     /** Breakpoints names for responsive design */
-    devices?: TDevice[];
+    devices?: E<%camel%>Device[];
 
     /** If true, the button length will be equal to the width from the size prop */
     square?: boolean;
