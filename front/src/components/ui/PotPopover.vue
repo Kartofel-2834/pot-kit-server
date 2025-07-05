@@ -2,7 +2,6 @@
 // Types
 import type { Ref } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
-import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -17,30 +16,27 @@ import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useClassList } from '@/composables/class-list';
+import { useFocusTrap } from '@/composables/focus-trap';
 
 // Components
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
-import { useFocusTrap } from '@/composables/focus-trap';
 
-const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
+const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(
-    defineProps<IPotPopoverProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
-    {
-        visible: undefined,
-        modelValue: undefined,
-        position: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
-        nudge: 10,
-        edgeMargin: 10,
-        persistent: false,
-        noSticky: false,
-        noAutoFocus: false,
-        noFocusTrap: false,
-        to: 'body',
-        transition: 'pot-popover-transition',
-    },
-);
+const $props = withDefaults(defineProps<IPotPopoverProps>(), {
+    visible: undefined,
+    modelValue: undefined,
+    position: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
+    nudge: 10,
+    edgeMargin: 10,
+    persistent: false,
+    noSticky: false,
+    noAutoFocus: false,
+    noFocusTrap: false,
+    to: 'body',
+    transition: 'pot-popover-transition',
+});
 
 const $emit = defineEmits<{
     open: [];

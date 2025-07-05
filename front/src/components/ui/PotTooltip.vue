@@ -6,7 +6,6 @@
 // Types
 import type { Ref } from 'vue';
 import type { IPotTooltipExpose, IPotTooltipProps } from '@/types/components/tooltip';
-import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -29,24 +28,19 @@ const isOpen = ref<boolean>(false);
 const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(
-    defineProps<
-        IPotTooltipProps<TOpenTriggers, TCloseTriggers, EPotDevice, EPotColor, EPotSize, EPotRadius>
-    >(),
-    {
-        text: '',
-        to: 'body',
-        openDelay: 0,
-        closeDelay: 200,
-        autoCloseDelay: 0,
-        openTriggers: () => ['mouseover', 'focus'] as TOpenTriggers,
-        closeTriggers: () => ['mouseout', 'blur'] as TCloseTriggers,
-        openTriggersDelay: () => ({ mouseover: 200 }),
-        closeTriggersDelay: () => ({ mouseover: 400 }),
-        enterable: false,
-        transition: 'pot-tooltip-transition',
-    },
-);
+const $props = withDefaults(defineProps<IPotTooltipProps<TOpenTriggers, TCloseTriggers>>(), {
+    text: '',
+    to: 'body',
+    openDelay: 0,
+    closeDelay: 200,
+    autoCloseDelay: 0,
+    openTriggers: () => ['mouseover', 'focus'] as TOpenTriggers,
+    closeTriggers: () => ['mouseout', 'blur'] as TCloseTriggers,
+    openTriggersDelay: () => ({ mouseover: 200 }),
+    closeTriggersDelay: () => ({ mouseover: 400 }),
+    enterable: false,
+    transition: 'pot-tooltip-transition',
+});
 
 const $emit = defineEmits<{
     open: [];

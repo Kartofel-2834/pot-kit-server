@@ -1,5 +1,6 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
+import type { EPotDevice } from '@/types';
 
 export const POT_DIALOG_POSITION = {
     TOP_RIGHT: 'top-right',
@@ -15,14 +16,21 @@ export const POT_DIALOG_POSITION = {
     CENTER: 'center',
 } as const;
 
+export const POT_DIALOG_SIZE = {} as const;
+
+export const POT_DIALOG_COLOR = {} as const;
+
+export const POT_DIALOG_RADIUS = {} as const;
+
 export type EPotDialogPosition = (typeof POT_DIALOG_POSITION)[keyof typeof POT_DIALOG_POSITION];
 
-export interface IPotDialogProps<
-    TDevice extends string = string,
-    TColor extends string = string,
-    TSize extends string = string,
-    TRadius extends string = string,
-> {
+export type EPotDialogSize = (typeof POT_DIALOG_SIZE)[keyof typeof POT_DIALOG_SIZE];
+
+export type EPotDialogColor = (typeof POT_DIALOG_COLOR)[keyof typeof POT_DIALOG_COLOR];
+
+export type EPotDialogRadius = (typeof POT_DIALOG_RADIUS)[keyof typeof POT_DIALOG_COLOR];
+
+export interface IPotDialogProps {
     /** Dialog visibility flag */
     visible?: boolean;
 
@@ -54,16 +62,16 @@ export interface IPotDialogProps<
     ariaDescribedby?: string;
 
     /** Dialog size */
-    size?: TSize | TSize[] | null;
+    size?: EPotDialogSize | EPotDialogSize[] | null;
 
     /** Dialog color */
-    color?: TColor | TColor[] | null;
+    color?: EPotDialogColor | EPotDialogColor[] | null;
 
     /** Dialog border radius */
-    radius?: TRadius | TRadius[] | null;
+    radius?: EPotDialogRadius | EPotDialogRadius[] | null;
 
     /** Breakpoints names for responsive design */
-    devices?: TDevice[];
+    devices?: EPotDevice[];
 }
 
 export interface IPotDialogExports {

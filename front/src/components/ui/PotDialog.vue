@@ -2,7 +2,6 @@
 // Types
 import type { Ref } from 'vue';
 import type { IPotDialogExports, IPotDialogProps } from '@/types/components/dialog';
-import type { EPotColor, EPotDevice, EPotRadius, EPotSize } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -22,18 +21,15 @@ import { useFocusTrap } from '@/composables/focus-trap';
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(
-    defineProps<IPotDialogProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
-    {
-        visible: undefined,
-        modelValue: undefined,
-        position: POT_DIALOG_POSITION.CENTER,
-        to: 'body',
-        transition: 'pot-dialog-transition',
-        noOverlay: false,
-        noFocus: false,
-    },
-);
+const $props = withDefaults(defineProps<IPotDialogProps>(), {
+    visible: undefined,
+    modelValue: undefined,
+    position: POT_DIALOG_POSITION.CENTER,
+    to: 'body',
+    transition: 'pot-dialog-transition',
+    noOverlay: false,
+    noFocus: false,
+});
 
 const $emit = defineEmits<{
     open: [];
@@ -161,7 +157,7 @@ defineExpose<IPotDialogExports>({
 }
 
 .pot-dialog__container {
-    position: relative;
+    position: fixed;
     overflow: auto;
 }
 
@@ -174,32 +170,26 @@ defineExpose<IPotDialogExports>({
 }
 
 /* --- Position - Center --- */
-.pot-dialog._position-center {
+.pot-dialog._position-center .pot-dialog__container {
     --pot-dialog-position-transform: scale(0.5) translate(-50%, -50%);
 
     top: 50%;
     left: 50%;
-}
-
-.pot-dialog._position-center .pot-dialog__container {
     transform-origin: left;
     transform: scale(1) translate(-50%, -50%);
 }
 
 /* --- Position - Bottom --- */
-.pot-dialog._position-bottom {
+.pot-dialog._position-bottom .pot-dialog__container {
     --pot-dialog-position-transform: translate(-50%, calc(100% + var(--pot-dialog-edge-margin)));
 
     bottom: var(--pot-dialog-edge-margin);
     left: 50%;
-}
-
-.pot-dialog._position-bottom .pot-dialog__container {
     transform: translateX(-50%);
 }
 
 /* --- Position - Bottom-Left --- */
-.pot-dialog._position-bottom-left {
+.pot-dialog._position-bottom-left .pot-dialog__container {
     --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-edge-margin)));
 
     bottom: var(--pot-dialog-edge-margin);
@@ -207,7 +197,7 @@ defineExpose<IPotDialogExports>({
 }
 
 /* --- Position - Bottom-Right --- */
-.pot-dialog._position-bottom-right {
+.pot-dialog._position-bottom-right .pot-dialog__container {
     --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-edge-margin)));
 
     bottom: var(--pot-dialog-edge-margin);
@@ -215,19 +205,16 @@ defineExpose<IPotDialogExports>({
 }
 
 /* --- Position - Top --- */
-.pot-dialog._position-top {
+.pot-dialog._position-top .pot-dialog__container {
     --pot-dialog-position-transform: translate(-50%, calc(-100% - var(--pot-dialog-edge-margin)));
 
     top: var(--pot-dialog-edge-margin);
     left: 50%;
-}
-
-.pot-dialog._position-top .pot-dialog__container {
     transform: translateX(-50%);
 }
 
 /* --- Position - Top-Left --- */
-.pot-dialog._position-top-left {
+.pot-dialog._position-top-left .pot-dialog__container {
     --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-edge-margin)));
 
     top: var(--pot-dialog-edge-margin);
@@ -235,7 +222,7 @@ defineExpose<IPotDialogExports>({
 }
 
 /* --- Position - Top-Right --- */
-.pot-dialog._position-top-right {
+.pot-dialog._position-top-right .pot-dialog__container {
     --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-edge-margin)));
 
     top: var(--pot-dialog-edge-margin);
@@ -243,26 +230,20 @@ defineExpose<IPotDialogExports>({
 }
 
 /* --- Position - Left --- */
-.pot-dialog._position-left {
+.pot-dialog._position-left .pot-dialog__container {
     --pot-dialog-position-transform: translate(calc(-100% - var(--pot-dialog-edge-margin)), -50%);
 
     top: 50%;
     left: var(--pot-dialog-edge-margin);
-}
-
-.pot-dialog._position-left .pot-dialog__container {
     transform: translateY(-50%);
 }
 
 /* --- Position - Right --- */
-.pot-dialog._position-right {
+.pot-dialog._position-right .pot-dialog__container {
     --pot-dialog-position-transform: translate(calc(100% + var(--pot-dialog-edge-margin)), -50%);
 
     top: 50%;
     right: var(--pot-dialog-edge-margin);
-}
-
-.pot-dialog._position-right .pot-dialog__container {
     transform: translateY(-50%);
 }
 

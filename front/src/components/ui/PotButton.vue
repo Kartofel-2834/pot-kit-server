@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 // Types
 import type { IPotButtonProps } from '@/types/components/button';
-import type { EPotDevice, EPotColor, EPotSize, EPotRadius } from '@/types';
 
 // Vue
 import { computed } from 'vue';
@@ -11,12 +10,9 @@ import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDeviceIs } from '@/composables/device-is';
 
-const $props = withDefaults(
-    defineProps<IPotButtonProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
-    {
-        tag: 'button',
-    },
-);
+const $props = withDefaults(defineProps<IPotButtonProps>(), {
+    tag: 'button',
+});
 
 const $deviceIs = useDeviceIs();
 

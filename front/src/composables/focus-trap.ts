@@ -102,6 +102,7 @@ export function useFocusTrap(): IFocusTrap {
             return;
         }
 
+        /** Tab */
         if (document.activeElement === lastFocusableElement) {
             firstFocusableElement.focus();
             event.preventDefault();

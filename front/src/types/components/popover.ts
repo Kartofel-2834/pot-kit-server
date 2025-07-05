@@ -1,13 +1,21 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
 import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
+import type { EPotDevice } from '@/types';
 
-export interface IPotPopoverProps<
-    TDevice extends string = string,
-    TColor extends string = string,
-    TSize extends string = string,
-    TRadius extends string = string,
-> {
+export const POT_POPOVER_SIZE = {} as const;
+
+export const POT_POPOVER_COLOR = {} as const;
+
+export const POT_POPOVER_RADIUS = {} as const;
+
+export type EPotPopoverSize = (typeof POT_POPOVER_SIZE)[keyof typeof POT_POPOVER_SIZE];
+
+export type EPotPopoverColor = (typeof POT_POPOVER_COLOR)[keyof typeof POT_POPOVER_COLOR];
+
+export type EPotPopoverRadius = (typeof POT_POPOVER_RADIUS)[keyof typeof POT_POPOVER_COLOR];
+
+export interface IPotPopoverProps {
     /** Popover visibility flag */
     visible?: boolean;
 
@@ -42,16 +50,16 @@ export interface IPotPopoverProps<
     noFocusTrap?: boolean;
 
     /** Popover size */
-    size?: TSize | TSize[] | null;
+    size?: EPotPopoverSize | EPotPopoverSize[] | null;
 
     /** Popover color */
-    color?: TColor | TColor[] | null;
+    color?: EPotPopoverColor | EPotPopoverColor[] | null;
 
     /** Popover border radius */
-    radius?: TRadius | TRadius[] | null;
+    radius?: EPotPopoverRadius | EPotPopoverRadius[] | null;
 
     /** Breakpoints names for responsive design */
-    devices?: TDevice[];
+    devices?: EPotDevice[];
 
     /** Popover transition name */
     transition?: string;

@@ -1,15 +1,21 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
-import type { EPotAttachedBoxPosition } from './attach-target';
+import type { EPotDevice } from '@/types';
+import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
 
-export interface IPotTooltipProps<
-    TOpenTriggers extends string[],
-    TCloseTriggers extends string[],
-    TDevice extends string = string,
-    TColor extends string = string,
-    TSize extends string = string,
-    TRadius extends string = string,
-> {
+export const POT_TOOLTIP_SIZE = {} as const;
+
+export const POT_TOOLTIP_COLOR = {} as const;
+
+export const POT_TOOLTIP_RADIUS = {} as const;
+
+export type EPotTooltipSize = (typeof POT_TOOLTIP_SIZE)[keyof typeof POT_TOOLTIP_SIZE];
+
+export type EPotTooltipColor = (typeof POT_TOOLTIP_COLOR)[keyof typeof POT_TOOLTIP_COLOR];
+
+export type EPotTooltipRadius = (typeof POT_TOOLTIP_RADIUS)[keyof typeof POT_TOOLTIP_COLOR];
+
+export interface IPotTooltipProps<TOpenTriggers extends string[], TCloseTriggers extends string[]> {
     /** Tooltip text (may be replaced by slot) */
     text?: string;
 
@@ -22,8 +28,10 @@ export interface IPotTooltipProps<
     /** Target events names, that will close tooltip */
     closeTriggers?: TCloseTriggers;
 
+    /** Tooltip delay between open triggers activation in milliseconds */
     openTriggersDelay?: { [key in TOpenTriggers[number]]?: number };
 
+    /** Tooltip delay between close triggers activation in milliseconds */
     closeTriggersDelay?: { [key in TCloseTriggers[number]]?: number };
 
     /** Tooltip open delay in milliseconds */
@@ -60,16 +68,16 @@ export interface IPotTooltipProps<
     target?: Element | null;
 
     /** Tooltip size */
-    size?: TSize | TSize[] | null;
+    size?: EPotTooltipSize | EPotTooltipSize[] | null;
 
     /** Tooltip color */
-    color?: TColor | TColor[] | null;
+    color?: EPotTooltipColor | EPotTooltipColor[] | null;
 
     /** Tooltip border radius */
-    radius?: TRadius | TRadius[] | null;
+    radius?: EPotTooltipRadius | EPotTooltipRadius[] | null;
 
     /** Breakpoints names for responsive design */
-    devices?: TDevice[];
+    devices?: EPotDevice[];
 }
 
 export interface IPotTooltipExpose {

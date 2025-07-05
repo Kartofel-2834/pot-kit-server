@@ -2,7 +2,6 @@
 // Types
 import type { Ref } from 'vue';
 import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
-import type { EPotSize, EPotColor, EPotDevice, EPotRadius } from '@/types';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -22,19 +21,16 @@ import { useFocusTrap } from '@/composables/focus-trap';
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(
-    defineProps<IPotDrawerProps<EPotDevice, EPotColor, EPotSize, EPotRadius>>(),
-    {
-        visible: undefined,
-        modelValue: undefined,
-        position: POT_DRAWER_POSITION.LEFT,
-        to: 'body',
-        transition: 'pot-drawer-transition',
-        noOverlay: false,
-        noAutoFocus: false,
-        noFocusTrap: false,
-    },
-);
+const $props = withDefaults(defineProps<IPotDrawerProps>(), {
+    visible: undefined,
+    modelValue: undefined,
+    position: POT_DRAWER_POSITION.LEFT,
+    to: 'body',
+    transition: 'pot-drawer-transition',
+    noOverlay: false,
+    noAutoFocus: false,
+    noFocusTrap: false,
+});
 
 const $emit = defineEmits<{
     open: [];

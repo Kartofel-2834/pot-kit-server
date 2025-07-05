@@ -14,27 +14,18 @@ import PotPopover from './components/ui/PotPopover.vue';
 import PotTooltip from './components/ui/PotTooltip.vue';
 import PotDrawer from './components/ui/PotDrawer.vue';
 import PotDialog from './components/ui/PotDialog.vue';
-
-// Composables
-import { setup as setupDialogs, terminate as terminateDialogs } from '@/composables/dialog';
-import { setup as setupDeviceIs, terminate as terminateDeviceIs } from '@/composables/device-is';
+import PotToast from './components/ui/PotToast.vue';
+import { useToast } from './composables/toast';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
+const isPopoverVisible2 = ref<boolean>(true);
 
 const mainRef = ref<Element | null>(null);
 const buttonRef = ref<Element | null>(null);
 
-onMounted(() => {
-    setupDialogs();
-    setupDeviceIs();
-});
-
-onUnmounted(() => {
-    terminateDialogs();
-    terminateDeviceIs();
-});
+const $toast = useToast<string>();
 </script>
 
 <template>
@@ -44,52 +35,16 @@ onUnmounted(() => {
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotDialog
-            v-model="isVisible"
-            position="right"
-            radius="large"
-            color="pot"
-            size="medium"
-            aria-labelledby="dialog-header"
-        >
-            <div
-                style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 4rem;
-                    height: 100%;
-                "
-            >
-                <PotPopover
-                    v-model="isPopoverVisible"
-                    size="medium"
-                    color="pot"
-                >
-                    <div style="background-color: red; color: white; padding: 10rem">
-                        <input />
-                    </div>
+        <PotButton @click="$toast.add({ data: 'bebra' })"> TOGGLE </PotButton>
 
-                    <template #target>
-                        <PotButton
-                            color="pot"
-                            size="large"
-                            @click="isPopoverVisible = !isPopoverVisible"
-                        >
-                            Popover
-                        </PotButton>
-                    </template>
-                </PotPopover>
+        <PotToast
+            v-slot="{ data, close }"
+            :toast="$toast"
+        >
+            <div @click="close">
+                {{ data }}
             </div>
-        </PotDialog>
-
-        <PotButton
-            color="pot"
-            size="medium"
-            @click="isVisible = !isVisible"
-        >
-            TOGGLE
-        </PotButton>
+        </PotToast>
     </main>
 </template>
 

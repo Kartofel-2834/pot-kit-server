@@ -1,5 +1,6 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
+import type { EPotDevice } from '@/types';
 
 export const POT_DRAWER_POSITION = {
     TOP: 'top',
@@ -8,14 +9,21 @@ export const POT_DRAWER_POSITION = {
     RIGHT: 'right',
 } as const;
 
+export const POT_DRAWER_SIZE = {} as const;
+
+export const POT_DRAWER_COLOR = {} as const;
+
+export const POT_DRAWER_RADIUS = {} as const;
+
 export type EPotDrawerPosition = (typeof POT_DRAWER_POSITION)[keyof typeof POT_DRAWER_POSITION];
 
-export interface IPotDrawerProps<
-    TDevice extends string = string,
-    TColor extends string = string,
-    TSize extends string = string,
-    TRadius extends string = string,
-> {
+export type EPotDrawerSize = (typeof POT_DRAWER_SIZE)[keyof typeof POT_DRAWER_SIZE];
+
+export type EPotDrawerColor = (typeof POT_DRAWER_COLOR)[keyof typeof POT_DRAWER_COLOR];
+
+export type EPotDrawerRadius = (typeof POT_DRAWER_RADIUS)[keyof typeof POT_DRAWER_COLOR];
+
+export interface IPotDrawerProps {
     /** Drawer visibility flag */
     visible?: boolean;
 
@@ -47,16 +55,16 @@ export interface IPotDrawerProps<
     ariaDescribedby?: string;
 
     /** Drawer size */
-    size?: TSize | TSize[] | null;
+    size?: EPotDrawerSize | EPotDrawerSize[] | null;
 
     /** Drawer color */
-    color?: TColor | TColor[] | null;
+    color?: EPotDrawerColor | EPotDrawerColor[] | null;
 
     /** Drawer border radius */
-    radius?: TRadius | TRadius[] | null;
+    radius?: EPotDrawerRadius | EPotDrawerRadius[] | null;
 
     /** Breakpoints names for responsive design */
-    devices?: TDevice[];
+    devices?: EPotDevice[];
 }
 
 export interface IPotDrawerExports {
