@@ -37,18 +37,8 @@ const $toast = useToast<string>();
         class="main"
         style="display: flex; flex-direction: column; justify-content: center; width: 100vw"
     >
-        <PotTooltip
-            size="medium"
-            color="pot"
-            text="Tooltip"
-        >
-            <PotButton
-                size="large"
-                color="pot"
-                @click="$toast.add({ data: 'bebra' })"
-            >
-                TOGGLE
-            </PotButton>
+        <PotTooltip text="Tooltip">
+            <PotButton @click="$toast.add({ data: 'bebra' })"> TOGGLE </PotButton>
         </PotTooltip>
 
         <PotToast

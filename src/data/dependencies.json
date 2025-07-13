@@ -125,14 +125,16 @@
             "components": [],
             "composables": [],
             "types": [
-                "composables/device-is"
+                "composables/device-is",
+                "index"
             ]
         },
         "device-properties": {
             "components": [],
             "composables": [],
             "types": [
-                "composables/device-properties"
+                "composables/device-properties",
+                "index"
             ]
         },
         "dialog": {
@@ -172,17 +174,18 @@
         }
     },
     "types": {
-        "composables/toast": {
-            "components": [],
-            "composables": [],
-            "types": []
-        },
         "components/toast": {
             "components": [],
             "composables": [],
             "types": [
+                "index",
                 "composables/toast"
             ]
+        },
+        "composables/toast": {
+            "components": [],
+            "composables": [],
+            "types": []
         }
     }
 }

@@ -26,7 +26,7 @@ const TYPES_GLOBAL_PATH = `@\/types`;
 // Import from paths
 const COMPONENTS_IMPORT_FROM_PATH = `${COMPONENTS_GLOBAL_PATH}(\/[a-zA-Z0-9\-\_\.\/]+)?`;
 const COMPOSABLES_IMPORT_FROM_PATH = `${COMPOSABLES_GLOBAL_PATH}(\/[a-zA-Z0-9\-\_\.\/]+)?`;
-const TYPES_IMPORT_FROM_PATH = `${TYPES_GLOBAL_PATH}\/([a-zA-Z0-9\-\_\.\/]+)?`;
+const TYPES_IMPORT_FROM_PATH = `${TYPES_GLOBAL_PATH}(\/([a-zA-Z0-9\-\_\.\/]+)?)?`;
 
 // Import paths regex
 const COMPONENT_IMPORT_PATH_REGEX = new RegExp(COMPONENTS_IMPORT_FROM_PATH, 'g');
@@ -48,7 +48,7 @@ const TYPE_IMPORT_REGEX = new RegExp(
     `import (type )?(.|\n)+ from (('${TYPES_IMPORT_FROM_PATH}')|("${TYPES_IMPORT_FROM_PATH}"))`,
     'gm',
 );
-
+console.log(TYPE_IMPORT_REGEX);
 function getComponentName(fileName: string): string {
     return splitCamelCase(path.basename(fileName, '.vue'), '-').replace(/^pot-/, '');
 }
@@ -78,8 +78,11 @@ function collectDeps(data: string): TPotDependencies {
         .map(v => trimPath(v.replace(COMPONENTS_GLOBAL_PATH, '')))
         .map(v => getComponentName(v));
 
+    types = types
+        .map(v => trimPath(v.replace(TYPES_GLOBAL_PATH, '')))
+        .map(v => (v.length ? v : 'index'));
+
     composables = composables.map(v => trimPath(v.replace(COMPOSABLES_GLOBAL_PATH, '')));
-    types = types.map(v => trimPath(v.replace(TYPES_GLOBAL_PATH, '')));
 
     components = [...new Set(components.filter(Boolean))];
     composables = [...new Set(composables.filter(Boolean))];
