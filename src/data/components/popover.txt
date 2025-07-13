@@ -171,10 +171,38 @@ defineExpose<I<%camel%>PopoverExpose>({
 
 <style>
 .<%kebab%>-popover {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-popover-color-background: transparent;
+    --<%kebab%>-popover-color-border: transparent;
+    --<%kebab%>-popover-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-popover-size-border: 0;
+    --<%kebab%>-popover-size-padding: 0;
+    --<%kebab%>-popover-size-shadow: none;
+    --<%kebab%>-popover-size-text: inherit;
+
+    /* --- Radius - Configuration --- */
+    --<%kebab%>-popover-radius-value: 0;
+
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
+
+    /* --- <%camel%>Popover - Color --- */
+    border-color: var(--<%kebab%>-popover-color-border);
+    background-color: var(--<%kebab%>-popover-color-background);
+    color: var(--<%kebab%>-popover-color-text);
+
+    /* --- <%camel%>Popover - Size --- */
+    border-width: var(--<%kebab%>-popover-size-border);
+    padding: var(--<%kebab%>-popover-size-padding);
+    box-shadow: var(--<%kebab%>-popover-size-shadow);
+    font-size: var(--<%kebab%>-popover-size-text);
+
+    /* --- <%camel%>Popover - Radius --- */
+    border-radius: var(--<%kebab%>-popover-radius-value);
 }
 
 .<%kebab%>-popover-transition-enter-active,

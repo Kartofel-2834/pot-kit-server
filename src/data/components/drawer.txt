@@ -151,6 +151,20 @@ defineExpose<I<%camel%>DrawerExports>({
 
 <style>
 .<%kebab%>-drawer {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-drawer-color-background: transparent;
+    --<%kebab%>-drawer-color-border: transparent;
+    --<%kebab%>-drawer-color-overlay: rgba(0, 0, 0, 0.3);
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-drawer-size-text: inherit;
+    --<%kebab%>-drawer-size-padding: 0;
+    --<%kebab%>-drawer-size-border: 1px;
+    --<%kebab%>-drawer-size-shadow: none;
+
+    /* --- Radius - Configuration --- */
+    --<%kebab%>-drawer-radius-value: 0;
+
     position: fixed;
 }
 
@@ -158,6 +172,19 @@ defineExpose<I<%camel%>DrawerExports>({
     position: relative;
     overflow: auto;
     border-style: solid;
+
+    /* --- <%camel%>Drawer - Color --- */
+    border-color: var(--<%kebab%>-drawer-color-border);
+    background-color: var(--<%kebab%>-drawer-color-background);
+
+    /* --- <%camel%>Drawer - Size --- */
+    padding: var(--<%kebab%>-drawer-size-padding);
+    border-width: var(--<%kebab%>-drawer-size-border);
+    font-size: var(--<%kebab%>-drawer-size-text);
+    box-shadow: var(--<%kebab%>-drawer-size-shadow);
+
+    /* --- <%camel%>Drawer - Radius --- */
+    border-radius: var(--<%kebab%>-drawer-radius-value);
 }
 
 .<%kebab%>-drawer__overlay {
@@ -166,6 +193,9 @@ defineExpose<I<%camel%>DrawerExports>({
     left: 0;
     width: 100%;
     height: 100%;
+
+    /* --- <%camel%>Drawer - Color --- */
+    background-color: var(--<%kebab%>-drawer-color-overlay);
 }
 
 /* --- Position - Left --- */

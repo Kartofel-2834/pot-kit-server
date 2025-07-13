@@ -356,10 +356,38 @@ defineExpose<I<%camel%>TooltipExpose>({
 
 <style>
 .<%kebab%>-tooltip {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-tooltip-color-background: transparent;
+    --<%kebab%>-tooltip-color-border: transparent;
+    --<%kebab%>-tooltip-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-tooltip-size-border: 0;
+    --<%kebab%>-tooltip-size-padding: 0;
+    --<%kebab%>-tooltip-size-shadow: none;
+    --<%kebab%>-tooltip-size-text: inherit;
+
+    /* --- Radius - Configuration --- */
+    --<%kebab%>-tooltip-radius-value: 0;
+
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
+
+    /* --- <%camel%>Tooltip - Color --- */
+    border-color: var(--<%kebab%>-tooltip-color-border);
+    background-color: var(--<%kebab%>-tooltip-color-background);
+    color: var(--<%kebab%>-tooltip-color-text);
+
+    /* --- <%camel%>Tooltip - Size --- */
+    border-width: var(--<%kebab%>-tooltip-size-border);
+    padding: var(--<%kebab%>-tooltip-size-padding);
+    box-shadow: var(--<%kebab%>-tooltip-size-shadow);
+    font-size: var(--<%kebab%>-tooltip-size-text);
+
+    /* --- <%camel%>Tooltip - Radius --- */
+    border-radius: var(--<%kebab%>-tooltip-radius-value);
 }
 
 .<%kebab%>-tooltip-transition-enter-active,

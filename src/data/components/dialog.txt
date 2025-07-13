@@ -153,12 +153,40 @@ defineExpose<I<%camel%>DialogExports>({
 
 <style>
 .<%kebab%>-dialog {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-dialog-color-background: transparent;
+    --<%kebab%>-dialog-color-border: transparent;
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-dialog-size-text: inherit;
+    --<%kebab%>-dialog-size-padding: 0;
+    --<%kebab%>-dialog-size-border: 1px;
+    --<%kebab%>-dialog-edge-margin: 2rem;
+    --<%kebab%>-dialog-size-shadow: none;
+
+    /* --- Radius - Configuration --- */
+    --<%kebab%>-dialog-radius-value: 0;
+
     position: fixed;
 }
 
 .<%kebab%>-dialog__container {
     position: fixed;
     overflow: auto;
+    border-style: solid;
+
+    /* --- <%camel%>Dialog - Color --- */
+    border-color: var(--<%kebab%>-dialog-color-border);
+    background-color: var(--<%kebab%>-dialog-color-background);
+
+    /* --- <%camel%>Dialog - Size --- */
+    padding: var(--<%kebab%>-dialog-size-padding);
+    border-width: var(--<%kebab%>-dialog-size-border);
+    font-size: var(--<%kebab%>-dialog-size-text);
+    box-shadow: var(--<%kebab%>-dialog-size-shadow);
+
+    /* --- <%camel%>Dialog - Radius --- */
+    border-radius: var(--<%kebab%>-dialog-radius-value);
 }
 
 .<%kebab%>-dialog__overlay {

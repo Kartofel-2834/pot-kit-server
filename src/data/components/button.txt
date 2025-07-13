@@ -49,6 +49,23 @@ const classList = computed(() =>
 
 <style>
 .<%kebab%>-button {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-button-color-border: transparent;
+    --<%kebab%>-button-color-background: transparent;
+    --<%kebab%>-button-color-text: inherit;
+    --<%kebab%>-button-color-outline: initial;
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-button-size-height: auto;
+    --<%kebab%>-button-size-padding: 0;
+    --<%kebab%>-button-size-border: 0;
+    --<%kebab%>-button-size-text: inherit;
+    --<%kebab%>-button-size-outline: initial;
+    --<%kebab%>-button-size-outline-offset: initial;
+
+    /* --- Radius - Configuration --- */
+    --<%kebab%>-button-radius-value: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,6 +79,23 @@ const classList = computed(() =>
         border-color 0.4s ease,
         outline-color 0.4s ease,
         background-color 0.4s ease;
+
+    /* --- <%camel%>Button - Color --- */
+    border-color: var(--<%kebab%>-button-color-border);
+    background-color: var(--<%kebab%>-button-color-background);
+    color: var(--<%kebab%>-button-color-text);
+    outline-color: var(--<%kebab%>-button-color-outline);
+
+    /* --- <%camel%>Button - Size --- */
+    height: var(--<%kebab%>-button-size-height);
+    padding: 0 var(--<%kebab%>-button-size-padding);
+    border-width: var(--<%kebab%>-button-size-border);
+    font-size: var(--<%kebab%>-button-size-text);
+    outline-width: var(--<%kebab%>-button-size-outline);
+    outline-offset: var(--<%kebab%>-button-size-outline-offset);
+
+    /* --- <%camel%>Button - Radius --- */
+    border-radius: var(--<%kebab%>-button-radius-value);
 }
 
 /* --- <%camel%>Button - Disabled --- */
