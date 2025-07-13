@@ -49,6 +49,23 @@ const classList = computed(() =>
 
 <style>
 .pot-button {
+    /* --- Color - Configuration --- */
+    --pot-button-color-border: transparent;
+    --pot-button-color-background: transparent;
+    --pot-button-color-text: inherit;
+    --pot-button-color-outline: initial;
+
+    /* --- Size - Configuration --- */
+    --pot-button-size-height: auto;
+    --pot-button-size-padding: 0;
+    --pot-button-size-border: 0;
+    --pot-button-size-text: inherit;
+    --pot-button-size-outline: initial;
+    --pot-button-size-outline-offset: initial;
+
+    /* --- Radius - Configuration --- */
+    --pot-button-radius-value: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,6 +79,23 @@ const classList = computed(() =>
         border-color 0.4s ease,
         outline-color 0.4s ease,
         background-color 0.4s ease;
+
+    /* --- PotButton - Color --- */
+    border-color: var(--pot-button-color-border);
+    background-color: var(--pot-button-color-background);
+    color: var(--pot-button-color-text);
+    outline-color: var(--pot-button-color-outline);
+
+    /* --- PotButton - Size --- */
+    height: var(--pot-button-size-height);
+    padding: 0 var(--pot-button-size-padding);
+    border-width: var(--pot-button-size-border);
+    font-size: var(--pot-button-size-text);
+    outline-width: var(--pot-button-size-outline);
+    outline-offset: var(--pot-button-size-outline-offset);
+
+    /* --- PotButton - Radius --- */
+    border-radius: var(--pot-button-radius-value);
 }
 
 /* --- PotButton - Disabled --- */
@@ -78,6 +112,4 @@ const classList = computed(() =>
 
 <!-- Styles - START -->
 <style src="@/assets/css/styles/test/button.css" />
-<style src="@/assets/css/styles/conditions/button.css" />
-<style src="@/assets/css/styles/configuration/button.css" />
 <!-- Styles - END -->

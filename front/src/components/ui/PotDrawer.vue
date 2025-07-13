@@ -151,6 +151,20 @@ defineExpose<IPotDrawerExports>({
 
 <style>
 .pot-drawer {
+    /* --- Color - Configuration --- */
+    --pot-drawer-color-background: transparent;
+    --pot-drawer-color-border: transparent;
+    --pot-drawer-color-overlay: rgba(0, 0, 0, 0.3);
+
+    /* --- Size - Configuration --- */
+    --pot-drawer-size-text: inherit;
+    --pot-drawer-size-padding: 0;
+    --pot-drawer-size-border: 1px;
+    --pot-drawer-size-shadow: none;
+
+    /* --- Radius - Configuration --- */
+    --pot-drawer-radius-value: 0;
+
     position: fixed;
 }
 
@@ -158,6 +172,19 @@ defineExpose<IPotDrawerExports>({
     position: relative;
     overflow: auto;
     border-style: solid;
+
+    /* --- PotDrawer - Color --- */
+    border-color: var(--pot-drawer-color-border);
+    background-color: var(--pot-drawer-color-background);
+
+    /* --- PotDrawer - Size --- */
+    padding: var(--pot-drawer-size-padding);
+    border-width: var(--pot-drawer-size-border);
+    font-size: var(--pot-drawer-size-text);
+    box-shadow: var(--pot-drawer-size-shadow);
+
+    /* --- PotDrawer - Radius --- */
+    border-radius: var(--pot-drawer-radius-value);
 }
 
 .pot-drawer__overlay {
@@ -166,6 +193,9 @@ defineExpose<IPotDrawerExports>({
     left: 0;
     width: 100%;
     height: 100%;
+
+    /* --- PotDrawer - Color --- */
+    background-color: var(--pot-drawer-color-overlay);
 }
 
 /* --- Position - Left --- */
@@ -250,6 +280,4 @@ defineExpose<IPotDrawerExports>({
 
 <!-- Styles - START -->
 <style src="@/assets/css/styles/test/drawer.css" />
-<style src="@/assets/css/styles/conditions/drawer.css" />
-<style src="@/assets/css/styles/configuration/drawer.css" />
 <!-- Styles - END -->

@@ -1,7 +1,7 @@
 .pot-tooltip._color-pot {
-    --pot-tooltip-color-base-background: var(--pot-base-0);
-    --pot-tooltip-color-base-border: var(--pot-base-400);
-    --pot-tooltip-color-base-text: inherit;
+    --pot-tooltip-color-background: var(--pot-base-0);
+    --pot-tooltip-color-border: var(--pot-base-400);
+    --pot-tooltip-color-text: inherit;
 }
 
 .pot-tooltip._size-tiny {

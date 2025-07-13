@@ -1,6 +1,6 @@
 .pot-dialog._color-pot {
-    --pot-dialog-color-base-background: var(--pot-base-0);
-    --pot-dialog-color-base-border: var(--pot-base-400);
+    --pot-dialog-color-background: var(--pot-base-0);
+    --pot-dialog-color-border: var(--pot-base-400);
 }
 
 .pot-dialog._radius-circle,
@@ -12,7 +12,7 @@
 .pot-dialog._radius-radius--6,
 .pot-dialog._radius-radius--4,
 .pot-dialog._radius-radius--2 {
-    --pot-dialog-radius: var(--radius);
+    --pot-dialog-radius-value: var(--radius);
 }
 
 

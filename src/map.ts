@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 // Utils
-import { cutData, multiReplace } from './utils/template-utils';
+import { multiReplace } from './utils/template-utils';
 import { splitCamelCase } from './utils/string-utils';
 
 // Logger
@@ -12,16 +12,9 @@ import { logger } from './logger';
 // Dependencies collection
 import { writeDeps } from './collect-dependencies';
 
-const STYLES_PATH = path.join(process.cwd(), 'front', 'src', 'assets', 'css', 'styles');
 const COMPONENTS_PATH = path.join(process.cwd(), 'front', 'src', 'components', 'ui');
 const COMPOSABLES_PATH = path.join(process.cwd(), 'front', 'src', 'composables');
 const TYPES_PATH = path.join(process.cwd(), 'front', 'src', 'types');
-
-const STYLES_REPLACEMENTS = {
-    pot: '<%kebab%>',
-    POT: '<%upper%>',
-    Pot: '<%camel%>',
-};
 
 const COMPONENTS_REPLACEMENTS = {
     pot: '<%kebab%>',
@@ -50,49 +43,6 @@ const TYPES_REPLACEMENTS = {
 
 const STYLES_MARKER_START = '<!-- Styles - START -->';
 const STYLES_MARKER_END = '<!-- Styles - END -->';
-
-async function mapStylesToMap(dataKey: string, inputPath: string, outputPath: string) {
-    try {
-        const [dir] = await Promise.all([
-            fs.readdir(inputPath),
-            fs.mkdir(outputPath, { recursive: true }),
-        ]);
-
-        await Promise.all([
-            dir.map(async fileName => {
-                const componentName = path.basename(fileName, '.css');
-                const data = await fs.readFile(path.join(inputPath, fileName), 'utf8');
-
-                const preparedData = multiReplace(data, STYLES_REPLACEMENTS);
-                const stringifiedData = JSON.stringify(cutData(preparedData, dataKey));
-
-                await fs.writeFile(path.join(outputPath, `${componentName}.json`), stringifiedData);
-            }),
-        ]);
-    } catch (err) {
-        logger.error('Styles mapping error', err as Error);
-    }
-}
-
-async function mapAllStyles() {
-    // Conditions
-    const conditionsInputPath = path.join(STYLES_PATH, 'conditions');
-    const conditionsOutputPath = path.join(process.cwd(), 'src', 'data', 'conditions');
-
-    // Configuration
-    const configurationInputPath = path.join(STYLES_PATH, 'configuration');
-    const configurationOutputPath = path.join(process.cwd(), 'src', 'data', 'configuration');
-
-    try {
-        await Promise.all([
-            mapStylesToMap('CONDITION', conditionsInputPath, conditionsOutputPath),
-            mapStylesToMap('CONFIGURATION', configurationInputPath, configurationOutputPath),
-        ]);
-        logger.success('Styles successfully mapped');
-    } catch (err) {
-        logger.error('Styles mapping error', err as Error);
-    }
-}
 
 async function mapComponent(fileName: string) {
     const componentName = path.basename(fileName, '.vue');
@@ -200,7 +150,7 @@ async function mapTypes(dirPath: string[] = []) {
 async function init() {
     logger.time('Mapping duration');
 
-    await Promise.all([mapAllStyles(), mapAllComponents(), mapAllComposables(), mapTypes()]);
+    await Promise.all([mapAllComponents(), mapAllComposables(), mapTypes()]);
 
     await writeDeps();
 

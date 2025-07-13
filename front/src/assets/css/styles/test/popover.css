@@ -1,7 +1,7 @@
 .pot-popover._color-pot {
-    --pot-popover-color-base-background: var(--pot-base-0);
-    --pot-popover-color-base-border: var(--pot-base-400);
-    --pot-popover-color-base-text: inherit;
+    --pot-popover-color-background: var(--pot-base-0);
+    --pot-popover-color-border: var(--pot-base-400);
+    --pot-popover-color-text: inherit;
 }
 
 .pot-popover._size-tiny {

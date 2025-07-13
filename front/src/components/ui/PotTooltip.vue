@@ -356,10 +356,38 @@ defineExpose<IPotTooltipExpose>({
 
 <style>
 .pot-tooltip {
+    /* --- Color - Configuration --- */
+    --pot-tooltip-color-background: transparent;
+    --pot-tooltip-color-border: transparent;
+    --pot-tooltip-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --pot-tooltip-size-border: 0;
+    --pot-tooltip-size-padding: 0;
+    --pot-tooltip-size-shadow: none;
+    --pot-tooltip-size-text: inherit;
+
+    /* --- Radius - Configuration --- */
+    --pot-tooltip-radius-value: 0;
+
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
+
+    /* --- PotTooltip - Color --- */
+    border-color: var(--pot-tooltip-color-border);
+    background-color: var(--pot-tooltip-color-background);
+    color: var(--pot-tooltip-color-text);
+
+    /* --- PotTooltip - Size --- */
+    border-width: var(--pot-tooltip-size-border);
+    padding: var(--pot-tooltip-size-padding);
+    box-shadow: var(--pot-tooltip-size-shadow);
+    font-size: var(--pot-tooltip-size-text);
+
+    /* --- PotTooltip - Radius --- */
+    border-radius: var(--pot-tooltip-radius-value);
 }
 
 .pot-tooltip-transition-enter-active,
@@ -375,6 +403,4 @@ defineExpose<IPotTooltipExpose>({
 
 <!-- Styles - START -->
 <style src="@/assets/css/styles/test/tooltip.css" />
-<style src="@/assets/css/styles/conditions/tooltip.css" />
-<style src="@/assets/css/styles/configuration/tooltip.css" />
 <!-- Styles - END -->

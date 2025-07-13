@@ -171,10 +171,38 @@ defineExpose<IPotPopoverExpose>({
 
 <style>
 .pot-popover {
+    /* --- Color - Configuration --- */
+    --pot-popover-color-background: transparent;
+    --pot-popover-color-border: transparent;
+    --pot-popover-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --pot-popover-size-border: 0;
+    --pot-popover-size-padding: 0;
+    --pot-popover-size-shadow: none;
+    --pot-popover-size-text: inherit;
+
+    /* --- Radius - Configuration --- */
+    --pot-popover-radius-value: 0;
+
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
+
+    /* --- PotPopover - Color --- */
+    border-color: var(--pot-popover-color-border);
+    background-color: var(--pot-popover-color-background);
+    color: var(--pot-popover-color-text);
+
+    /* --- PotPopover - Size --- */
+    border-width: var(--pot-popover-size-border);
+    padding: var(--pot-popover-size-padding);
+    box-shadow: var(--pot-popover-size-shadow);
+    font-size: var(--pot-popover-size-text);
+
+    /* --- PotPopover - Radius --- */
+    border-radius: var(--pot-popover-radius-value);
 }
 
 .pot-popover-transition-enter-active,
@@ -190,6 +218,4 @@ defineExpose<IPotPopoverExpose>({
 
 <!-- Styles - START -->
 <style src="@/assets/css/styles/test/popover.css" />
-<style src="@/assets/css/styles/conditions/popover.css" />
-<style src="@/assets/css/styles/configuration/popover.css" />
 <!-- Styles - END -->

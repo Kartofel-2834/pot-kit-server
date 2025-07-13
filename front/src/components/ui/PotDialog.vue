@@ -153,12 +153,40 @@ defineExpose<IPotDialogExports>({
 
 <style>
 .pot-dialog {
+    /* --- Color - Configuration --- */
+    --pot-dialog-color-background: transparent;
+    --pot-dialog-color-border: transparent;
+
+    /* --- Size - Configuration --- */
+    --pot-dialog-size-text: inherit;
+    --pot-dialog-size-padding: 0;
+    --pot-dialog-size-border: 1px;
+    --pot-dialog-edge-margin: 2rem;
+    --pot-dialog-size-shadow: none;
+
+    /* --- Radius - Configuration --- */
+    --pot-dialog-radius-value: 0;
+
     position: fixed;
 }
 
 .pot-dialog__container {
     position: fixed;
     overflow: auto;
+    border-style: solid;
+
+    /* --- PotDialog - Color --- */
+    border-color: var(--pot-dialog-color-border);
+    background-color: var(--pot-dialog-color-background);
+
+    /* --- PotDialog - Size --- */
+    padding: var(--pot-dialog-size-padding);
+    border-width: var(--pot-dialog-size-border);
+    font-size: var(--pot-dialog-size-text);
+    box-shadow: var(--pot-dialog-size-shadow);
+
+    /* --- PotDialog - Radius --- */
+    border-radius: var(--pot-dialog-radius-value);
 }
 
 .pot-dialog__overlay {
@@ -280,6 +308,4 @@ defineExpose<IPotDialogExports>({
 
 <!-- Styles - START -->
 <style src="@/assets/css/styles/test/dialog.css" />
-<style src="@/assets/css/styles/conditions/dialog.css" />
-<style src="@/assets/css/styles/configuration/dialog.css" />
 <!-- Styles - END -->
