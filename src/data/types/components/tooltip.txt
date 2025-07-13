@@ -13,7 +13,7 @@ export type E<%camel%>TooltipSize = (typeof <%upper%>_TOOLTIP_SIZE)[keyof typeof
 
 export type E<%camel%>TooltipColor = (typeof <%upper%>_TOOLTIP_COLOR)[keyof typeof <%upper%>_TOOLTIP_COLOR];
 
-export type E<%camel%>TooltipRadius = (typeof <%upper%>_TOOLTIP_RADIUS)[keyof typeof <%upper%>_TOOLTIP_COLOR];
+export type E<%camel%>TooltipRadius = (typeof <%upper%>_TOOLTIP_RADIUS)[keyof typeof <%upper%>_TOOLTIP_RADIUS];
 
 export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTriggers extends string[]> {
     /** Tooltip text (may be replaced by slot) */

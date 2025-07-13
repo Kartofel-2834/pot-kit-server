@@ -48,7 +48,7 @@ const TYPE_IMPORT_REGEX = new RegExp(
     `import (type )?(.|\n)+ from (('${TYPES_IMPORT_FROM_PATH}')|("${TYPES_IMPORT_FROM_PATH}"))`,
     'gm',
 );
-console.log(TYPE_IMPORT_REGEX);
+
 function getComponentName(fileName: string): string {
     return splitCamelCase(path.basename(fileName, '.vue'), '-').replace(/^pot-/, '');
 }

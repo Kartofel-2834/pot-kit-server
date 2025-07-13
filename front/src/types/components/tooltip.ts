@@ -13,7 +13,7 @@ export type EPotTooltipSize = (typeof POT_TOOLTIP_SIZE)[keyof typeof POT_TOOLTIP
 
 export type EPotTooltipColor = (typeof POT_TOOLTIP_COLOR)[keyof typeof POT_TOOLTIP_COLOR];
 
-export type EPotTooltipRadius = (typeof POT_TOOLTIP_RADIUS)[keyof typeof POT_TOOLTIP_COLOR];
+export type EPotTooltipRadius = (typeof POT_TOOLTIP_RADIUS)[keyof typeof POT_TOOLTIP_RADIUS];
 
 export interface IPotTooltipProps<TOpenTriggers extends string[], TCloseTriggers extends string[]> {
     /** Tooltip text (may be replaced by slot) */

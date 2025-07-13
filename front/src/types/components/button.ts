@@ -11,7 +11,7 @@ export type EPotButtonSize = (typeof POT_BUTTON_SIZE)[keyof typeof POT_BUTTON_SI
 
 export type EPotButtonColor = (typeof POT_BUTTON_COLOR)[keyof typeof POT_BUTTON_COLOR];
 
-export type EPotButtonRadius = (typeof POT_BUTTON_RADIUS)[keyof typeof POT_BUTTON_COLOR];
+export type EPotButtonRadius = (typeof POT_BUTTON_RADIUS)[keyof typeof POT_BUTTON_RADIUS];
 
 export interface IPotButtonProps {
     /** Button HTML-tag */

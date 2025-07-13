@@ -13,7 +13,7 @@ export type EPotPopoverSize = (typeof POT_POPOVER_SIZE)[keyof typeof POT_POPOVER
 
 export type EPotPopoverColor = (typeof POT_POPOVER_COLOR)[keyof typeof POT_POPOVER_COLOR];
 
-export type EPotPopoverRadius = (typeof POT_POPOVER_RADIUS)[keyof typeof POT_POPOVER_COLOR];
+export type EPotPopoverRadius = (typeof POT_POPOVER_RADIUS)[keyof typeof POT_POPOVER_RADIUS];
 
 export interface IPotPopoverProps {
     /** Popover visibility flag */

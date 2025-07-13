@@ -28,7 +28,7 @@ export type EPotDialogSize = (typeof POT_DIALOG_SIZE)[keyof typeof POT_DIALOG_SI
 
 export type EPotDialogColor = (typeof POT_DIALOG_COLOR)[keyof typeof POT_DIALOG_COLOR];
 
-export type EPotDialogRadius = (typeof POT_DIALOG_RADIUS)[keyof typeof POT_DIALOG_COLOR];
+export type EPotDialogRadius = (typeof POT_DIALOG_RADIUS)[keyof typeof POT_DIALOG_RADIUS];
 
 export interface IPotDialogProps {
     /** Dialog visibility flag */

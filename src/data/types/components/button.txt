@@ -11,7 +11,7 @@ export type E<%camel%>ButtonSize = (typeof <%upper%>_BUTTON_SIZE)[keyof typeof <
 
 export type E<%camel%>ButtonColor = (typeof <%upper%>_BUTTON_COLOR)[keyof typeof <%upper%>_BUTTON_COLOR];
 
-export type E<%camel%>ButtonRadius = (typeof <%upper%>_BUTTON_RADIUS)[keyof typeof <%upper%>_BUTTON_COLOR];
+export type E<%camel%>ButtonRadius = (typeof <%upper%>_BUTTON_RADIUS)[keyof typeof <%upper%>_BUTTON_RADIUS];
 
 export interface I<%camel%>ButtonProps {
     /** Button HTML-tag */

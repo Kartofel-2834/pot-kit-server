@@ -21,7 +21,7 @@ export type E<%camel%>DrawerSize = (typeof <%upper%>_DRAWER_SIZE)[keyof typeof <
 
 export type E<%camel%>DrawerColor = (typeof <%upper%>_DRAWER_COLOR)[keyof typeof <%upper%>_DRAWER_COLOR];
 
-export type E<%camel%>DrawerRadius = (typeof <%upper%>_DRAWER_RADIUS)[keyof typeof <%upper%>_DRAWER_COLOR];
+export type E<%camel%>DrawerRadius = (typeof <%upper%>_DRAWER_RADIUS)[keyof typeof <%upper%>_DRAWER_RADIUS];
 
 export interface I<%camel%>DrawerProps {
     /** Drawer visibility flag */

@@ -21,7 +21,7 @@ export type EPotDrawerSize = (typeof POT_DRAWER_SIZE)[keyof typeof POT_DRAWER_SI
 
 export type EPotDrawerColor = (typeof POT_DRAWER_COLOR)[keyof typeof POT_DRAWER_COLOR];
 
-export type EPotDrawerRadius = (typeof POT_DRAWER_RADIUS)[keyof typeof POT_DRAWER_COLOR];
+export type EPotDrawerRadius = (typeof POT_DRAWER_RADIUS)[keyof typeof POT_DRAWER_RADIUS];
 
 export interface IPotDrawerProps {
     /** Drawer visibility flag */

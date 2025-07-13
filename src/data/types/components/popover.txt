@@ -13,7 +13,7 @@ export type E<%camel%>PopoverSize = (typeof <%upper%>_POPOVER_SIZE)[keyof typeof
 
 export type E<%camel%>PopoverColor = (typeof <%upper%>_POPOVER_COLOR)[keyof typeof <%upper%>_POPOVER_COLOR];
 
-export type E<%camel%>PopoverRadius = (typeof <%upper%>_POPOVER_RADIUS)[keyof typeof <%upper%>_POPOVER_COLOR];
+export type E<%camel%>PopoverRadius = (typeof <%upper%>_POPOVER_RADIUS)[keyof typeof <%upper%>_POPOVER_RADIUS];
 
 export interface I<%camel%>PopoverProps {
     /** Popover visibility flag */

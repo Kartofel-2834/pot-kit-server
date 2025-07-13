@@ -22,7 +22,7 @@ export type EPotToastSize = (typeof POT_TOAST_SIZE)[keyof typeof POT_TOAST_SIZE]
 
 export type EPotToastColor = (typeof POT_TOAST_COLOR)[keyof typeof POT_TOAST_COLOR];
 
-export type EPotToastRadius = (typeof POT_TOAST_RADIUS)[keyof typeof POT_TOAST_COLOR];
+export type EPotToastRadius = (typeof POT_TOAST_RADIUS)[keyof typeof POT_TOAST_RADIUS];
 
 export interface IPotToastProps<T = unknown> {
     /** Toast composable instance, use this prop for share your toast type to toast slot data */

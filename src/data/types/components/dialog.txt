@@ -28,7 +28,7 @@ export type E<%camel%>DialogSize = (typeof <%upper%>_DIALOG_SIZE)[keyof typeof <
 
 export type E<%camel%>DialogColor = (typeof <%upper%>_DIALOG_COLOR)[keyof typeof <%upper%>_DIALOG_COLOR];
 
-export type E<%camel%>DialogRadius = (typeof <%upper%>_DIALOG_RADIUS)[keyof typeof <%upper%>_DIALOG_COLOR];
+export type E<%camel%>DialogRadius = (typeof <%upper%>_DIALOG_RADIUS)[keyof typeof <%upper%>_DIALOG_RADIUS];
 
 export interface I<%camel%>DialogProps {
     /** Dialog visibility flag */
