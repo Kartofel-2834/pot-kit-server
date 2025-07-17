@@ -34,7 +34,7 @@ const $deviceIs = useDeviceIs();
 const $toast = useToast<T>();
 
 const $dialog = useDialog({
-    triggers: ['escape'],
+    triggers: [],
     isOpen: computed(() => Boolean($toast.list.value.length)),
     layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
     close: pop,
