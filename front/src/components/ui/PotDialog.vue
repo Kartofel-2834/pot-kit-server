@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Types
 import type { Ref } from 'vue';
-import type { IPotDialogExports, IPotDialogProps } from '@/types/components/dialog';
+import type { IPotDialogExpose, IPotDialogProps } from '@/types/components/dialog';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -111,7 +111,7 @@ function close() {
 // Exports
 provide('pot-dialog-layer', $dialog.layer);
 
-defineExpose<IPotDialogExports>({
+defineExpose<IPotDialogExpose>({
     isOpen: readonly($dialog.isOpen),
     open,
     close,
@@ -156,12 +156,13 @@ defineExpose<IPotDialogExports>({
     /* --- Color - Configuration --- */
     --pot-dialog-color-background: transparent;
     --pot-dialog-color-border: transparent;
+    --pot-dialog-color-overlay: rgba(0, 0, 0, 0.3);
 
     /* --- Size - Configuration --- */
     --pot-dialog-size-text: inherit;
     --pot-dialog-size-padding: 0;
     --pot-dialog-size-border: 1px;
-    --pot-dialog-edge-margin: 2rem;
+    --pot-dialog-size-edge-margin: 20px;
     --pot-dialog-size-shadow: none;
 
     /* --- Radius - Configuration --- */
@@ -195,6 +196,9 @@ defineExpose<IPotDialogExports>({
     left: 0;
     width: 100%;
     height: 100%;
+
+    /* --- PotDialog - Color --- */
+    background-color: var(--pot-dialog-color-overlay);
 }
 
 /* --- Position - Center --- */
@@ -209,69 +213,81 @@ defineExpose<IPotDialogExports>({
 
 /* --- Position - Bottom --- */
 .pot-dialog._position-bottom .pot-dialog__container {
-    --pot-dialog-position-transform: translate(-50%, calc(100% + var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translate(
+        -50%,
+        calc(100% + var(--pot-dialog-size-edge-margin))
+    );
 
-    bottom: var(--pot-dialog-edge-margin);
+    bottom: var(--pot-dialog-size-edge-margin);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Position - Bottom-Left --- */
 .pot-dialog._position-bottom-left .pot-dialog__container {
-    --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-size-edge-margin)));
 
-    bottom: var(--pot-dialog-edge-margin);
-    left: var(--pot-dialog-edge-margin);
+    bottom: var(--pot-dialog-size-edge-margin);
+    left: var(--pot-dialog-size-edge-margin);
 }
 
 /* --- Position - Bottom-Right --- */
 .pot-dialog._position-bottom-right .pot-dialog__container {
-    --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-size-edge-margin)));
 
-    bottom: var(--pot-dialog-edge-margin);
-    right: var(--pot-dialog-edge-margin);
+    bottom: var(--pot-dialog-size-edge-margin);
+    right: var(--pot-dialog-size-edge-margin);
 }
 
 /* --- Position - Top --- */
 .pot-dialog._position-top .pot-dialog__container {
-    --pot-dialog-position-transform: translate(-50%, calc(-100% - var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translate(
+        -50%,
+        calc(-100% - var(--pot-dialog-size-edge-margin))
+    );
 
-    top: var(--pot-dialog-edge-margin);
+    top: var(--pot-dialog-size-edge-margin);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Position - Top-Left --- */
 .pot-dialog._position-top-left .pot-dialog__container {
-    --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translateX(calc(-100% - var(--pot-dialog-size-edge-margin)));
 
-    top: var(--pot-dialog-edge-margin);
-    left: var(--pot-dialog-edge-margin);
+    top: var(--pot-dialog-size-edge-margin);
+    left: var(--pot-dialog-size-edge-margin);
 }
 
 /* --- Position - Top-Right --- */
 .pot-dialog._position-top-right .pot-dialog__container {
-    --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-edge-margin)));
+    --pot-dialog-position-transform: translateX(calc(100% + var(--pot-dialog-size-edge-margin)));
 
-    top: var(--pot-dialog-edge-margin);
-    right: var(--pot-dialog-edge-margin);
+    top: var(--pot-dialog-size-edge-margin);
+    right: var(--pot-dialog-size-edge-margin);
 }
 
 /* --- Position - Left --- */
 .pot-dialog._position-left .pot-dialog__container {
-    --pot-dialog-position-transform: translate(calc(-100% - var(--pot-dialog-edge-margin)), -50%);
+    --pot-dialog-position-transform: translate(
+        calc(-100% - var(--pot-dialog-size-edge-margin)),
+        -50%
+    );
 
     top: 50%;
-    left: var(--pot-dialog-edge-margin);
+    left: var(--pot-dialog-size-edge-margin);
     transform: translateY(-50%);
 }
 
 /* --- Position - Right --- */
 .pot-dialog._position-right .pot-dialog__container {
-    --pot-dialog-position-transform: translate(calc(100% + var(--pot-dialog-edge-margin)), -50%);
+    --pot-dialog-position-transform: translate(
+        calc(100% + var(--pot-dialog-size-edge-margin)),
+        -50%
+    );
 
     top: 50%;
-    right: var(--pot-dialog-edge-margin);
+    right: var(--pot-dialog-size-edge-margin);
     transform: translateY(-50%);
 }
 

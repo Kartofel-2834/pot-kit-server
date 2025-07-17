@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Types
 import type { Ref } from 'vue';
-import type { IPotDrawerExports, IPotDrawerProps } from '@/types/components/drawer';
+import type { IPotDrawerExpose, IPotDrawerProps } from '@/types/components/drawer';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
@@ -109,7 +109,7 @@ function close() {
 // Exports
 provide('pot-dialog-layer', $dialog.layer);
 
-defineExpose<IPotDrawerExports>({
+defineExpose<IPotDrawerExpose>({
     isOpen: readonly($dialog.isOpen),
     open,
     close,

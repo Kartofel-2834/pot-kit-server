@@ -1,7 +1,7 @@
 // Types
-import type { RendererElement } from 'vue';
+import type { Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
-import type { IToast } from '@/types/composables/toast';
+import type { IToast, IToastDialog } from '@/types/composables/toast';
 
 export const POT_TOAST_SIZE = {} as const;
 
@@ -12,8 +12,10 @@ export const POT_TOAST_RADIUS = {} as const;
 export const POT_TOAST_POSITION = {
     TOP_LEFT: 'top-left',
     TOP_RIGHT: 'top-right',
+    TOP_CENTER: 'top-center',
     BOTTOM_LEFT: 'bottom-left',
     BOTTOM_RIGHT: 'bottom-right',
+    BOTTOM_CENTER: 'bottom-center',
 } as const;
 
 export type EPotToastPosition = (typeof POT_TOAST_POSITION)[keyof typeof POT_TOAST_POSITION];
@@ -51,4 +53,15 @@ export interface IPotToastProps<T = unknown> {
 
     /** Breakpoints names for responsive design */
     devices?: EPotDevice[];
+}
+
+export interface IPotToastExpose<T = unknown> {
+    /** Toast component dialogs list */
+    list: Readonly<Ref<IToastDialog<T>[]>>;
+
+    /** Close oldest toast */
+    pop: () => void;
+
+    /** Close toast by id */
+    close: (toastId: Symbol) => void;
 }

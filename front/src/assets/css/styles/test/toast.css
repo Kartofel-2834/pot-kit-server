@@ -1,0 +1,17 @@
+.pot-toast {
+    /* --- Color - Configuration --- */
+    --pot-toast-color-background: white;
+    --pot-toast-color-border: gray;
+    --pot-toast-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --pot-toast-size-border: 2px;
+    --pot-toast-size-padding: 2rem;
+    --pot-toast-size-shadow: var(--pot-shadow-100);
+    --pot-toast-size-text: inherit;
+    --pot-toast-size-gap: 20px;
+    --pot-toast-edge-margin: 20px;
+
+    /* --- Radius - Configuration --- */
+    --pot-toast-radius-value: 18px;
+}

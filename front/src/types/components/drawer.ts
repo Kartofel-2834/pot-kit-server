@@ -67,7 +67,7 @@ export interface IPotDrawerProps {
     devices?: EPotDevice[];
 }
 
-export interface IPotDrawerExports {
+export interface IPotDrawerExpose {
     /** Drawer visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 

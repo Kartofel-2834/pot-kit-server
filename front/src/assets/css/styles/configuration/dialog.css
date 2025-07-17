@@ -4,7 +4,7 @@
     --pot-dialog-size-border: initial;
     --pot-dialog-size-text: inherit;
     --pot-dialog-size-shadow: initial;
-    --pot-dialog-edge-margin: 2rem;
+    --pot-dialog-size-edge-margin: 2rem;
 
     padding: var(--pot-dialog-size-padding);
     border-width: var(--pot-dialog-size-border);

@@ -9,6 +9,24 @@ const defaultOptions: IFocusTrapOptions = {
     autofocus: true,
 };
 
+const listeners: Array<(event: Event) => void> = [];
+
+function setupFocusTrap() {
+    window.addEventListener('keydown', handleGlobalKeydown);
+}
+
+function terminateFocusTrap() {
+    window.removeEventListener('keydown', handleGlobalKeydown);
+}
+
+function handleGlobalKeydown(event: Event) {
+    const currentListener = listeners[listeners.length - 1];
+
+    if (currentListener) {
+        currentListener(event);
+    }
+}
+
 /** Composable for trapping focus inside container */
 export function useFocusTrap(): IFocusTrap {
     const mutationObserver = new MutationObserver(
@@ -40,7 +58,8 @@ export function useFocusTrap(): IFocusTrap {
         });
 
         if (currentOptions.trap) {
-            trap.addEventListener('keydown', handleKeydown);
+            listeners.push(handleKeydown);
+            if (listeners.length === 1) setupFocusTrap();
         }
 
         if (currentOptions.autofocus) {
@@ -53,7 +72,11 @@ export function useFocusTrap(): IFocusTrap {
             return;
         }
 
-        trap.removeEventListener('keydown', handleKeydown);
+        const listenerIndex = listeners.indexOf(handleKeydown);
+
+        if (listenerIndex !== -1) listeners.splice(listenerIndex, 1);
+        if (listeners.length === 0) terminateFocusTrap();
+
         mutationObserver.disconnect();
         focusLastActiveElement();
     }
@@ -91,7 +114,12 @@ export function useFocusTrap(): IFocusTrap {
     function handleKeydown(event: Event) {
         const keyBoardEvent = event as KeyboardEvent;
 
-        if (keyBoardEvent.key !== 'Tab' || !firstFocusableElement || !lastFocusableElement) {
+        if (keyBoardEvent.key !== 'Tab') {
+            return;
+        }
+
+        if (!firstFocusableElement || !lastFocusableElement) {
+            event.preventDefault();
             return;
         }
 

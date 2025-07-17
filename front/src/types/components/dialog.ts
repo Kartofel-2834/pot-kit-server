@@ -74,7 +74,7 @@ export interface IPotDialogProps {
     devices?: EPotDevice[];
 }
 
-export interface IPotDialogExports {
+export interface IPotDialogExpose {
     /** Dialog visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 
