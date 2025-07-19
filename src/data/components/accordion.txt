@@ -1,0 +1,200 @@
+<script lang="ts" setup>
+// Vue
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDebounce } from '<%composablesImport%>/timer';
+
+const $slots = defineSlots<{
+    default?: () => unknown;
+    header?: () => unknown;
+    title?: () => unknown;
+    icon?: () => unknown;
+}>();
+
+const $props = withDefaults(
+    defineProps<{
+        opened?: boolean;
+        modelValue?: boolean;
+    }>(),
+    {
+        opened: undefined,
+        modelValue: undefined,
+    },
+);
+
+const $emit = defineEmits<{
+    open: [];
+    close: [];
+    'update:modelValue': [isVisible: boolean];
+}>();
+
+// Data
+const content = ref<Element | null>(null);
+const contentHeight = ref<number>(0);
+
+const contentResizeObserver = new ResizeObserver(
+    useDebounce({
+        delay: 500,
+        action: updateContentHeight,
+    }),
+);
+
+// Lifecycle
+onMounted(() => setTimeout(updateContentHeight, 1000));
+onUnmounted(() => contentResizeObserver.disconnect());
+
+// Computed
+const isOpen = computed(() => Boolean($props.opened ?? $props.modelValue));
+
+const classList = computed(() => useClassList({ opened: isOpen.value }));
+
+const currentStyles = computed(() => {
+    return {
+        '--<%kebab%>-accordion-content-height': `${contentHeight.value || 1000}px`,
+    };
+});
+
+// Watchers
+watch(
+    () => content.value,
+    (newContent, oldContent) => {
+        if (newContent) contentResizeObserver.observe(newContent);
+        if (oldContent) contentResizeObserver.unobserve(oldContent);
+    },
+);
+
+// Methods
+function toggle() {
+    if (isOpen.value) {
+        close();
+    } else {
+        open();
+    }
+}
+
+function open() {
+    $emit('open');
+    $emit('update:modelValue', true);
+}
+
+function close() {
+    $emit('close');
+    $emit('update:modelValue', false);
+}
+
+function updateContentHeight() {
+    if (
+        content.value &&
+        content.value.scrollHeight &&
+        content.value.scrollHeight !== contentHeight.value
+    ) {
+        contentHeight.value = content.value.scrollHeight;
+    }
+}
+</script>
+
+<template>
+    <div
+        :class="['<%kebab%>-accordion', classList]"
+        :style="currentStyles"
+    >
+        <slot name="header">
+            <div
+                v-if="$slots.title"
+                class="<%kebab%>-accordion__header"
+                role="button"
+                @click="toggle"
+            >
+                <div class="<%kebab%>-accordion__header__title">
+                    <slot name="title" />
+                </div>
+
+                <div class="<%kebab%>-accordion__header__icon">
+                    <slot name="icon">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 -960 960 960"
+                            width="24px"
+                            fill="currentColor"
+                        >
+                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+                        </svg>
+                    </slot>
+                </div>
+            </div>
+        </slot>
+
+        <div
+            class="<%kebab%>-accordion__content"
+            ref="content"
+        >
+            <slot />
+        </div>
+    </div>
+</template>
+
+<style>
+.<%kebab%>-accordion {
+    /* --- Color - Configuration --- */
+    --<%kebab%>-accordion-color-background: transparent;
+    --<%kebab%>-accordion-color-border: transparent;
+    --<%kebab%>-accordion-color-text: inherit;
+    --<%kebab%>-accordion-color-icon: inherit;
+
+    /* --- Size - Configuration --- */
+    --<%kebab%>-accordion-size-text: inherit;
+    --<%kebab%>-accordion-size-icon: 1.4rem;
+    --<%kebab%>-accordion-size-padding: 0;
+    --<%kebab%>-accordion-size-border: 1px;
+}
+
+/* --- <%camel%>Accordion - Opened --- */
+.<%kebab%>-accordion._opened .<%kebab%>-accordion__header__icon {
+    transform: rotate(-180deg);
+}
+
+.<%kebab%>-accordion._opened .<%kebab%>-accordion__content {
+    max-height: var(--<%kebab%>-accordion-content-height);
+}
+
+.<%kebab%>-accordion__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+
+    /* --- <%camel%>Accordion - Color --- */
+    background-color: var(--<%kebab%>-accordion-color-background);
+    border-color: var(--<%kebab%>-accordion-color-border);
+    color: var(--<%kebab%>-accordion-color-text);
+
+    /* --- <%camel%>Accordion - Size --- */
+    padding: var(--<%kebab%>-accordion-size-padding);
+    border-width: var(--<%kebab%>-accordion-size-border);
+    font-size: var(--<%kebab%>-accordion-size-text);
+}
+
+.<%kebab%>-accordion__header__icon {
+    transition: transform 0.2s ease;
+
+    /* --- <%camel%>Accordion - Color --- */
+    color: var(--<%kebab%>-accordion-color-icon);
+
+    /* --- <%camel%>Accordion - Size --- */
+    font-size: var(--<%kebab%>-accordion-size-icon);
+}
+
+.<%kebab%>-accordion__header__icon svg {
+    width: 1em;
+    height: 1em;
+}
+
+.<%kebab%>-accordion__content {
+    overflow: hidden;
+    max-height: 0;
+    transition: 0.4s ease;
+}
+</style>

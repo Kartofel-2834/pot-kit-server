@@ -67,7 +67,7 @@ export interface I<%camel%>DrawerProps {
     devices?: E<%camel%>Device[];
 }
 
-export interface I<%camel%>DrawerExports {
+export interface I<%camel%>DrawerExpose {
     /** Drawer visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 

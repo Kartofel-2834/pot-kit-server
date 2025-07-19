@@ -1,5 +1,13 @@
 {
     "components": {
+        "accordion": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "timer"
+            ],
+            "types": []
+        },
         "attach-target": {
             "components": [
                 "slot-catcher"
@@ -50,6 +58,11 @@
                 "composables/dialog"
             ]
         },
+        "input": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
         "popover": {
             "components": [
                 "attach-target"
@@ -80,11 +93,13 @@
                 "toast",
                 "class-list",
                 "device-properties",
-                "device-is"
+                "device-is",
+                "dialog"
             ],
             "types": [
                 "components/toast",
-                "composables/toast"
+                "composables/toast",
+                "composables/dialog"
             ]
         },
         "tooltip": {

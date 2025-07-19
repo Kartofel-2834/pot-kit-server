@@ -74,7 +74,7 @@ export interface I<%camel%>DialogProps {
     devices?: E<%camel%>Device[];
 }
 
-export interface I<%camel%>DialogExports {
+export interface I<%camel%>DialogExpose {
     /** Dialog visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 

@@ -109,7 +109,7 @@ defineExpose<IPotToastExpose<T>>({
             :class="['pot-toast', classList]"
             :style="currentStyles"
             tag="div"
-            role="alertdialog"
+            role="alert"
         >
             <div
                 v-for="(toastDialog, index) in toastsList"

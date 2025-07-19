@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Types
 import type { Ref } from 'vue';
-import type { I<%camel%>DrawerExports, I<%camel%>DrawerProps } from '<%typesImport%>/components/drawer';
+import type { I<%camel%>DrawerExpose, I<%camel%>DrawerProps } from '<%typesImport%>/components/drawer';
 import type { EDialogLayers } from '<%typesImport%>/composables/dialog';
 
 // Constants
@@ -109,7 +109,7 @@ function close() {
 // Exports
 provide('<%kebab%>-dialog-layer', $dialog.layer);
 
-defineExpose<I<%camel%>DrawerExports>({
+defineExpose<I<%camel%>DrawerExpose>({
     isOpen: readonly($dialog.isOpen),
     open,
     close,
