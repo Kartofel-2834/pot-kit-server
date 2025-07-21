@@ -11,6 +11,8 @@ import { onMounted, onUnmounted, ref } from 'vue';
 // Composables
 import { useToast } from './composables/toast';
 
+import { POT_TOAST_POSITION, type EPotToastPosition } from './types/components/toast';
+
 // Components
 import PotButton from './components/ui/PotButton.vue';
 import PotPopover from './components/ui/PotPopover.vue';
@@ -18,8 +20,8 @@ import PotTooltip from './components/ui/PotTooltip.vue';
 import PotDrawer from './components/ui/PotDrawer.vue';
 import PotDialog from './components/ui/PotDialog.vue';
 import PotToast from './components/ui/PotToast.vue';
-import { POT_TOAST_POSITION, type EPotToastPosition } from './types/components/toast';
 import PotAccordion from './components/ui/PotAccordion.vue';
+import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
@@ -31,6 +33,8 @@ const buttonRef = ref<Element | null>(null);
 
 const $toast = useToast<string>();
 const position = ref<EPotToastPosition>(POT_TOAST_POSITION.TOP_LEFT);
+
+const openedAccordions = ref<string[]>([]);
 </script>
 
 <template>
@@ -40,14 +44,23 @@ const position = ref<EPotToastPosition>(POT_TOAST_POSITION.TOP_LEFT);
         class="main"
         style="display: flex; flex-direction: column; width: 100vw"
     >
-        {{ isVisible }}
-
         <div style="width: 400px">
-            <PotAccordion v-model="isVisible">
-                <template #title> Ahmad </template>
+            <PotAccordionGroup
+                v-model="openedAccordions"
+                v-slot="{ singleBind }"
+            >
+                <PotAccordion v-bind="singleBind('Kamal')">
+                    <template #title> Kamal </template>
 
-                <div style="height: 400px; background-color: green">TEST</div>
-            </PotAccordion>
+                    <div style="height: 400px; background-color: green">TEST</div>
+                </PotAccordion>
+
+                <PotAccordion v-bind="singleBind('Ambal')">
+                    <template #title> Ambal </template>
+
+                    <div style="height: 400px; background-color: green">TEST</div>
+                </PotAccordion>
+            </PotAccordionGroup>
         </div>
     </main>
 </template>

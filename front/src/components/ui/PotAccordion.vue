@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+// Types
+import type { IPotAccordionProps, IPotAccordionSlots } from '@/types/components/accordion';
+
 // Vue
 import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 
@@ -6,23 +9,13 @@ import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { useClassList } from '@/composables/class-list';
 import { useDebounce } from '@/composables/timer';
 
-const $slots = defineSlots<{
-    default?: () => unknown;
-    header?: () => unknown;
-    title?: () => unknown;
-    icon?: () => unknown;
-}>();
+const $slots = defineSlots<IPotAccordionSlots>();
 
-const $props = withDefaults(
-    defineProps<{
-        opened?: boolean;
-        modelValue?: boolean;
-    }>(),
-    {
-        opened: undefined,
-        modelValue: undefined,
-    },
-);
+const $props = withDefaults(defineProps<IPotAccordionProps>(), {
+    opened: undefined,
+    modelValue: undefined,
+    disabled: false,
+});
 
 const $emit = defineEmits<{
     open: [];
@@ -46,7 +39,7 @@ onMounted(() => setTimeout(updateContentHeight, 1000));
 onUnmounted(() => contentResizeObserver.disconnect());
 
 // Computed
-const isOpen = computed(() => Boolean($props.opened ?? $props.modelValue));
+const isOpen = computed(() => Boolean(!$props.disabled && ($props.opened ?? $props.modelValue)));
 
 const classList = computed(() => useClassList({ opened: isOpen.value }));
 
@@ -101,10 +94,10 @@ function updateContentHeight() {
         :style="currentStyles"
     >
         <slot name="header">
-            <div
+            <button
                 v-if="$slots.title"
+                :disabled="disabled"
                 class="pot-accordion__header"
-                role="button"
                 @click="toggle"
             >
                 <div class="pot-accordion__header__title">
@@ -123,7 +116,7 @@ function updateContentHeight() {
                         </svg>
                     </slot>
                 </div>
-            </div>
+            </button>
         </slot>
 
         <div
@@ -142,17 +135,20 @@ function updateContentHeight() {
     --pot-accordion-color-border: transparent;
     --pot-accordion-color-text: inherit;
     --pot-accordion-color-icon: inherit;
+    --pot-accordion-color-outline: initial;
 
     /* --- Size - Configuration --- */
     --pot-accordion-size-text: inherit;
     --pot-accordion-size-icon: 1.4rem;
     --pot-accordion-size-padding: 0;
     --pot-accordion-size-border: 1px;
+    --pot-accordion-size-outline: initial;
+    --pot-accordion-size-outline-offset: initial;
 }
 
 /* --- PotAccordion - Opened --- */
 .pot-accordion._opened .pot-accordion__header__icon {
-    transform: rotate(-180deg);
+    transform: scaleY(-1);
 }
 
 .pot-accordion._opened .pot-accordion__content {
@@ -170,14 +166,22 @@ function updateContentHeight() {
     background-color: var(--pot-accordion-color-background);
     border-color: var(--pot-accordion-color-border);
     color: var(--pot-accordion-color-text);
+    outline-color: var(--pot-accordion-color-outline);
 
     /* --- PotAccordion - Size --- */
     padding: var(--pot-accordion-size-padding);
     border-width: var(--pot-accordion-size-border);
     font-size: var(--pot-accordion-size-text);
+    outline-width: var(--pot-accordion-size-outline);
+    outline-offset: var(--pot-accordion-size-outline-offset);
+}
+
+.pot-accordion__header:disabled {
+    cursor: not-allowed;
 }
 
 .pot-accordion__header__icon {
+    display: flex;
     transition: transform 0.2s ease;
 
     /* --- PotAccordion - Color --- */
