@@ -126,7 +126,7 @@ defineExpose<IPotDialogExpose>({
         <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
-                :pot-dialog-id="$dialog.id.description"
+                :data-pot-dialog-id="$dialog.id.description"
                 :class="['pot-dialog', classList]"
                 :style="currentStyles"
             >

@@ -47,20 +47,34 @@ const openedAccordions = ref<string[]>([]);
         <div style="width: 400px">
             <PotAccordionGroup
                 v-model="openedAccordions"
-                v-slot="{ singleBind }"
+                v-slot="{ multipleBind, singleBind }"
             >
-                <PotAccordion v-bind="singleBind('Kamal')">
+                <PotAccordion v-bind="multipleBind('Kamal')">
                     <template #title> Kamal </template>
 
-                    <div style="height: 400px; background-color: green">TEST</div>
+                    <div style="height: 400px; background-color: green"><button>TEST</button></div>
+                    <div
+                        v-if="isPopoverVisible"
+                        style="height: 200px; background-color: red"
+                    >
+                        <button>TEST</button>
+                    </div>
                 </PotAccordion>
 
-                <PotAccordion v-bind="singleBind('Ambal')">
+                <PotAccordion v-bind="multipleBind('Ambal')">
                     <template #title> Ambal </template>
 
                     <div style="height: 400px; background-color: green">TEST</div>
                 </PotAccordion>
+
+                <PotAccordion v-bind="singleBind('Jabuk')">
+                    <template #title> Jabuk </template>
+
+                    <div style="height: 400px; background-color: green">TEST</div>
+                </PotAccordion>
             </PotAccordionGroup>
+
+            <button @click="isPopoverVisible = !isPopoverVisible">Kamal</button>
         </div>
     </main>
 </template>

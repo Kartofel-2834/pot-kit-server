@@ -148,7 +148,7 @@ defineExpose<IPotPopoverExpose>({
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                 :class="['pot-popover', classList]"
                 :style="currentStyles"
-                :pot-dialog-id="$dialog.id.description"
+                :data-pot-dialog-id="$dialog.id.description"
             >
                 <slot />
             </div>

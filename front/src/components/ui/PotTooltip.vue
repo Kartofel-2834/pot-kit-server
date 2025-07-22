@@ -330,7 +330,7 @@ defineExpose<IPotTooltipExpose>({
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                 :class="['pot-tooltip', classList]"
                 :style="currentStyles"
-                :pot-dialog-id="$dialog.id.description"
+                :data-pot-dialog-id="$dialog.id.description"
             >
                 <slot name="content">
                     {{ text }}

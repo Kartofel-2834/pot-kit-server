@@ -7,7 +7,7 @@ import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDebounce } from '@/composables/timer';
+import { useThrottle } from '@/composables/timer';
 
 const $slots = defineSlots<IPotAccordionSlots>();
 
@@ -25,23 +25,28 @@ const $emit = defineEmits<{
 
 // Data
 const content = ref<Element | null>(null);
-const contentHeight = ref<number>(0);
+const contentHeight = ref<number>(NaN);
 
 const contentResizeObserver = new ResizeObserver(
-    useDebounce({
+    useThrottle({
         delay: 500,
         action: updateContentHeight,
     }),
 );
 
 // Lifecycle
-onMounted(() => setTimeout(updateContentHeight, 1000));
+onMounted(() => setTimeout(updateContentHeight));
 onUnmounted(() => contentResizeObserver.disconnect());
 
 // Computed
 const isOpen = computed(() => Boolean(!$props.disabled && ($props.opened ?? $props.modelValue)));
 
-const classList = computed(() => useClassList({ opened: isOpen.value }));
+const classList = computed(() =>
+    useClassList({
+        opened: isOpen.value,
+        disabled: $props.disabled,
+    }),
+);
 
 const currentStyles = computed(() => {
     return {
@@ -60,6 +65,8 @@ watch(
 
 // Methods
 function toggle() {
+    if ($props.disabled) return;
+
     if (isOpen.value) {
         close();
     } else {
@@ -68,11 +75,15 @@ function toggle() {
 }
 
 function open() {
+    if ($props.disabled) return;
+
     $emit('open');
     $emit('update:modelValue', true);
 }
 
 function close() {
+    if ($props.disabled) return;
+
     $emit('close');
     $emit('update:modelValue', false);
 }
@@ -93,12 +104,20 @@ function updateContentHeight() {
         :class="['pot-accordion', classList]"
         :style="currentStyles"
     >
-        <slot name="header">
-            <button
+        <slot
+            name="header"
+            :toggle="toggle"
+            :open="open"
+            :close="close"
+        >
+            <div
                 v-if="$slots.title"
-                :disabled="disabled"
+                data-pot-accordion-header
                 class="pot-accordion__header"
+                :tabindex="disabled ? -1 : 0"
                 @click="toggle"
+                @keydown.enter="toggle"
+                @keydown.space="toggle"
             >
                 <div class="pot-accordion__header__title">
                     <slot name="title" />
@@ -116,15 +135,18 @@ function updateContentHeight() {
                         </svg>
                     </slot>
                 </div>
-            </button>
+            </div>
         </slot>
 
-        <div
-            class="pot-accordion__content"
-            ref="content"
-        >
-            <slot />
-        </div>
+        <Transition name="pot-accordion-transition">
+            <div
+                v-show="isOpen"
+                class="pot-accordion__content"
+                ref="content"
+            >
+                <slot />
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -146,13 +168,14 @@ function updateContentHeight() {
     --pot-accordion-size-outline-offset: initial;
 }
 
+/* --- PotAccordion - Disabled --- */
+.pot-accordion._disabled .pot-accordion__header {
+    cursor: not-allowed;
+}
+
 /* --- PotAccordion - Opened --- */
 .pot-accordion._opened .pot-accordion__header__icon {
     transform: scaleY(-1);
-}
-
-.pot-accordion._opened .pot-accordion__content {
-    max-height: var(--pot-accordion-content-height);
 }
 
 .pot-accordion__header {
@@ -198,7 +221,17 @@ function updateContentHeight() {
 
 .pot-accordion__content {
     overflow: hidden;
-    max-height: 0;
+}
+
+/* --- Transition --- */
+.pot-accordion-transition-enter-active,
+.pot-accordion-transition-leave-active {
+    max-height: var(--pot-accordion-content-height);
     transition: 0.4s ease;
+}
+
+.pot-accordion-transition-enter-from,
+.pot-accordion-transition-leave-to {
+    max-height: 0;
 }
 </style>

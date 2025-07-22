@@ -133,7 +133,7 @@ function handleClick(event: MouseEvent) {
 
     const path = event.composedPath();
     const dialogIdAttributes = path
-        .map(v => (v instanceof Element ? v.getAttribute('pot-dialog-id') : null))
+        .map(v => (v instanceof HTMLElement ? v.dataset.potDialogId : null))
         .filter(Boolean) as string[];
 
     if (dialogIdAttributes.includes(dialogManager.id.description)) return;
