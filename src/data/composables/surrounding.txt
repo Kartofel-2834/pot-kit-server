@@ -137,13 +137,21 @@ function getSurrounding(element: Element): ISurroundingData[] {
 
 /** Get all parents of element */
 function getAllParents(element: Element): Element[] {
-    const result = [];
+    const root = element.getRootNode();
+
+    let result = [];
     let currentElement: Element | null = element;
 
     while (currentElement) {
         currentElement = currentElement.parentElement;
         result.push(currentElement);
     }
+
+    if (root instanceof ShadowRoot) {
+        result = result.concat(getAllParents(root.host));
+    }
+
+    result = result.filter(Boolean) as Element[];
 
     return result.filter(Boolean) as Element[];
 }

@@ -17,14 +17,17 @@ export interface IAttachOptions {
 
     /** Sticky box that will follow target */
     sticky: boolean;
+
+    /** The side to which the tooltip will be moved if it does not fit in the X direction */
+    oppositeSideX?: EPotAttachedBoxPosition;
+
+    /** The side to which the tooltip will be moved if it does not fit in the Y direction */
+    oppositeSideY?: EPotAttachedBoxPosition;
 }
 
 export interface IAttach {
-    /** Box top-left corner X coordinate on screen */
-    x: ComputedRef<number>;
-
-    /** Box top-left corner Y coordinate on screen */
-    y: ComputedRef<number>;
+    /** Box top-left corner coordinates on screen */
+    coordinates: ComputedRef<[x: number, y: number]>;
 
     /** Target rect */
     targetRect: Ref<DOMRect | null>;

@@ -1,28 +1,21 @@
 <script lang="ts" setup>
+// Types
+import type { I<%camel%>AccordionProps, I<%camel%>AccordionSlots } from '<%typesImport%>/components/accordion';
+
 // Vue
 import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 
 // Composables
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDebounce } from '<%composablesImport%>/timer';
+import { useThrottle } from '<%composablesImport%>/timer';
 
-const $slots = defineSlots<{
-    default?: () => unknown;
-    header?: () => unknown;
-    title?: () => unknown;
-    icon?: () => unknown;
-}>();
+const $slots = defineSlots<I<%camel%>AccordionSlots>();
 
-const $props = withDefaults(
-    defineProps<{
-        opened?: boolean;
-        modelValue?: boolean;
-    }>(),
-    {
-        opened: undefined,
-        modelValue: undefined,
-    },
-);
+const $props = withDefaults(defineProps<I<%camel%>AccordionProps>(), {
+    opened: undefined,
+    modelValue: undefined,
+    disabled: false,
+});
 
 const $emit = defineEmits<{
     open: [];
@@ -32,23 +25,28 @@ const $emit = defineEmits<{
 
 // Data
 const content = ref<Element | null>(null);
-const contentHeight = ref<number>(0);
+const contentHeight = ref<number>(NaN);
 
 const contentResizeObserver = new ResizeObserver(
-    useDebounce({
+    useThrottle({
         delay: 500,
         action: updateContentHeight,
     }),
 );
 
 // Lifecycle
-onMounted(() => setTimeout(updateContentHeight, 1000));
+onMounted(() => setTimeout(updateContentHeight));
 onUnmounted(() => contentResizeObserver.disconnect());
 
 // Computed
-const isOpen = computed(() => Boolean($props.opened ?? $props.modelValue));
+const isOpen = computed(() => Boolean(!$props.disabled && ($props.opened ?? $props.modelValue)));
 
-const classList = computed(() => useClassList({ opened: isOpen.value }));
+const classList = computed(() =>
+    useClassList({
+        opened: isOpen.value,
+        disabled: $props.disabled,
+    }),
+);
 
 const currentStyles = computed(() => {
     return {
@@ -67,6 +65,8 @@ watch(
 
 // Methods
 function toggle() {
+    if ($props.disabled) return;
+
     if (isOpen.value) {
         close();
     } else {
@@ -75,11 +75,15 @@ function toggle() {
 }
 
 function open() {
+    if ($props.disabled) return;
+
     $emit('open');
     $emit('update:modelValue', true);
 }
 
 function close() {
+    if ($props.disabled) return;
+
     $emit('close');
     $emit('update:modelValue', false);
 }
@@ -100,12 +104,20 @@ function updateContentHeight() {
         :class="['<%kebab%>-accordion', classList]"
         :style="currentStyles"
     >
-        <slot name="header">
+        <slot
+            name="header"
+            :toggle="toggle"
+            :open="open"
+            :close="close"
+        >
             <div
                 v-if="$slots.title"
+                data-<%kebab%>-accordion-header
                 class="<%kebab%>-accordion__header"
-                role="button"
+                :tabindex="disabled ? -1 : 0"
                 @click="toggle"
+                @keydown.enter="toggle"
+                @keydown.space="toggle"
             >
                 <div class="<%kebab%>-accordion__header__title">
                     <slot name="title" />
@@ -126,12 +138,15 @@ function updateContentHeight() {
             </div>
         </slot>
 
-        <div
-            class="<%kebab%>-accordion__content"
-            ref="content"
-        >
-            <slot />
-        </div>
+        <Transition name="<%kebab%>-accordion-transition">
+            <div
+                v-show="isOpen"
+                class="<%kebab%>-accordion__content"
+                ref="content"
+            >
+                <slot />
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -142,21 +157,25 @@ function updateContentHeight() {
     --<%kebab%>-accordion-color-border: transparent;
     --<%kebab%>-accordion-color-text: inherit;
     --<%kebab%>-accordion-color-icon: inherit;
+    --<%kebab%>-accordion-color-outline: initial;
 
     /* --- Size - Configuration --- */
     --<%kebab%>-accordion-size-text: inherit;
     --<%kebab%>-accordion-size-icon: 1.4rem;
     --<%kebab%>-accordion-size-padding: 0;
     --<%kebab%>-accordion-size-border: 1px;
+    --<%kebab%>-accordion-size-outline: initial;
+    --<%kebab%>-accordion-size-outline-offset: initial;
+}
+
+/* --- <%camel%>Accordion - Disabled --- */
+.<%kebab%>-accordion._disabled .<%kebab%>-accordion__header {
+    cursor: not-allowed;
 }
 
 /* --- <%camel%>Accordion - Opened --- */
 .<%kebab%>-accordion._opened .<%kebab%>-accordion__header__icon {
-    transform: rotate(-180deg);
-}
-
-.<%kebab%>-accordion._opened .<%kebab%>-accordion__content {
-    max-height: var(--<%kebab%>-accordion-content-height);
+    transform: scaleY(-1);
 }
 
 .<%kebab%>-accordion__header {
@@ -170,14 +189,22 @@ function updateContentHeight() {
     background-color: var(--<%kebab%>-accordion-color-background);
     border-color: var(--<%kebab%>-accordion-color-border);
     color: var(--<%kebab%>-accordion-color-text);
+    outline-color: var(--<%kebab%>-accordion-color-outline);
 
     /* --- <%camel%>Accordion - Size --- */
     padding: var(--<%kebab%>-accordion-size-padding);
     border-width: var(--<%kebab%>-accordion-size-border);
     font-size: var(--<%kebab%>-accordion-size-text);
+    outline-width: var(--<%kebab%>-accordion-size-outline);
+    outline-offset: var(--<%kebab%>-accordion-size-outline-offset);
+}
+
+.<%kebab%>-accordion__header:disabled {
+    cursor: not-allowed;
 }
 
 .<%kebab%>-accordion__header__icon {
+    display: flex;
     transition: transform 0.2s ease;
 
     /* --- <%camel%>Accordion - Color --- */
@@ -194,7 +221,17 @@ function updateContentHeight() {
 
 .<%kebab%>-accordion__content {
     overflow: hidden;
-    max-height: 0;
+}
+
+/* --- Transition --- */
+.<%kebab%>-accordion-transition-enter-active,
+.<%kebab%>-accordion-transition-leave-active {
+    max-height: var(--<%kebab%>-accordion-content-height);
     transition: 0.4s ease;
+}
+
+.<%kebab%>-accordion-transition-enter-from,
+.<%kebab%>-accordion-transition-leave-to {
+    max-height: 0;
 }
 </style>

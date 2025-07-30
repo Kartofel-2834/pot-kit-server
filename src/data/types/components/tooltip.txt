@@ -28,12 +28,6 @@ export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTr
     /** Target events names, that will close tooltip */
     closeTriggers?: TCloseTriggers;
 
-    /** Tooltip delay between open triggers activation in milliseconds */
-    openTriggersDelay?: { [key in TOpenTriggers[number]]?: number };
-
-    /** Tooltip delay between close triggers activation in milliseconds */
-    closeTriggersDelay?: { [key in TCloseTriggers[number]]?: number };
-
     /** Tooltip open delay in milliseconds */
     openDelay?: number;
 
@@ -84,11 +78,8 @@ export interface I<%camel%>TooltipExpose {
     /** Tooltip visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 
-    /** Tooltip left-top corner X coordinate */
-    x?: number;
-
-    /** Tooltip left-top corner Y coordinate */
-    y?: number;
+    /** Tooltip left-top corner coordinates */
+    coordinates?: [x: number, y: number];
 
     /** Target element */
     target?: Element | null;

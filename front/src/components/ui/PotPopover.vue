@@ -84,8 +84,7 @@ const properties = computed(() => {
 const classList = computed(() => useClassList({ ...properties.value }));
 
 const currentStyles = computed(() => {
-    const x = attachTarget.value?.boxX ?? 0;
-    const y = attachTarget.value?.boxY ?? 0;
+    const [x, y] = attachTarget.value?.boxCoordinates ?? [0, 0];
 
     return {
         zIndex: useDialogZIndex($dialog),
@@ -126,8 +125,7 @@ provide('pot-dialog-layer', $dialog.layer);
 
 defineExpose<IPotPopoverExpose>({
     isOpen: readonly($dialog.isOpen),
-    x: attachTarget.value?.boxX,
-    y: attachTarget.value?.boxY,
+    coordinates: attachTarget.value?.boxCoordinates,
     target: attachTarget.value?.target as Element,
     popover: box.value,
     open: () => $dialog.open(),

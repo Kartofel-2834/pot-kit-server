@@ -126,7 +126,7 @@ defineExpose<I<%camel%>DialogExpose>({
         <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
-                :<%kebab%>-dialog-id="$dialog.id.description"
+                :data-<%kebab%>-dialog-id="$dialog.id.description"
                 :class="['<%kebab%>-dialog', classList]"
                 :style="currentStyles"
             >

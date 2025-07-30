@@ -82,6 +82,7 @@ export function useFocusTrap(): IFocusTrap {
         if (listeners.length === 0) terminateFocusTrap();
 
         mutationObserver.disconnect();
+        focusableElements.value = [];
         focusLastActiveElement();
     }
 

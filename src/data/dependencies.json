@@ -6,6 +6,15 @@
                 "class-list",
                 "timer"
             ],
+            "types": [
+                "components/accordion"
+            ]
+        },
+        "accordion-group": {
+            "components": [],
+            "composables": [
+                "focus-trap"
+            ],
             "types": []
         },
         "attach-target": {
@@ -56,6 +65,28 @@
             "types": [
                 "components/drawer",
                 "composables/dialog"
+            ]
+        },
+        "grid": {
+            "components": [],
+            "composables": [
+                "device-properties",
+                "class-list",
+                "device-is"
+            ],
+            "types": [
+                "components/grid"
+            ]
+        },
+        "group": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-properties",
+                "device-is"
+            ],
+            "types": [
+                "components/group"
             ]
         },
         "input": {
@@ -189,11 +220,6 @@
         }
     },
     "types": {
-        "composables/toast": {
-            "components": [],
-            "composables": [],
-            "types": []
-        },
         "components/toast": {
             "components": [],
             "composables": [],
@@ -201,6 +227,11 @@
                 "index",
                 "composables/toast"
             ]
+        },
+        "composables/toast": {
+            "components": [],
+            "composables": [],
+            "types": []
         }
     }
 }

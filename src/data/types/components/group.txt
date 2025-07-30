@@ -1,0 +1,91 @@
+// Types
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+type T<%camel%>GroupSafeAlignment<T extends string> = `${'safe' | 'unsafe'} ${T}`;
+
+type T<%camel%>GroupJustifyKeys =
+    | 'normal'
+    | 'stretch'
+    | 'center'
+    | 'start'
+    | 'flex-start'
+    | 'end'
+    | 'flex-end'
+    | 'left'
+    | 'right'
+    | 'space-between'
+    | 'space-around'
+    | 'space-evenly';
+
+type T<%camel%>GroupJustifyItemsKeys = T<%camel%>GroupJustifyKeys | 'self-start' | 'self-end' | 'anchor-center';
+
+type T<%camel%>GroupAlignKeys =
+    | 'normal'
+    | 'stretch'
+    | 'center'
+    | 'start'
+    | 'flex-start'
+    | 'end'
+    | 'flex-end'
+    | 'baseline'
+    | 'first baseline'
+    | 'last baseline';
+
+type T<%camel%>GroupAlignContentKeys =
+    | T<%camel%>GroupAlignKeys
+    | 'space-between'
+    | 'space-around'
+    | 'space-evenly';
+
+type T<%camel%>GroupDirection = 'row' | 'column' | 'row-reverse' | 'column-reverse';
+
+type T<%camel%>GroupWrap = 'wrap' | 'nowrap' | 'wrap-reverse';
+
+type T<%camel%>GroupJustify =
+    | T<%camel%>GroupJustifyKeys
+    | T<%camel%>GroupSafeAlignment<T<%camel%>GroupJustifyKeys>
+    | `legacy ${T<%camel%>GroupJustifyKeys}`;
+
+type T<%camel%>GroupJustifyItems =
+    | T<%camel%>GroupJustifyItemsKeys
+    | T<%camel%>GroupSafeAlignment<T<%camel%>GroupJustifyItemsKeys>
+    | `legacy ${T<%camel%>GroupJustifyItemsKeys}`;
+
+type T<%camel%>GroupAlign = T<%camel%>GroupAlignKeys | T<%camel%>GroupSafeAlignment<T<%camel%>GroupAlignKeys>;
+
+type T<%camel%>GroupAlignContent =
+    | T<%camel%>GroupAlignContentKeys
+    | T<%camel%>GroupSafeAlignment<T<%camel%>GroupAlignContentKeys>;
+
+export const <%upper%>_GROUP_GAP = {} as const;
+
+export type E<%camel%>GroupGap = (typeof <%upper%>_GROUP_GAP)[keyof typeof <%upper%>_GROUP_GAP];
+
+export interface I<%camel%>GroupProps {
+    /** Тег элемента задающего сетку */
+    tag?: string;
+
+    /** align-items сетки */
+    align?: T<%camel%>GroupAlign | T<%camel%>GroupAlign[] | null;
+
+    /** align-content сетки */
+    alignContent?: T<%camel%>GroupAlignContent | T<%camel%>GroupAlignContent[] | null;
+
+    /** justify-content сетки */
+    justify?: T<%camel%>GroupJustify | T<%camel%>GroupJustify[] | null;
+
+    /** justify-items сетки */
+    justifyItems?: T<%camel%>GroupJustifyItems | T<%camel%>GroupJustifyItems[] | null;
+
+    /** Направление сетки */
+    direction?: T<%camel%>GroupDirection | T<%camel%>GroupDirection[] | null;
+
+    /** Тип переноса невмещаюхихся в сетку элементов */
+    wrap?: T<%camel%>GroupWrap | T<%camel%>GroupWrap[] | null;
+
+    /** Размер отступов сетки */
+    gap?: E<%camel%>GroupGap | E<%camel%>GroupGap[] | null;
+
+    /** Точки останова для адаптивного дизайна */
+    devices?: E<%camel%>Device[];
+}

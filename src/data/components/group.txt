@@ -1,0 +1,74 @@
+<template>
+    <component
+        :is="tag"
+        :class="['<%kebab%>-group', classList]"
+        :style="currentStyles"
+    >
+        <slot />
+    </component>
+</template>
+
+<script lang="ts" setup>
+// Types
+import type { I<%camel%>GroupProps } from '<%typesImport%>/components/group';
+
+// Vue
+import { computed } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-properties';
+import { useDeviceIs } from '<%composablesImport%>/device-is';
+
+const $props = withDefaults(defineProps<I<%camel%>GroupProps>(), {
+    tag: 'div',
+});
+
+const $deviceIs = useDeviceIs();
+
+// Computed
+const properties = computed(() => {
+    return useDeviceProperties(
+        {
+            gap: $props.gap,
+            direction: $props.direction,
+            align: $props.align,
+            alignContent: $props.alignContent,
+            justify: $props.justify,
+            justifyItems: $props.justifyItems,
+            wrap: $props.wrap,
+        },
+        $deviceIs.device.value,
+        $props.devices,
+    );
+});
+
+const classList = computed(() =>
+    useClassList({
+        gap: properties.value.gap,
+    }),
+);
+
+const currentStyles = computed(() => {
+    return {
+        'flex-direction': properties.value.direction,
+        'align-items': properties.value.align,
+        'align-content': properties.value.alignContent,
+        'justify-content': properties.value.justify,
+        'justify-items': properties.value.justifyItems,
+        'flex-wrap': properties.value.wrap,
+    };
+});
+</script>
+
+<style lang="scss">
+.<%kebab%>-group {
+    /* --- Gap - Configuration --- */
+    --<%kebab%>-group-gap-value: auto;
+
+    display: flex;
+
+    /* --- <%camel%>Group - Gap --- */
+    gap: var(--<%kebab%>-group-gap-value);
+}
+</style>

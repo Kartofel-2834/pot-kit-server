@@ -13,10 +13,25 @@ import { computed, ref } from 'vue';
 import { useSurrounding } from '<%composablesImport%>/surrounding';
 import { useDebounce } from '<%composablesImport%>/timer';
 
-// TODO: add arrow to popups
-const arrowSize = 16;
+const STICKY_X_POSITIONS: E<%camel%>AttachedBoxPosition[] = [
+    <%upper%>_ATTACHED_BOX_POSITION.TOP_START,
+    <%upper%>_ATTACHED_BOX_POSITION.TOP_END,
+    <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER,
+    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START,
+    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END,
+    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+];
 
-const xOppositePositions: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
+const STICKY_Y_POSITIONS: E<%camel%>AttachedBoxPosition[] = [
+    <%upper%>_ATTACHED_BOX_POSITION.LEFT_START,
+    <%upper%>_ATTACHED_BOX_POSITION.LEFT_END,
+    <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER,
+    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_START,
+    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_END,
+    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER,
+];
+
+const X_OPPOSITE_POSITIONS: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_START]: null,
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_END]: null,
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER]: null,
@@ -34,7 +49,7 @@ const xOppositePositions: Record<E<%camel%>AttachedBoxPosition, E<%camel%>Attach
     [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER,
 };
 
-const yOppositePositions: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
+const Y_OPPOSITE_POSITIONS: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_START]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START,
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_END]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END,
     [<%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
@@ -54,8 +69,7 @@ const yOppositePositions: Record<E<%camel%>AttachedBoxPosition, E<%camel%>Attach
 
 /** Composable for calculating attached to target box position */
 export function useAttach(options: IAttachOptions): IAttach {
-    const x = computed<number>(getX);
-    const y = computed<number>(getY);
+    const coordinates = computed<[x: number, y: number]>(getPosition);
 
     const targetElement = ref<Element | null>(null);
     const boxElement = ref<Element | null>(null);
@@ -148,38 +162,44 @@ export function useAttach(options: IAttachOptions): IAttach {
         surrounding.terminate();
     }
 
-    /** Get box Y coordinate */
-    function getY(): number {
-        if (!targetRect.value || !boxRect.value) return 0;
+    function getPosition(): [x: number, y: number] {
+        if (!targetRect.value || !boxRect.value) {
+            return [0, 0];
+        }
 
-        const offset = getYOffset();
+        const offset = getOffset(currentSurrounding.value, surrounding.data.value);
 
-        return calculateLimitedY(options, offset, targetRect.value, boxRect.value);
+        const { coordinates, position } = getCurrentPosition(
+            options,
+            offset,
+            targetRect.value,
+            boxRect.value,
+        );
+
+        return getStickyPosition(
+            coordinates,
+            { ...options, position },
+            offset,
+            targetRect.value,
+            boxRect.value,
+        );
     }
 
-    /** Get box X coordinate */
-    function getX(): number {
-        if (!targetRect.value || !boxRect.value) return 0;
+    function getOffset(
+        currentSurrounding: ISurroundingData[],
+        initialSurrounding: ISurroundingData[],
+    ): [x: number, y: number] {
+        return currentSurrounding.reduce(
+            ([x, y], data, index) => {
+                const initialData = initialSurrounding[index];
 
-        const offset = getXOffset();
-
-        return calculateLimitedX(options, offset, targetRect.value, boxRect.value);
-    }
-
-    /** Get box Y scroll-offset */
-    function getYOffset(): number {
-        return currentSurrounding.value.reduce((res, data, index) => {
-            const initialData = surrounding.data.value[index];
-            return res + (initialData.scrollY - data.scrollY);
-        }, 0);
-    }
-
-    /** Get box X scroll-offset */
-    function getXOffset(): number {
-        return currentSurrounding.value.reduce((res, data, index) => {
-            const initialData = surrounding.data.value[index];
-            return res + (initialData.scrollX - data.scrollX);
-        }, 0);
+                return [
+                    x + (initialData.scrollX - data.scrollX),
+                    y + (initialData.scrollY - data.scrollY),
+                ];
+            },
+            [0, 0],
+        );
     }
 
     /** Update target sizes */
@@ -244,8 +264,7 @@ export function useAttach(options: IAttachOptions): IAttach {
     }
 
     return {
-        x,
-        y,
+        coordinates,
         targetRect,
         boxRect,
         isTargetResizing,
@@ -259,124 +278,146 @@ export function useAttach(options: IAttachOptions): IAttach {
     };
 }
 
-/** Get box Y coordinate that limited by screen and target sizes */
-function calculateLimitedY(
+function getCurrentPosition(
     options: IAttachOptions,
-    offset: number,
+    offset: [x: number, y: number],
     targetRect: DOMRect,
     boxRect: DOMRect,
-): number {
-    const { y: targetYInitial, height: targetHeight } = targetRect;
-    const { height: boxHeight } = boxRect;
+): {
+    coordinates: [x: number, y: number];
+    position: E<%camel%>AttachedBoxPosition;
+} {
+    const { height: boxHeight, width: boxWidth } = boxRect;
 
-    const targetStartY = targetYInitial + offset;
-    const targetEndY = targetStartY + targetHeight;
+    const [offsetX, offsetY] = offset;
 
-    const yStart = calculateYForPosition(options, offset, targetRect, boxRect);
+    const yStart = calculateYForPosition(options, offsetY, targetRect, boxRect);
     const yEnd = yStart + boxHeight;
+    const xStart = calculateXForPosition(options, offsetX, targetRect, boxRect);
+    const xEnd = xStart + boxWidth;
+
+    if (options.persistent) {
+        return {
+            coordinates: [xStart, yStart],
+            position: options.position,
+        };
+    }
 
     const edgeMargin = options.edgeMargin || 0;
     const topLimit = edgeMargin;
     const bottomLimit = window.innerHeight - edgeMargin;
-
-    const oppositeSide = yOppositePositions[options.position];
-    const oppositeOptions = {
-        ...options,
-        position: oppositeSide as E<%camel%>AttachedBoxPosition,
-    };
-
-    const isReplaced = !options.persistent && oppositeSide;
-    const isSticky = options.sticky && !isReplaced;
-
-    // If box goes beyond the TOP edge of the screen,
-    // then try to move it to the other side
-    if (isReplaced && yStart < topLimit) {
-        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, boxRect);
-        return Math.max(yOpposite, yStart);
-    }
-
-    // If box goes beyond the TOP edge of the screen and there is nowhere to move it,
-    // then we try to imitate sticky behavior
-    if (isSticky && yStart < topLimit) {
-        const stickyLimit = targetEndY - arrowSize;
-        return Math.min(Math.max(yStart, topLimit), stickyLimit);
-    }
-
-    // If box goes beyond the BOTTOM edge of the screen,
-    // then try to move it to the other side
-    if (isReplaced && yEnd > bottomLimit) {
-        const yOpposite = calculateYForPosition(oppositeOptions, offset, targetRect, boxRect);
-        return Math.min(yOpposite, yStart);
-    }
-
-    // If box goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
-    // then we try to imitate sticky behavior
-    if (isSticky && yEnd > bottomLimit) {
-        const stickyLimit = targetStartY + arrowSize;
-        return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
-    }
-
-    return yStart;
-}
-
-/** Get box X coordinate that limited by screen and target sizes */
-function calculateLimitedX(
-    options: IAttachOptions,
-    offset: number,
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): number {
-    const { x: targetXInitial, width: targetWidth } = targetRect;
-    const { width: boxWidth } = boxRect;
-
-    const targetStartX = targetXInitial + offset;
-    const targetEndX = targetStartX + targetWidth;
-
-    const xStart = calculateXForPosition(options, offset, targetRect, boxRect);
-    const xEnd = xStart + boxWidth;
-
-    const edgeMargin = options.edgeMargin || 0;
     const leftLimit = edgeMargin;
     const rightLimit = window.innerWidth - edgeMargin;
 
-    const oppositeSide = xOppositePositions[options.position];
-    const oppositeOptions = {
-        ...options,
-        position: oppositeSide as E<%camel%>AttachedBoxPosition,
+    const oppositeSideX = options.oppositeSideX ?? X_OPPOSITE_POSITIONS[options.position];
+    const oppositeSideY = options.oppositeSideY ?? Y_OPPOSITE_POSITIONS[options.position];
+
+    const xOptions = { ...options, position: oppositeSideX } as IAttachOptions;
+    const yOptions = { ...options, position: oppositeSideY } as IAttachOptions;
+
+    let currentPosition = options.position;
+    let x: number = xStart;
+    let y: number = yStart;
+
+    if (oppositeSideY && yStart < topLimit) {
+        // If it goes beyond the TOP edge of the screen
+        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
+        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
+
+        y = newY > yStart ? newY : yStart;
+        x = newY > yStart ? newX : xStart;
+        currentPosition = oppositeSideY;
+    } else if (oppositeSideY && yEnd > bottomLimit) {
+        // If it goes beyond the BOTTOM edge of the screen
+        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
+        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
+
+        y = newY < yStart ? newY : yStart;
+        x = newY < yStart ? newX : xStart;
+        currentPosition = oppositeSideY;
+    } else if (oppositeSideX && xStart < leftLimit) {
+        // If it goes beyond the LEFT edge of the screen
+        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
+        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
+
+        y = newX > xStart ? newY : yStart;
+        x = newX > xStart ? newX : xStart;
+        currentPosition = oppositeSideX;
+    } else if (oppositeSideX && xEnd > rightLimit) {
+        // If it goes beyond the RIGHT edge of the screen
+        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
+        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
+
+        y = newX < xStart ? newY : yStart;
+        x = newX < xStart ? newX : xStart;
+        currentPosition = oppositeSideX;
+    }
+
+    return {
+        coordinates: [x, y],
+        position: currentPosition,
     };
+}
 
-    const isReplaced = !options.persistent && oppositeSide;
-    const isSticky = options.sticky && !isReplaced;
-
-    // If box goes beyond the TOP edge of the screen,
-    // then try to move it to the other side
-    if (isReplaced && xStart < leftLimit) {
-        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, boxRect);
-        return Math.max(xOpposite, xStart);
+function getStickyPosition(
+    coordinates: [x: number, y: number],
+    options: IAttachOptions,
+    offset: [x: number, y: number],
+    targetRect: DOMRect,
+    boxRect: DOMRect,
+): [x: number, y: number] {
+    if (!options.sticky) {
+        return [...coordinates];
     }
 
-    // If box goes beyond the TOP edge of the screen and there is nowhere to move it,
-    // then we try to imitate sticky behavior
-    if (isSticky && xStart < leftLimit) {
-        const stickyLimit = targetEndX - arrowSize;
-        return Math.min(Math.max(xStart, leftLimit), stickyLimit);
+    const {
+        x: targetXInitial,
+        y: targetYInitial,
+        height: targetHeight,
+        width: targetWidth,
+    } = targetRect;
+    const { height: boxHeight, width: boxWidth } = boxRect;
+
+    const [xStart, yStart] = coordinates;
+    const [offsetX, offsetY] = offset;
+
+    const yEnd = yStart + boxHeight;
+    const xEnd = xStart + boxWidth;
+
+    const targetStartY = targetYInitial + offsetY;
+    const targetEndY = targetStartY + targetHeight;
+    const targetStartX = targetXInitial + offsetX;
+    const targetEndX = targetStartX + targetWidth;
+
+    const edgeMargin = options.edgeMargin || 0;
+    const topLimit = edgeMargin;
+    const bottomLimit = window.innerHeight - edgeMargin;
+    const leftLimit = edgeMargin;
+    const rightLimit = window.innerWidth - edgeMargin;
+
+    const isXSticky = STICKY_X_POSITIONS.includes(options.position);
+    const isYSticky = STICKY_Y_POSITIONS.includes(options.position);
+
+    let x: number = xStart;
+    let y: number = yStart;
+
+    if (isXSticky && xStart < leftLimit) {
+        const stickyLimit = targetEndX;
+        x = Math.min(Math.max(xStart, leftLimit), stickyLimit);
+    } else if (isXSticky && xEnd > rightLimit) {
+        const stickyLimit = targetStartX;
+        x = Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
     }
 
-    // If box goes beyond the BOTTOM edge of the screen,
-    // then try to move it to the other side
-    if (isReplaced && xEnd > rightLimit) {
-        const xOpposite = calculateXForPosition(oppositeOptions, offset, targetRect, boxRect);
-        return Math.min(xOpposite, xStart);
+    if (isYSticky && yStart < topLimit) {
+        const stickyLimit = targetEndY;
+        y = Math.min(Math.max(yStart, topLimit), stickyLimit);
+    } else if (isYSticky && yEnd > bottomLimit) {
+        const stickyLimit = targetStartY;
+        y = Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
     }
 
-    // If box goes beyond the BOTTOM edge of the screen and there is nowhere to move it,
-    // then we try to imitate sticky behavior
-    if (isSticky && xEnd > rightLimit) {
-        const stickyLimit = targetStartX + arrowSize;
-        return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
-    }
-
-    return xStart;
+    return [x, y];
 }
 
 /** Get pure box Y coordinate, without limited by screen and target sizes */

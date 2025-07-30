@@ -43,14 +43,17 @@ export interface IPotAttachTargetProps {
 
     /** Target element */
     target?: Element | null;
+
+    /** The side to which the tooltip will be moved if it does not fit in the X direction */
+    oppositeSideX?: EPotAttachedBoxPosition;
+
+    /** The side to which the tooltip will be moved if it does not fit in the Y direction */
+    oppositeSideY?: EPotAttachedBoxPosition;
 }
 
 export interface IPotAttachTargetExpose {
-    /** Box top-left corner X coordinate on screen */
-    boxX: Readonly<Ref<number>>;
-
-    /** Box top-left corner Y coordinate on screen */
-    boxY: Readonly<Ref<number>>;
+    /** Box top-left corner coordinates on screen */
+    boxCoordinates: Readonly<Ref<[x: number, y: number]>>;
 
     /** Target element */
     target: Readonly<Ref<Element | null>>;

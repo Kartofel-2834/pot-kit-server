@@ -82,8 +82,7 @@ function findTarget(vnode: VNode): VNode | null {
 
 // Exports
 defineExpose<I<%camel%>AttachTargetExpose>({
-    boxX: readonly($attach.x),
-    boxY: readonly($attach.y),
+    boxCoordinates: readonly($attach.coordinates) as Readonly<Ref<[x: number, y: number]>>,
     target: readonly(currentTarget) as Readonly<Ref<Element | null>>,
 });
 </script>

@@ -69,11 +69,8 @@ export interface IPotPopoverExpose {
     /** Popover visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 
-    /** Popover left-top corner X coordinate */
-    x?: number;
-
-    /** Popover left-top corner Y coordinate */
-    y?: number;
+    /** Popover left-top corner coordinates */
+    coordinates?: [x: number, y: number];
 
     /** Popover target element */
     target?: Element | null;
