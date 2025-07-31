@@ -22,11 +22,14 @@ import PotDialog from './components/ui/PotDialog.vue';
 import PotToast from './components/ui/PotToast.vue';
 import PotAccordion from './components/ui/PotAccordion.vue';
 import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
+import PotInput from './components/ui/PotInput.vue';
 
 const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
 const isPopoverVisible2 = ref<boolean>(true);
+
+const test = ref<string>('test');
 
 const mainRef = ref<Element | null>(null);
 const buttonRef = ref<Element | null>(null);
@@ -48,6 +51,9 @@ const openedAccordions = ref<string[]>([]);
             <PotTooltip text="Tooltip">
                 <button>Kamal</button>
             </PotTooltip>
+
+            {{ test }}
+            <PotInput v-model="test"></PotInput>
         </div>
     </main>
 </template>

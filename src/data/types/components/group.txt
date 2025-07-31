@@ -62,30 +62,30 @@ export const <%upper%>_GROUP_GAP = {} as const;
 export type E<%camel%>GroupGap = (typeof <%upper%>_GROUP_GAP)[keyof typeof <%upper%>_GROUP_GAP];
 
 export interface I<%camel%>GroupProps {
-    /** Тег элемента задающего сетку */
+    /** Tag of the element defining the grid */
     tag?: string;
 
-    /** align-items сетки */
+    /** align-items css property */
     align?: T<%camel%>GroupAlign | T<%camel%>GroupAlign[] | null;
 
-    /** align-content сетки */
+    /** align-content css property */
     alignContent?: T<%camel%>GroupAlignContent | T<%camel%>GroupAlignContent[] | null;
 
-    /** justify-content сетки */
+    /** justify-content css property */
     justify?: T<%camel%>GroupJustify | T<%camel%>GroupJustify[] | null;
 
-    /** justify-items сетки */
+    /** justify-items css property */
     justifyItems?: T<%camel%>GroupJustifyItems | T<%camel%>GroupJustifyItems[] | null;
 
-    /** Направление сетки */
+    /** Flex direction */
     direction?: T<%camel%>GroupDirection | T<%camel%>GroupDirection[] | null;
 
-    /** Тип переноса невмещаюхихся в сетку элементов */
+    /** Type of transfer of elements that do not fit into the grid */
     wrap?: T<%camel%>GroupWrap | T<%camel%>GroupWrap[] | null;
 
-    /** Размер отступов сетки */
+    /** Gap size */
     gap?: E<%camel%>GroupGap | E<%camel%>GroupGap[] | null;
 
-    /** Точки останова для адаптивного дизайна */
+    /** Breakpoints for responsive design */
     devices?: E<%camel%>Device[];
 }

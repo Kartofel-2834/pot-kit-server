@@ -53,6 +53,7 @@ const classList = computed(() =>
         gap: properties.value.gap,
         'row-gap': properties.value.rowGap,
         'column-gap': properties.value.columnGap,
+        'divided-gap': Boolean(properties.value.rowGap || properties.value.columnGap),
     }),
 );
 
@@ -83,7 +84,7 @@ function formatNumberToFr(v?: string | number): string | undefined {
 <style>
 .<%kebab%>-grid {
     /* --- Gap - Configuration --- */
-    --<%kebab%>-grid-gap-value: auto;
+    --<%kebab%>-grid-gap-value: 0;
     --<%kebab%>-grid-row-gap-value: 0;
     --<%kebab%>-grid-column-gap-value: 0;
 
@@ -91,6 +92,10 @@ function formatNumberToFr(v?: string | number): string | undefined {
 
     /* --- <%camel%>Grid - Gap --- */
     gap: var(--<%kebab%>-grid-gap-value);
+}
+
+.<%kebab%>-grid._divided-gap {
+    /* Gap */
     row-gap: var(--<%kebab%>-grid-row-gap-value);
     column-gap: var(--<%kebab%>-grid-column-gap-value);
 }

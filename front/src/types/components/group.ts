@@ -62,30 +62,30 @@ export const POT_GROUP_GAP = {} as const;
 export type EPotGroupGap = (typeof POT_GROUP_GAP)[keyof typeof POT_GROUP_GAP];
 
 export interface IPotGroupProps {
-    /** Тег элемента задающего сетку */
+    /** Tag of the element defining the grid */
     tag?: string;
 
-    /** align-items сетки */
+    /** align-items css property */
     align?: TPotGroupAlign | TPotGroupAlign[] | null;
 
-    /** align-content сетки */
+    /** align-content css property */
     alignContent?: TPotGroupAlignContent | TPotGroupAlignContent[] | null;
 
-    /** justify-content сетки */
+    /** justify-content css property */
     justify?: TPotGroupJustify | TPotGroupJustify[] | null;
 
-    /** justify-items сетки */
+    /** justify-items css property */
     justifyItems?: TPotGroupJustifyItems | TPotGroupJustifyItems[] | null;
 
-    /** Направление сетки */
+    /** Flex direction */
     direction?: TPotGroupDirection | TPotGroupDirection[] | null;
 
-    /** Тип переноса невмещаюхихся в сетку элементов */
+    /** Type of transfer of elements that do not fit into the grid */
     wrap?: TPotGroupWrap | TPotGroupWrap[] | null;
 
-    /** Размер отступов сетки */
+    /** Gap size */
     gap?: EPotGroupGap | EPotGroupGap[] | null;
 
-    /** Точки останова для адаптивного дизайна */
+    /** Breakpoints for responsive design */
     devices?: EPotDevice[];
 }

@@ -1,0 +1,47 @@
+// Types
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_INPUT_SIZE = {} as const;
+
+export const <%upper%>_INPUT_COLOR = {} as const;
+
+export const <%upper%>_INPUT_RADIUS = {} as const;
+
+export type E<%camel%>InputSize = (typeof <%upper%>_INPUT_SIZE)[keyof typeof <%upper%>_INPUT_SIZE];
+
+export type E<%camel%>InputColor = (typeof <%upper%>_INPUT_COLOR)[keyof typeof <%upper%>_INPUT_COLOR];
+
+export type E<%camel%>InputRadius = (typeof <%upper%>_INPUT_RADIUS)[keyof typeof <%upper%>_INPUT_RADIUS];
+
+export interface I<%camel%>InputProps {
+    /** Текущее значение */
+    value?: string;
+
+    /** То же, что и `value`, добавлен для поддержки v-model */
+    modelValue?: string;
+
+    /** Точки останова для адаптивного дизайна */
+    devices?: E<%camel%>Device[];
+
+    /** Радиус границ кнопки */
+    radius?: E<%camel%>InputRadius | E<%camel%>InputRadius[] | null;
+
+    /** Размер инпута */
+    size?: E<%camel%>InputSize | E<%camel%>InputSize[] | null;
+
+    /** Цвет инпута */
+    color?: E<%camel%>InputColor | E<%camel%>InputColor[] | null;
+
+    /** Если true, то инпут будет заблокирован и не активен */
+    disabled?: boolean;
+
+    /** Если true, то инпут будет невалиден */
+    invalid?: boolean;
+}
+
+export interface I<%camel%>InputSlots {
+    prepend?: () => unknown;
+    preicon?: () => unknown;
+    icon?: () => unknown;
+    append?: () => unknown;
+}

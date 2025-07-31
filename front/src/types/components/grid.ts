@@ -57,49 +57,54 @@ export const POT_GRID_GAP = {} as const;
 
 export type EPotGridGap = (typeof POT_GRID_GAP)[keyof typeof POT_GRID_GAP];
 
-/**
- * Интерфейс пропсов для компонента PotGrid
- */
+export const POT_GRID_ROW_GAP = {} as const;
+
+export type EPotGridRowGap = (typeof POT_GRID_ROW_GAP)[keyof typeof POT_GRID_ROW_GAP];
+
+export const POT_GRID_COLUMN_GAP = {} as const;
+
+export type EPotGridColumnGap = (typeof POT_GRID_COLUMN_GAP)[keyof typeof POT_GRID_COLUMN_GAP];
+
 export interface IPotGridProps {
-    /** Тег элемента задающего сетку */
+    /** Tag of the element defining the grid */
     tag?: string;
 
-    /** Кол-во колонок в сетке */
+    /** Number of columns in the grid */
     cols?: number | number[] | string | string[];
 
-    /** Кол-во рядов в сетке */
+    /** Number of rows in the grid */
     rows?: number | number[] | string | string[];
 
-    /** Направление сетки */
+    /** Grid direction */
     flow?: string | string[];
 
-    /** Высота элемента выходящего за заданную сетку */
+    /** Height of an element that goes beyond the specified grid */
     autoRows?: string | string[];
 
-    /** Длина элемента выходящего за заданную сетку */
+    /** Length of element that goes beyond the specified grid */
     autoCols?: string | string[];
 
-    /** align-items сетки */
+    /** align-items css property */
     align?: TPotGridAlign | TPotGridAlign[] | null;
 
-    /** align-content сетки */
+    /** align-content css property */
     alignContent?: TPotGridAlignContent | TPotGridAlignContent[] | null;
 
-    /** justify-content сетки */
+    /** justify-content css property */
     justify?: TPotGridJustify | TPotGridJustify[] | null;
 
-    /** justify-items сетки */
+    /** justify-items css property */
     justifyItems?: TPotGridJustifyItems | TPotGridJustifyItems[] | null;
 
-    /** Размер отступов сетки */
+    /** Grid margin size */
     gap?: EPotGridGap | EPotGridGap[] | null;
 
-    /** Размер отступов рядов сетки */
+    /** Grid row indent size */
     rowGap?: EPotGridGap | EPotGridGap[] | null;
 
-    /** Размер отступов колонок сетки */
+    /** Grid column indent size */
     columnGap?: EPotGridGap | EPotGridGap[] | null;
 
-    /** Точки останова для адаптивного дизайна */
+    /** Breakpoints for responsive design */
     devices?: EPotDevice[];
 }

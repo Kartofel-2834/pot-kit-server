@@ -57,49 +57,54 @@ export const <%upper%>_GRID_GAP = {} as const;
 
 export type E<%camel%>GridGap = (typeof <%upper%>_GRID_GAP)[keyof typeof <%upper%>_GRID_GAP];
 
-/**
- * Интерфейс пропсов для компонента <%camel%>Grid
- */
+export const <%upper%>_GRID_ROW_GAP = {} as const;
+
+export type E<%camel%>GridRowGap = (typeof <%upper%>_GRID_ROW_GAP)[keyof typeof <%upper%>_GRID_ROW_GAP];
+
+export const <%upper%>_GRID_COLUMN_GAP = {} as const;
+
+export type E<%camel%>GridColumnGap = (typeof <%upper%>_GRID_COLUMN_GAP)[keyof typeof <%upper%>_GRID_COLUMN_GAP];
+
 export interface I<%camel%>GridProps {
-    /** Тег элемента задающего сетку */
+    /** Tag of the element defining the grid */
     tag?: string;
 
-    /** Кол-во колонок в сетке */
+    /** Number of columns in the grid */
     cols?: number | number[] | string | string[];
 
-    /** Кол-во рядов в сетке */
+    /** Number of rows in the grid */
     rows?: number | number[] | string | string[];
 
-    /** Направление сетки */
+    /** Grid direction */
     flow?: string | string[];
 
-    /** Высота элемента выходящего за заданную сетку */
+    /** Height of an element that goes beyond the specified grid */
     autoRows?: string | string[];
 
-    /** Длина элемента выходящего за заданную сетку */
+    /** Length of element that goes beyond the specified grid */
     autoCols?: string | string[];
 
-    /** align-items сетки */
+    /** align-items css property */
     align?: T<%camel%>GridAlign | T<%camel%>GridAlign[] | null;
 
-    /** align-content сетки */
+    /** align-content css property */
     alignContent?: T<%camel%>GridAlignContent | T<%camel%>GridAlignContent[] | null;
 
-    /** justify-content сетки */
+    /** justify-content css property */
     justify?: T<%camel%>GridJustify | T<%camel%>GridJustify[] | null;
 
-    /** justify-items сетки */
+    /** justify-items css property */
     justifyItems?: T<%camel%>GridJustifyItems | T<%camel%>GridJustifyItems[] | null;
 
-    /** Размер отступов сетки */
+    /** Grid margin size */
     gap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
 
-    /** Размер отступов рядов сетки */
+    /** Grid row indent size */
     rowGap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
 
-    /** Размер отступов колонок сетки */
+    /** Grid column indent size */
     columnGap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
 
-    /** Точки останова для адаптивного дизайна */
+    /** Breakpoints for responsive design */
     devices?: E<%camel%>Device[];
 }
