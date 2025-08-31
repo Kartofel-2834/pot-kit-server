@@ -18,6 +18,8 @@ const $props = withDefaults(defineProps<I<%camel%>InputProps>(), {
 const $emit = defineEmits<{
     input: [value: string];
     change: [value: string];
+    focus: [value: FocusEvent];
+    blur: [value: FocusEvent];
     'update:modelValue': [value: string];
     keydown: [value: KeyboardEvent];
     keyup: [value: KeyboardEvent];
@@ -70,11 +72,13 @@ function onChange(event: Event): void {
     $emit('change', target.value);
 }
 
-function onFocus() {
+function onFocus(event: FocusEvent) {
+    $emit('focus', event);
     isFocused.value = true;
 }
 
-function onBlur() {
+function onBlur(event: FocusEvent) {
+    $emit('blur', event);
     isFocused.value = false;
 }
 </script>
@@ -88,10 +92,18 @@ function onBlur() {
         </div>
 
         <input
-            :value="currentValue"
-            :disabled="disabled"
             class="<%kebab%>-input__target"
-            v-bind="$attrs"
+            :value="currentValue"
+            :type="type"
+            :name="name"
+            :placeholder="placeholder"
+            :readonly="readonly"
+            :step="step"
+            :min="min"
+            :max="max"
+            :maxlength="maxlength"
+            :tabindex="tabindex"
+            :disabled="disabled"
             @input="onInput"
             @change="onChange"
             @focus="onFocus"

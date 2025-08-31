@@ -57,6 +57,7 @@ const classList = computed(() =>
 
     /* --- Size - Configuration --- */
     --<%kebab%>-button-size-height: auto;
+    --<%kebab%>-button-size-gap: 0;
     --<%kebab%>-button-size-padding: 0;
     --<%kebab%>-button-size-border: 0;
     --<%kebab%>-button-size-text: inherit;
@@ -88,6 +89,7 @@ const classList = computed(() =>
 
     /* --- <%camel%>Button - Size --- */
     height: var(--<%kebab%>-button-size-height);
+    gap: var(--<%kebab%>-button-size-gap);
     padding: 0 var(--<%kebab%>-button-size-padding);
     border-width: var(--<%kebab%>-button-size-border);
     font-size: var(--<%kebab%>-button-size-text);

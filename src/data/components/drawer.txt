@@ -159,7 +159,7 @@ defineExpose<I<%camel%>DrawerExpose>({
     /* --- Size - Configuration --- */
     --<%kebab%>-drawer-size-text: inherit;
     --<%kebab%>-drawer-size-padding: 0;
-    --<%kebab%>-drawer-size-border: 1px;
+    --<%kebab%>-drawer-size-border: 0;
     --<%kebab%>-drawer-size-shadow: none;
 
     /* --- Radius - Configuration --- */

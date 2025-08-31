@@ -81,8 +81,6 @@ const properties = computed(() => {
     );
 });
 
-const classList = computed(() => useClassList({ ...properties.value }));
-
 const currentStyles = computed(() => {
     const [x, y] = attachTarget.value?.boxCoordinates ?? [0, 0];
 
@@ -144,9 +142,9 @@ defineExpose<I<%camel%>PopoverExpose>({
                 v-if="$dialog.isOpen.value"
                 v-bind="$attrs"
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                :class="['<%kebab%>-popover', classList]"
                 :style="currentStyles"
                 :data-<%kebab%>-dialog-id="$dialog.id.description"
+                class="<%kebab%>-popover"
             >
                 <slot />
             </div>

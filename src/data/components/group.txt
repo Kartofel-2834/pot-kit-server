@@ -61,7 +61,7 @@ const currentStyles = computed(() => {
 });
 </script>
 
-<style lang="scss">
+<style>
 .<%kebab%>-group {
     /* --- Gap - Configuration --- */
     --<%kebab%>-group-gap-value: auto;

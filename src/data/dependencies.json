@@ -205,6 +205,13 @@
                 "composables/focus-trap"
             ]
         },
+        "request": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "ui/composables/request"
+            ]
+        },
         "surrounding": {
             "components": [],
             "composables": [],
