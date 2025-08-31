@@ -159,7 +159,7 @@ defineExpose<IPotDrawerExpose>({
     /* --- Size - Configuration --- */
     --pot-drawer-size-text: inherit;
     --pot-drawer-size-padding: 0;
-    --pot-drawer-size-border: 1px;
+    --pot-drawer-size-border: 0;
     --pot-drawer-size-shadow: none;
 
     /* --- Radius - Configuration --- */

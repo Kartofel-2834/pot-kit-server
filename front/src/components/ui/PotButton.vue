@@ -57,6 +57,7 @@ const classList = computed(() =>
 
     /* --- Size - Configuration --- */
     --pot-button-size-height: auto;
+    --pot-button-size-gap: 0;
     --pot-button-size-padding: 0;
     --pot-button-size-border: 0;
     --pot-button-size-text: inherit;
@@ -88,6 +89,7 @@ const classList = computed(() =>
 
     /* --- PotButton - Size --- */
     height: var(--pot-button-size-height);
+    gap: var(--pot-button-size-gap);
     padding: 0 var(--pot-button-size-padding);
     border-width: var(--pot-button-size-border);
     font-size: var(--pot-button-size-text);

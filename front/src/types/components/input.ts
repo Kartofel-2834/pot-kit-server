@@ -37,6 +37,16 @@ export interface IPotInputProps {
 
     /** Если true, то инпут будет невалиден */
     invalid?: boolean;
+
+    type?: string;
+    placeholder?: string;
+    readonly?: boolean;
+    step?: number;
+    min?: number;
+    max?: number;
+    maxlength?: number;
+    tabindex?: string | number;
+    name?: string;
 }
 
 export interface IPotInputSlots {

@@ -137,7 +137,7 @@ export function useFocusTrap(): IFocusTrap {
         }
 
         /** Tab */
-        if (document.activeElement === lastFocusableElement) {
+        if (!keyBoardEvent.shiftKey && document.activeElement === lastFocusableElement) {
             firstFocusableElement.focus();
             event.preventDefault();
             return;

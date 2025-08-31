@@ -61,7 +61,7 @@ const currentStyles = computed(() => {
 });
 </script>
 
-<style lang="scss">
+<style>
 .pot-group {
     /* --- Gap - Configuration --- */
     --pot-group-gap-value: auto;
