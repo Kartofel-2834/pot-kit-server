@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // Composables
 import { useFocusTrap } from '@/composables/focus-trap';
+import { useSubscriptions } from '@/composables/subscriptions';
 
 const $props = withDefaults(
     defineProps<{
@@ -22,6 +23,7 @@ const $emit = defineEmits<{
 }>();
 
 const $focusTrap = useFocusTrap();
+const $subscriptions = useSubscriptions();
 
 // Data
 const container = ref<Element | null>(null);
@@ -42,20 +44,25 @@ onUnmounted(() => $focusTrap.terminate());
 // Computed
 const currentValues = computed(() => $props.values ?? $props.modelValue ?? []);
 
-const accordionsHeaders = computed(() =>
-    $focusTrap.focusableElements.value.filter(v => v.dataset.potAccordionHeader !== undefined),
-);
+const accordionsHeaders = computed(() => {
+    if (!$focusTrap.trap.value) return [];
+
+    return $focusTrap.trap.value.focusableElements.filter(element => {
+        return element.dataset.potAccordionHeader !== undefined;
+    });
+});
 
 // Watchers
 watch(
     () => accordionsHeaders.value,
-    (newAccordionsHeaders, oldAccordionsHeaders) => {
+    newAccordionsHeaders => {
+        $subscriptions.clear();
         newAccordionsHeaders.forEach(header =>
-            header.addEventListener('focus', handleAccordionHeaderFocus),
-        );
-
-        oldAccordionsHeaders.forEach(header =>
-            header.removeEventListener('focus', handleAccordionHeaderFocus),
+            $subscriptions.addEventListener({
+                target: header,
+                eventName: 'focus',
+                listener: handleAccordionHeaderFocus,
+            }),
         );
     },
 );

@@ -13,6 +13,11 @@ import { DIALOG_LAYERS } from '@/types/composables/dialog';
 // Vue
 import { ref, watch } from 'vue';
 
+// Composables
+import { useSubscriptions } from '@/composables/subscriptions';
+
+const $subscriptions = useSubscriptions();
+
 const defaultConfig: IDialogsSetupOptions = {
     triggersStartDelays: {
         clickoutside: 100,
@@ -28,8 +33,18 @@ const dialogsQueue = ref<IDialogManager[]>([]);
 /** Setup dialogs trigger listeners */
 export function setup(options: Partial<IDialogsSetupOptions> = {}) {
     dialogsQueue.value = [];
-    window.addEventListener('keydown', handleKeydown);
-    window.addEventListener('click', handleClick);
+
+    $subscriptions.addEventListener({
+        target: window,
+        eventName: 'keydown',
+        listener: handleKeydown,
+    });
+
+    $subscriptions.addEventListener({
+        target: window,
+        eventName: 'click',
+        listener: handleClick,
+    });
 
     config.value = {
         ...defaultConfig,
@@ -43,9 +58,7 @@ export function setup(options: Partial<IDialogsSetupOptions> = {}) {
 
 /** Terminate dialogs trigger listeners */
 export function terminate() {
-    window.removeEventListener('keydown', handleKeydown);
-    window.removeEventListener('click', handleClick);
-
+    $subscriptions.clear();
     config.value = { ...defaultConfig };
 }
 

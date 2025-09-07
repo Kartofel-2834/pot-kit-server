@@ -1,109 +1,113 @@
 // Types
-import type { IFocusTrap, IFocusTrapOptions } from '@/types/composables/focus-trap';
+import type {
+    IFocusTrap,
+    IFocusTrapInstance,
+    IFocusTrapOptions,
+} from '@/types/composables/focus-trap';
 
 // Vue
 import { ref } from 'vue';
 
 // Composables
 import { useDebounce } from '@/composables/timer';
+import { useSubscriptions } from '@/composables/subscriptions';
 
-const defaultOptions: IFocusTrapOptions = {
+const DEFAULT_OPTIONS: Readonly<IFocusTrapOptions> = {
     trap: true,
     autofocus: true,
 };
 
-const listeners: Array<(event: Event) => void> = [];
+const $subscriptions = useSubscriptions();
 
-function setupFocusTrap() {
-    window.addEventListener('keydown', handleGlobalKeydown);
-}
-
-function terminateFocusTrap() {
-    window.removeEventListener('keydown', handleGlobalKeydown);
-}
-
-function handleGlobalKeydown(event: Event) {
-    const currentListener = listeners[listeners.length - 1];
-
-    if (currentListener) {
-        currentListener(event);
-    }
-}
+const trapsList: IFocusTrapInstance[] = [];
 
 /** Composable for trapping focus inside container */
 export function useFocusTrap(): IFocusTrap {
-    const focusableElements = ref<HTMLElement[]>([]);
-
-    const mutationObserver = new MutationObserver(
-        useDebounce({
-            action: update,
-            delay: 100,
-        }),
-    );
-
-    let trap: Element | null = null;
-    let lastActiveElement: HTMLElement | null = null;
+    const id = Symbol();
+    const instance = ref<IFocusTrapInstance | null>(null);
+    const mutationObserver = new MutationObserver(useDebounce({ action: update, delay: 100 }));
 
     function setup(target: Element, options: Partial<IFocusTrapOptions> = {}) {
-        const currentOptions = { ...defaultOptions, ...options };
+        terminate();
 
-        trap = target;
-        update();
-        mutationObserver.observe(trap, {
+        instance.value = {
+            id,
+            target,
+            lastActiveElement: document.activeElement,
+            options: { ...DEFAULT_OPTIONS, ...options },
+            focusableElements: getFocusableElements(target),
+        };
+
+        trapsList.push(instance.value);
+
+        $subscriptions.observe('mutation', target, mutationObserver, {
             childList: true,
             subtree: true,
             attributeFilter: ['tabindex', 'disabled'],
         });
 
-        if (!currentOptions.trap && !currentOptions.autofocus) {
-            return;
+        if (instance.value.options.trap || instance.value.options.autofocus) {
+            const lastActiveElement = instance.value.lastActiveElement as HTMLElement;
+            lastActiveElement?.blur?.();
         }
 
-        blurLastActiveElement();
-
-        if (currentOptions.trap) {
-            listeners.push(handleKeydown);
-            if (listeners.length === 1) setupFocusTrap();
+        if (instance.value.options.trap) {
+            setupFocusTrap();
         }
 
-        if (currentOptions.autofocus) {
+        if (instance.value.options.autofocus) {
             setTimeout(focusFirst, 1);
         }
     }
 
     function terminate() {
-        if (!trap) {
-            return;
-        }
+        const lastActiveElement = instance.value?.lastActiveElement as HTMLElement;
 
-        const listenerIndex = listeners.indexOf(handleKeydown);
+        terminateFocusTrap();
+        $subscriptions.remove('mutation');
 
-        if (listenerIndex !== -1) listeners.splice(listenerIndex, 1);
-        if (listeners.length === 0) terminateFocusTrap();
+        lastActiveElement?.focus?.();
+        instance.value = null;
+    }
 
-        mutationObserver.disconnect();
-        focusableElements.value = [];
-        focusLastActiveElement();
+    function setupFocusTrap() {
+        if ($subscriptions.has('focus-trap')) return;
+
+        $subscriptions.addEventListener<KeyboardEvent>({
+            key: 'focus-trap',
+            target: window,
+            eventName: 'keydown',
+            listener: event => {
+                const lastTrap = trapsList[trapsList.length - 1];
+                if (!lastTrap) return;
+                handleKeydown(lastTrap, event);
+            },
+        });
+    }
+
+    function terminateFocusTrap() {
+        if (!instance.value) return;
+
+        const index = trapsList.indexOf(instance.value);
+
+        if (index !== -1) trapsList.splice(index, 1);
+        if (trapsList.length === 0) $subscriptions.remove('focus-trap');
     }
 
     function update() {
-        if (!trap) return;
+        if (!instance.value) return;
 
-        focusableElements.value = getFocusableElements(trap);
-    }
-
-    function blurLastActiveElement() {
-        lastActiveElement = document.activeElement as HTMLElement;
-        lastActiveElement?.blur?.();
-    }
-
-    function focusLastActiveElement() {
-        lastActiveElement?.focus?.();
-        lastActiveElement = null;
+        instance.value = {
+            ...instance.value,
+            focusableElements: getFocusableElements(instance.value.target),
+        };
     }
 
     function focusFirst() {
-        focusableElements.value?.[0]?.focus?.();
+        if (!instance.value) return;
+
+        const focusableElements = instance.value.focusableElements ?? [];
+        focusableElements[0]?.focus?.();
     }
 
     function getFocusableElements(trap: Element): HTMLElement[] {
@@ -114,13 +118,12 @@ export function useFocusTrap(): IFocusTrap {
         return Array.from(result) as HTMLElement[];
     }
 
-    function handleKeydown(event: Event) {
-        const keyBoardEvent = event as KeyboardEvent;
-        const firstFocusableElement = focusableElements.value[0] ?? null;
-        const lastFocusableElement =
-            focusableElements.value[focusableElements.value.length - 1] ?? null;
+    function handleKeydown(trapInstance: IFocusTrapInstance, event: KeyboardEvent) {
+        const focusableElements = trapInstance.focusableElements ?? [];
+        const firstFocusableElement = focusableElements[0] ?? null;
+        const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
 
-        if (keyBoardEvent.key !== 'Tab') {
+        if (event.key !== 'Tab') {
             return;
         }
 
@@ -130,14 +133,14 @@ export function useFocusTrap(): IFocusTrap {
         }
 
         /** Shift + Tab */
-        if (keyBoardEvent.shiftKey && document.activeElement === firstFocusableElement) {
+        if (event.shiftKey && document.activeElement === firstFocusableElement) {
             lastFocusableElement.focus();
             event.preventDefault();
             return;
         }
 
         /** Tab */
-        if (!keyBoardEvent.shiftKey && document.activeElement === lastFocusableElement) {
+        if (!event.shiftKey && document.activeElement === lastFocusableElement) {
             firstFocusableElement.focus();
             event.preventDefault();
             return;
@@ -145,7 +148,7 @@ export function useFocusTrap(): IFocusTrap {
     }
 
     return {
-        focusableElements,
+        trap: instance,
         setup,
         terminate,
         update,

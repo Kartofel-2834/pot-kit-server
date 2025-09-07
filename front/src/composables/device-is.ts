@@ -5,8 +5,13 @@ import type { EPotDevice } from '@/types';
 // Constants
 import { ALL_DEVICES, POT_BREAKPOINT } from '@/types';
 
+// Composables
+import { useSubscriptions } from '@/composables/subscriptions';
+
 // Vue
 import { computed, ref } from 'vue';
+
+const $subscriptions = useSubscriptions();
 
 const emptyState: Record<EPotDevice, boolean> = Object.keys(POT_BREAKPOINT).reduce(
     (res, breakpoint) => {
@@ -55,9 +60,11 @@ function createQuery(
 
     const createdQuery: MediaQueryList = window.matchMedia(query);
 
-    createdQuery.onchange = (event: MediaQueryListEvent) => {
-        handleQueryChange(event, currentBreakpoint);
-    };
+    $subscriptions.addEventListener<MediaQueryListEvent>({
+        target: createdQuery,
+        eventName: 'change',
+        listener: event => handleQueryChange(event, currentBreakpoint),
+    });
 
     return createdQuery;
 }
@@ -66,11 +73,7 @@ function createQuery(
 export function terminate() {
     if (!queries) return;
 
-    queries.forEach(value => {
-        if (!value.onchange) return;
-
-        value.removeEventListener('change', value.onchange);
-    });
+    $subscriptions.clear();
 
     queries = null;
     device.value = null;

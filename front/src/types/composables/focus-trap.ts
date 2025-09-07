@@ -5,9 +5,17 @@ export interface IFocusTrapOptions {
     autofocus: boolean;
 }
 
+export interface IFocusTrapInstance {
+    id: symbol;
+    target: Element;
+    lastActiveElement: Element | null;
+    options: IFocusTrapOptions;
+    focusableElements: HTMLElement[];
+}
+
 export interface IFocusTrap {
     /** Focusable child elements */
-    focusableElements: Ref<HTMLElement[]>;
+    trap: Ref<IFocusTrapInstance | null>;
 
     /** Setup focus trap */
     setup: (target: Element, options?: Partial<IFocusTrapOptions>) => void;

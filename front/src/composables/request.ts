@@ -1,3 +1,4 @@
+// Types
 import type {
     IRequest,
     IRequestOptions,
