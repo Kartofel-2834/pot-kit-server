@@ -58,8 +58,6 @@ export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KE
         subscriptions.set(currentKey, controller);
 
         function abort() {
-            if (controller.signal.aborted) return;
-
             controller.signal.removeEventListener('abort', abort);
             dispose(disposeData);
             subscriptions.delete(currentKey);
@@ -78,7 +76,7 @@ export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KE
         subscriptions.forEach(controller => controller.abort());
     }
 
-    function has(key: EVENT_KEY) {
+    function has(key: EVENT_KEY): boolean {
         return subscriptions.has(key);
     }
 

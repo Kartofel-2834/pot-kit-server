@@ -15,7 +15,7 @@ export type EPotTooltipColor = (typeof POT_TOOLTIP_COLOR)[keyof typeof POT_TOOLT
 
 export type EPotTooltipRadius = (typeof POT_TOOLTIP_RADIUS)[keyof typeof POT_TOOLTIP_RADIUS];
 
-export interface IPotTooltipProps<TOpenTriggers extends string[], TCloseTriggers extends string[]> {
+export interface IPotTooltipProps {
     /** Tooltip text (may be replaced by slot) */
     text?: string;
 
@@ -23,10 +23,10 @@ export interface IPotTooltipProps<TOpenTriggers extends string[], TCloseTriggers
     to?: string | RendererElement | null;
 
     /** Target events names, that will open tooltip */
-    openTriggers?: TOpenTriggers;
+    openTriggers?: string[];
 
     /** Target events names, that will close tooltip */
-    closeTriggers?: TCloseTriggers;
+    closeTriggers?: string[];
 
     /** Tooltip open delay in milliseconds */
     openDelay?: number;

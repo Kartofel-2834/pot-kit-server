@@ -1,8 +1,4 @@
-<script
-    lang="ts"
-    generic="TOpenTriggers extends string[] = string[], TCloseTriggers extends string[] = string[]"
-    setup
->
+<script lang="ts" setup>
 // Types
 import type { Ref } from 'vue';
 import type { IPotTooltipExpose, IPotTooltipProps } from '@/types/components/tooltip';
@@ -19,23 +15,30 @@ import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDeviceIs } from '@/composables/device-is';
 import { useClassList } from '@/composables/class-list';
+import { useSubscriptions } from '@/composables/subscriptions';
 
 // Components
 import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
+
+interface IDelayedAction {
+    timeoutId: number;
+    action: ((...args: unknown[]) => unknown) | null;
+    delay: number;
+}
 
 const isOpen = ref<boolean>(false);
 
 const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
-const $props = withDefaults(defineProps<IPotTooltipProps<TOpenTriggers, TCloseTriggers>>(), {
+const $props = withDefaults(defineProps<IPotTooltipProps>(), {
     text: '',
     to: 'body',
-    openDelay: 0,
-    closeDelay: 200,
+    openDelay: 300,
+    closeDelay: 300,
     autoCloseDelay: 0,
-    openTriggers: () => ['mouseover', 'focus'] as TOpenTriggers,
-    closeTriggers: () => ['mouseout', 'blur'] as TCloseTriggers,
+    openTriggers: () => ['mouseenter', 'focus'],
+    closeTriggers: () => ['mouseleave', 'blur'],
     enterable: false,
     transition: 'pot-tooltip-transition',
 });
@@ -43,6 +46,7 @@ const $props = withDefaults(defineProps<IPotTooltipProps<TOpenTriggers, TCloseTr
 const $emit = defineEmits<{
     open: [];
     close: [];
+    trigger: [event: Event, trigger: string];
     'trigger:open': [event: Event, trigger: string];
     'trigger:close': [event: Event, trigger: string];
 }>();
@@ -57,27 +61,21 @@ const $dialog = useDialog({
     open: open,
 });
 
+const $targetSubscriptions = useSubscriptions();
+const $boxSubscriptions = useSubscriptions();
+
 // Data
 const box = ref<Element | null>(null);
 const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
 
-const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: number }>({
-    timeoutId: NaN,
-    action: null,
-    delay: 0,
-});
+const closeDelayedAction = ref<IDelayedAction | null>();
+const openDelayedAction = ref<IDelayedAction | null>();
 
 // Lifecycle
 onUnmounted(() => {
     $dialog.terminate();
-
-    if (attachTarget.value?.target) {
-        terminateTargetTriggers(attachTarget.value.target as Element);
-    }
-
-    if (box.value) {
-        terminateBoxListeners(box.value as Element);
-    }
+    $targetSubscriptions.clear();
+    $boxSubscriptions.clear();
 });
 
 // Computed
@@ -109,33 +107,51 @@ const currentStyles = computed(() => {
     };
 });
 
+const triggers = computed(() => {
+    return [...($props.openTriggers ?? []), ...($props.closeTriggers ?? [])];
+});
+
 // Watchers
 watch(
-    () => [attachTarget.value?.target, $props.openTriggers, $props.closeTriggers],
-    (newValue, oldValue) => {
-        const [newTarget] = newValue;
-        const [oldTarget] = oldValue;
+    () => [attachTarget.value?.target, triggers.value] as [Element | null, string[]],
+    newValue => {
+        const [newTarget, newTriggers] = newValue;
 
-        if (oldTarget instanceof Element) terminateTargetTriggers(oldTarget);
-        if (newTarget instanceof Element) setupTargetTriggers(newTarget);
+        $targetSubscriptions.clear();
+
+        if (!Array.isArray(newTriggers) || !(newTarget instanceof Element)) return;
+
+        newTriggers.forEach(trigger => {
+            $targetSubscriptions.addEventListener({
+                key: `target-trigger-${trigger}`,
+                eventName: trigger,
+                target: newTarget,
+                listener: event => toggleTrigger(trigger, event),
+            });
+        });
     },
 );
 
 watch(
-    () => [box.value, $props.enterable],
-    (newValue, oldValue) => {
+    () => [box.value, $props.enterable] as [Element, boolean],
+    newValue => {
         const [boxElement, enterable] = newValue;
-        const [oldBoxElement] = oldValue;
 
-        if (!enterable) return;
+        $boxSubscriptions.clear();
 
-        if (oldBoxElement instanceof Element) {
-            terminateBoxListeners(oldBoxElement);
-        }
+        if (!enterable || !(boxElement instanceof Element)) return;
 
-        if (boxElement instanceof Element) {
-            setupBoxListeners(boxElement);
-        }
+        $boxSubscriptions.addEventListener({
+            eventName: 'mouseenter',
+            target: boxElement,
+            listener: pause,
+        });
+
+        $boxSubscriptions.addEventListener({
+            eventName: 'mouseleave',
+            target: boxElement,
+            listener: resume,
+        });
     },
 );
 
@@ -143,132 +159,125 @@ watch(
 function open() {
     if (isOpen.value) return;
 
-    clearDelayedAction();
     isOpen.value = true;
     $emit('open');
-
-    if ($props.autoCloseDelay > 0) startAutoClose();
+    autoClose();
 }
 
 function close() {
     if (!isOpen.value) return;
 
-    clearDelayedAction();
     isOpen.value = false;
     $emit('close');
 }
 
-function delayedOpen(event: Event, trigger: TOpenTriggers[number]): number {
-    return setDelayedAction(() => {
-        if (isOpen.value) return;
+function autoClose() {
+    if (!$props.autoCloseDelay) {
+        return;
+    }
 
+    clearTimeout(closeDelayedAction.value?.timeoutId);
+    clearTimeout(openDelayedAction.value?.timeoutId);
+
+    openDelayedAction.value = null;
+    closeDelayedAction.value = {
+        timeoutId: setTimeout(close, $props.autoCloseDelay),
+        delay: $props.autoCloseDelay,
+        action: close,
+    };
+}
+
+function delayedOpen(trigger: string, event: Event) {
+    clearTimeout(closeDelayedAction.value?.timeoutId);
+    clearTimeout(openDelayedAction.value?.timeoutId);
+
+    if (isOpen.value) {
+        autoClose();
+        return;
+    }
+
+    const delay = $props.openDelay;
+    const action = () => {
+        if (isOpen.value) return;
         $emit('trigger:open', event, trigger);
         open();
-    }, $props.openDelay);
+    };
+
+    const timeoutId = setTimeout(action, delay);
+
+    closeDelayedAction.value = null;
+    openDelayedAction.value = { timeoutId, delay, action };
 }
 
-function delayedClose(event: Event, trigger: string): number {
-    return setDelayedAction(() => {
-        if (!isOpen.value) return;
+function delayedClose(trigger: string, event: Event) {
+    clearTimeout(closeDelayedAction.value?.timeoutId);
+    clearTimeout(openDelayedAction.value?.timeoutId);
 
+    if (!isOpen.value) return;
+
+    const delay = $props.closeDelay;
+    const action = () => {
+        if (!isOpen.value) return;
         $emit('trigger:close', event, trigger);
         close();
-    }, $props.closeDelay);
-}
+    };
 
-function startAutoClose(): number {
-    if ($props.autoCloseDelay <= 0 || isNaN($props.autoCloseDelay)) return NaN;
+    const timeoutId = setTimeout(action, delay);
 
-    return setDelayedAction(() => {
-        if (!isOpen.value) return;
-
-        isOpen.value = false;
-        $emit('close');
-    }, $props.autoCloseDelay);
+    closeDelayedAction.value = { timeoutId, delay, action };
+    openDelayedAction.value = null;
 }
 
 function pause() {
-    clearTimeout(delayedAction.value.timeoutId);
-    delayedAction.value = { ...delayedAction.value, timeoutId: NaN };
+    if (!closeDelayedAction.value) {
+        return;
+    }
+
+    clearTimeout(closeDelayedAction.value.timeoutId);
+    closeDelayedAction.value = {
+        ...closeDelayedAction.value,
+        timeoutId: NaN,
+    };
 }
 
 function resume() {
-    setDelayedAction(delayedAction.value.action, delayedAction.value.delay);
+    if (!closeDelayedAction.value?.action || !isNaN(closeDelayedAction.value.timeoutId)) {
+        return;
+    }
+
+    const timeoutId = setTimeout(closeDelayedAction.value.action, closeDelayedAction.value.delay);
+    closeDelayedAction.value = { ...closeDelayedAction.value, timeoutId };
 }
 
-function clearDelayedAction() {
-    clearTimeout(delayedAction.value.timeoutId);
-    delayedAction.value = { action: null, timeoutId: NaN, delay: 0 };
-}
+function toggleTrigger(trigger: string, event: Event) {
+    const isOpenTrigger = $props.openTriggers?.includes(trigger);
+    const isCloseTrigger = $props.closeTriggers?.includes(trigger);
 
-function setDelayedAction(action: Function | null, delay: number): number {
-    if (!action) return NaN;
+    $emit('trigger', event, trigger);
 
-    clearTimeout(delayedAction.value.timeoutId);
-    const timeoutId = delay ? setTimeout(action, delay) : NaN;
-
-    if (!delay) action();
-
-    delayedAction.value = {
-        action: delay ? action : null,
-        timeoutId,
-        delay,
-    };
-
-    return timeoutId;
-}
-
-function setupTargetTriggers(element: Element) {
-    if (!element) return;
-
-    $props.closeTriggers?.forEach?.(trigger =>
-        element.addEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
-    );
-    $props.openTriggers?.forEach?.(trigger =>
-        element.addEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
-    );
-}
-
-function terminateTargetTriggers(element: Element) {
-    if (!element) return;
-
-    $props.closeTriggers?.forEach?.(trigger =>
-        element.removeEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
-    );
-    $props.openTriggers?.forEach?.(trigger =>
-        element.removeEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
-    );
-}
-
-function setupBoxListeners(element: Element) {
-    if (!element) return;
-
-    element.addEventListener('mouseover', pause);
-    element.addEventListener('mouseout', resume);
-}
-
-function terminateBoxListeners(element: Element) {
-    if (!element) return;
-
-    element.removeEventListener('mouseover', pause);
-    element.removeEventListener('mouseout', resume);
+    if (isOpenTrigger && isCloseTrigger) {
+        if (isOpen.value) {
+            delayedClose(trigger, event);
+        } else {
+            delayedOpen(trigger, event);
+        }
+    } else if (isOpenTrigger) {
+        delayedOpen(trigger, event);
+    } else if (isCloseTrigger) {
+        delayedClose(trigger, event);
+    }
 }
 
 // Exports
 provide('pot-dialog-layer', $dialog.layer);
 
-defineExpose<IPotTooltipExpose>({
+defineExpose<any>({
     isOpen: readonly(isOpen),
     coordinates: attachTarget.value?.boxCoordinates,
     target: attachTarget.value?.target as Element,
     tooltip: box.value,
     open,
     close,
-    delayedOpen,
-    delayedClose,
-    pause,
-    resume,
-    clearDelayedAction,
 });
 </script>
 

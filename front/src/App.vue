@@ -48,8 +48,16 @@ const openedAccordions = ref<string[]>([]);
         style="display: flex; flex-direction: column; width: 100vw"
     >
         <div style="width: 400px">
-            <PotTooltip text="Tooltip">
+            <!-- :auto-close-delay="1000" -->
+            <PotTooltip
+                enterable
+                :auto-close-delay="1000"
+            >
                 <button>Kamal</button>
+
+                <template #content>
+                    <div style="padding: 2rem; background-color: greenyellow">Tooltip</div>
+                </template>
             </PotTooltip>
 
             {{ test }}
