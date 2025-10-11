@@ -1,13 +1,3 @@
-<template>
-    <component
-        :is="tag"
-        :class="['pot-grid', classList]"
-        :style="currentStyles"
-    >
-        <slot />
-    </component>
-</template>
-
 <script lang="ts" setup>
 // Types
 import type { IPotGridProps } from '@/types/components/grid';
@@ -80,6 +70,16 @@ function formatNumberToFr(v?: string | number): string | undefined {
     return v ? String(v) : undefined;
 }
 </script>
+
+<template>
+    <component
+        :is="tag"
+        :class="['pot-grid', classList]"
+        :style="currentStyles"
+    >
+        <slot />
+    </component>
+</template>
 
 <style>
 .pot-grid {

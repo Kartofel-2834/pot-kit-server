@@ -163,18 +163,18 @@ defineExpose<IPotToastExpose<T>>({
 .pot-toast__item__container {
     border-style: solid;
 
-    /* --- PotTooltip - Color --- */
+    /* --- PotToast - Color --- */
     border-color: var(--pot-toast-color-border);
     background-color: var(--pot-toast-color-background);
     color: var(--pot-toast-color-text);
 
-    /* --- PotTooltip - Size --- */
+    /* --- PotToast - Size --- */
     border-width: var(--pot-toast-size-border);
     padding: var(--pot-toast-size-padding);
     box-shadow: var(--pot-toast-size-shadow);
     font-size: var(--pot-toast-size-text);
 
-    /* --- PotTooltip - Radius --- */
+    /* --- PotToast - Radius --- */
     border-radius: var(--pot-toast-radius-value);
 }
 

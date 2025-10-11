@@ -1,25 +1,38 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 // Types
-import type { Ref } from 'vue';
+import type { Ref, VNode } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
+import type { IAttachOptions } from '@/types/composables/attach';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
-// Constants
-import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
-import { DIALOG_LAYERS } from '@/types/composables/dialog';
-
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
+import {
+    cloneVNode,
+    computed,
+    inject,
+    isVNode,
+    onUnmounted,
+    provide,
+    readonly,
+    ref,
+    watch,
+} from 'vue';
+
+// Constants
+import { DIALOG_LAYERS } from '@/types/composables/dialog';
+import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 
 // Composables
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
-import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
-import { useClassList } from '@/composables/class-list';
-import { useFocusTrap } from '@/composables/focus-trap';
+import { useDeviceIs } from '@/composables/device-is';
+import { useAttach } from '@/composables/attach';
+import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+import { useClassListArray } from '@/composables/class-list';
+import { useSubscriptions } from '@/composables/subscriptions';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 // Components
-import PotAttachTarget from '@/components/ui/PotAttachTarget.vue';
+import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
 
 const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
@@ -27,13 +40,10 @@ const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_L
 const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     visible: undefined,
     modelValue: undefined,
-    position: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
+    position: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
     nudge: 10,
     edgeMargin: 10,
-    persistent: false,
-    noSticky: false,
-    noAutoFocus: false,
-    noFocusTrap: false,
+    noSticky: true,
     to: 'body',
     transition: 'pot-popover-transition',
 });
@@ -44,26 +54,32 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
+const $deviceIs = useDeviceIs();
+
 const $dialog = useDialog({
     triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
     layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
-    close: close,
-    open: open,
+    close,
+    open,
 });
 
-const $deviceIs = useDeviceIs();
-
-const $focusTrap = useFocusTrap();
+const $subscriptions = useSubscriptions();
 
 // Data
+const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
-const attachTarget = ref<InstanceType<typeof PotAttachTarget> | null>(null);
 
 // Lifecycle
-onUnmounted(() => $dialog.terminate());
+onUnmounted(() => {
+    $dialog.terminate();
+    $subscriptions.clear();
+    $attach.stop();
+});
 
 // Computed
+const currentTarget = computed(() => $props.target ?? target.value ?? null);
+
 const teleportTo = computed(() => $props.to ?? 'body');
 
 const properties = computed(() => {
@@ -81,10 +97,21 @@ const properties = computed(() => {
     );
 });
 
-const classList = computed(() => useClassList({ ...properties.value }));
+const attachOptions = computed<IAttachOptions>(() => ({
+    position: properties.value.position,
+    nudge: properties.value.nudge,
+    edgeMargin: properties.value.edgeMargin,
+    persistent: $props.persistent,
+    sticky: !$props.noSticky,
+    terminateOnChange: $props.closeOnMove,
+}));
+
+const $attach = useAttach(attachOptions, () => $dialog.close());
+
+const classList = computed(() => useClassListArray({ ...properties.value }));
 
 const currentStyles = computed(() => {
-    const [x, y] = attachTarget.value?.boxCoordinates ?? [0, 0];
+    const [x, y] = $attach.coordinates.value ?? [0, 0];
 
     return {
         zIndex: useDialogZIndex($dialog),
@@ -94,17 +121,25 @@ const currentStyles = computed(() => {
 
 // Watchers
 watch(
-    () => [box.value, $props.noFocusTrap],
-    newValue => {
-        const [box] = newValue;
-
-        if (box instanceof Element) {
-            $focusTrap.setup(box, {
-                trap: !$props.noFocusTrap,
-                autofocus: !$props.noAutoFocus,
-            });
+    () => [currentTarget.value, box.value],
+    () => {
+        if (currentTarget.value && box.value) {
+            $attach.start(currentTarget.value, box.value);
         } else {
-            $focusTrap.terminate();
+            $attach.stop();
+        }
+    },
+);
+
+watch(
+    () => [$dialog.isOpen.value, box.value],
+    () => {
+        if ($dialog.isOpen.value && box.value) {
+            if (!$props.noFocusTrap) focusTrap();
+            if (!$props.noAutoFocus) autoFocus();
+        } else {
+            $subscriptions.remove('focus-trap');
+            $subscriptions.remove('autofocus');
         }
     },
 );
@@ -120,13 +155,59 @@ function close() {
     $emit('update:modelValue', false);
 }
 
+function focusTrap() {
+    const boxElement = box.value as Element;
+
+    if (!boxElement) return;
+
+    $subscriptions.add(
+        () => useFocusTrap(boxElement),
+        controller => controller.abort(),
+        'focus-trap',
+    );
+}
+
+function autoFocus() {
+    const boxElement = box.value as Element;
+    const lastActiveElement = document.activeElement;
+
+    if (!boxElement) return;
+
+    $subscriptions.add(
+        () => useAutoFocus(boxElement, lastActiveElement),
+        controller => controller.abort(),
+        'autofocus',
+    );
+}
+
+function findTarget(vnode: VNode): VNode | null {
+    if (!isVNode(vnode)) return vnode;
+
+    if (Array.isArray(vnode.children)) {
+        vnode.children = vnode.children.map(v => (isVNode(v) ? findTarget(v) : v));
+    }
+
+    return cloneVNode(vnode, {
+        onVnodeMounted(vnode) {
+            if (target.value || !(vnode.el instanceof Element)) return;
+            target.value = vnode.el as Element;
+        },
+
+        onVnodeBeforeUnmount() {
+            if (target.value === vnode.el) {
+                target.value = null;
+            }
+        },
+    });
+}
+
 // Exports
 provide('pot-dialog-layer', $dialog.layer);
 
 defineExpose<IPotPopoverExpose>({
     isOpen: readonly($dialog.isOpen),
-    coordinates: attachTarget.value?.boxCoordinates,
-    target: attachTarget.value?.target as Element,
+    coordinates: $attach.coordinates.value,
+    target: currentTarget.value,
     popover: box.value,
     open: () => $dialog.open(),
     close: () => $dialog.close(),
@@ -140,8 +221,8 @@ defineExpose<IPotPopoverExpose>({
     >
         <Transition :name="transition">
             <div
-                ref="box"
                 v-if="$dialog.isOpen.value"
+                ref="box"
                 v-bind="$attrs"
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                 :class="['pot-popover', classList]"
@@ -153,18 +234,9 @@ defineExpose<IPotPopoverExpose>({
         </Transition>
     </Teleport>
 
-    <PotAttachTarget
-        ref="attachTarget"
-        :box="box"
-        :position="properties.position"
-        :edge-margin="properties.edgeMargin"
-        :nudge="properties.nudge"
-        :target="target"
-        :sticky="!noSticky"
-        :persistent="persistent"
-    >
+    <PotSlotCatcher :map-v-node="findTarget">
         <slot name="target" />
-    </PotAttachTarget>
+    </PotSlotCatcher>
 </template>
 
 <style>
@@ -213,7 +285,3 @@ defineExpose<IPotPopoverExpose>({
     opacity: 0;
 }
 </style>
-
-<!-- Styles - START -->
-<style src="@/assets/css/styles/test/popover.css" />
-<!-- Styles - END -->

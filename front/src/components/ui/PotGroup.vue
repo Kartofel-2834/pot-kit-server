@@ -1,13 +1,3 @@
-<template>
-    <component
-        :is="tag"
-        :class="['pot-group', classList]"
-        :style="currentStyles"
-    >
-        <slot />
-    </component>
-</template>
-
 <script lang="ts" setup>
 // Types
 import type { IPotGroupProps } from '@/types/components/group';
@@ -60,6 +50,16 @@ const currentStyles = computed(() => {
     };
 });
 </script>
+
+<template>
+    <component
+        :is="tag"
+        :class="['pot-group', classList]"
+        :style="currentStyles"
+    >
+        <slot />
+    </component>
+</template>
 
 <style>
 .pot-group {

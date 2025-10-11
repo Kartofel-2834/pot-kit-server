@@ -1,7 +1,7 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
-import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
+import type { EAttachedBoxPosition } from '@/types/composables/attach';
 
 export const POT_TOOLTIP_SIZE = {} as const;
 
@@ -44,7 +44,7 @@ export interface IPotTooltipProps {
     transition?: string;
 
     /** Tooltip position that relative to target */
-    position?: EPotAttachedBoxPosition | EPotAttachedBoxPosition[];
+    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
 
     /** Distance between tooltip and target */
     nudge?: number | number[];
@@ -57,6 +57,15 @@ export interface IPotTooltipProps {
 
     /** Tooltip will not be sticky and will not follow target on scroll */
     noSticky?: boolean;
+
+    /** Tooltip will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Tooltip will not lock focus outside of container */
+    noFocusTrap?: boolean;
+
+    /** Tooltip will be closed if target or box rect changed or on surrounding scroll/resize */
+    closeOnMove?: boolean;
 
     /** Target element */
     target?: Element | null;
@@ -93,18 +102,9 @@ export interface IPotTooltipExpose {
     /** Close tooltip */
     close: () => void;
 
-    /** Tooltip will open after openDelay prop value in milliseconds, if delay greater than zero */
-    delayedOpen: (event: Event, trigger: string) => number;
+    /** Tooltip will open after openDelay prop value in milliseconds */
+    delayedOpen: () => void;
 
-    /** Tooltip will open after closeDelay prop value in milliseconds, if delay greater than zero */
-    delayedClose: (event: Event, trigger: string) => number;
-
-    /** Pause delayed tooltip open action */
-    pause: () => void;
-
-    /** Resume delayed tooltip open action */
-    resume: () => void;
-
-    /** Clear delayed tooltip open action */
-    clearDelayedAction: () => void;
+    /** Tooltip will open after closeDelay prop value in milliseconds */
+    delayedClose: () => void;
 }

@@ -3,8 +3,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // Composables
-import { useFocusTrap } from '@/composables/focus-trap';
 import { useSubscriptions } from '@/composables/subscriptions';
+import { useDebounce } from '@/composables/timer';
+import { useFocusableChildren } from '@/composables/focus';
 
 const $props = withDefaults(
     defineProps<{
@@ -22,48 +23,59 @@ const $emit = defineEmits<{
     'update:modelValue': [newValues: unknown[]];
 }>();
 
-const $focusTrap = useFocusTrap();
 const $subscriptions = useSubscriptions();
+const $accordionSubscriptions = useSubscriptions();
 
 // Data
 const container = ref<Element | null>(null);
 const selectedHeader = ref<HTMLElement | null>(null);
+const accordionsHeaders = ref<HTMLElement[]>([]);
+
+const mutationObserver = new MutationObserver(
+    useDebounce({
+        action: () => (accordionsHeaders.value = getAccordionHeaders()),
+        delay: 100,
+    }),
+);
 
 // Lifecycle
 onMounted(() => {
     if (!container.value) return;
 
-    $focusTrap.setup(container.value, {
-        trap: false,
-        autofocus: false,
+    accordionsHeaders.value = getAccordionHeaders();
+
+    $subscriptions.observe('focusable-elements-change', container.value, mutationObserver, {
+        childList: true,
+        subtree: true,
+        attributeFilter: ['tabindex', 'disabled'],
     });
 });
 
-onUnmounted(() => $focusTrap.terminate());
+onUnmounted(() => {
+    $subscriptions.clear();
+    $accordionSubscriptions.clear();
+});
 
 // Computed
 const currentValues = computed(() => $props.values ?? $props.modelValue ?? []);
 
-const accordionsHeaders = computed(() => {
-    if (!$focusTrap.trap.value) return [];
-
-    return $focusTrap.trap.value.focusableElements.filter(element => {
-        return element.dataset.potAccordionHeader !== undefined;
-    });
-});
-
 // Watchers
 watch(
     () => accordionsHeaders.value,
-    newAccordionsHeaders => {
-        $subscriptions.clear();
-        newAccordionsHeaders.forEach(header =>
-            $subscriptions.addEventListener({
+    headers => {
+        $accordionSubscriptions.clear();
+
+        if (!Array.isArray(headers)) return;
+
+        headers.forEach(header => {
+            if (!(header instanceof Element)) return;
+
+            $accordionSubscriptions.addEventListener({
                 target: header,
                 eventName: 'focus',
                 listener: handleAccordionHeaderFocus,
-            }),
-        );
+            });
+        });
     },
 );
 
@@ -133,6 +145,16 @@ function handleKeydown(event: KeyboardEvent) {
 function handleAccordionHeaderFocus(event: Event) {
     const header = event.target as HTMLElement;
     selectedHeader.value = header;
+}
+
+function getAccordionHeaders(): HTMLElement[] {
+    if (!container.value) return [];
+
+    const focusableChildren = useFocusableChildren(container.value);
+
+    return focusableChildren.filter(element => {
+        return element instanceof HTMLElement && element.dataset.potAccordionHeader !== undefined;
+    });
 }
 </script>
 

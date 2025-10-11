@@ -40,5 +40,9 @@ export interface IEventListenerTarget<EVENT> {
         options?: boolean | AddEventListenerOptions,
     ): void;
 
-    removeEventListener(eventName: string, listener: (event: EVENT) => unknown): void;
+    removeEventListener(
+        eventName: string,
+        listener: (event: EVENT) => unknown,
+        options?: boolean | AddEventListenerOptions,
+    ): void;
 }

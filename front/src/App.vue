@@ -1,10 +1,4 @@
 <script setup lang="ts">
-// Types
-import type { EPotAttachedBoxPosition } from './types/components/attach-target';
-
-// Constants
-import { POT_ATTACHED_BOX_POSITION } from './types/components/attach-target';
-
 // Vue
 import { onMounted, onUnmounted, ref } from 'vue';
 
@@ -15,21 +9,21 @@ import { POT_TOAST_POSITION, type EPotToastPosition } from './types/components/t
 
 // Components
 import PotButton from './components/ui/PotButton.vue';
-import PotPopover from './components/ui/PotPopover.vue';
 import PotTooltip from './components/ui/PotTooltip.vue';
-import PotDrawer from './components/ui/PotDrawer.vue';
 import PotDialog from './components/ui/PotDialog.vue';
 import PotToast from './components/ui/PotToast.vue';
+import PotInput from './components/ui/PotInput.vue';
+import PotPopover from './components/ui/PotPopover.vue';
+import PotDrawer from './components/ui/PotDrawer.vue';
 import PotAccordion from './components/ui/PotAccordion.vue';
 import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
-import PotInput from './components/ui/PotInput.vue';
 
-const kamal = ref<EPotAttachedBoxPosition>(POT_ATTACHED_BOX_POSITION.TOP_CENTER);
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
 const isPopoverVisible2 = ref<boolean>(true);
 
 const test = ref<string>('test');
+const isOpen = ref<boolean>(false);
 
 const mainRef = ref<Element | null>(null);
 const buttonRef = ref<Element | null>(null);
@@ -45,24 +39,40 @@ const openedAccordions = ref<string[]>([]);
         ref="mainRef"
         id="main"
         class="main"
-        style="display: flex; flex-direction: column; width: 100vw"
+        style="
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100vw;
+            height: 100vh;
+            overflow: visible;
+        "
     >
-        <div style="width: 400px">
-            <!-- :auto-close-delay="1000" -->
-            <PotTooltip
-                enterable
-                :auto-close-delay="1000"
-            >
-                <button>Kamal</button>
+        {{ openedAccordions }}
 
-                <template #content>
-                    <div style="padding: 2rem; background-color: greenyellow">Tooltip</div>
-                </template>
-            </PotTooltip>
+        <PotAccordionGroup
+            v-model="openedAccordions"
+            v-slot="{ singleBind, multipleBind }"
+        >
+            <PotAccordion v-bind="multipleBind('first')">
+                <template #title> Title 1 </template>
 
-            {{ test }}
-            <PotInput v-model="test"></PotInput>
-        </div>
+                TEST 1
+            </PotAccordion>
+
+            <PotAccordion v-bind="multipleBind('second')">
+                <template #title> Title 2 </template>
+
+                TEST 2
+            </PotAccordion>
+
+            <PotAccordion v-bind="multipleBind('third')">
+                <template #title> Title 3 </template>
+
+                TEST 3
+            </PotAccordion>
+        </PotAccordionGroup>
     </main>
 </template>
 

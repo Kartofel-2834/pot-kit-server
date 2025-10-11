@@ -1,7 +1,7 @@
 // Types
 import type { Ref, RendererElement } from 'vue';
-import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
 import type { EPotDevice } from '@/types';
+import type { EAttachedBoxPosition } from '../composables/attach';
 
 export const POT_POPOVER_SIZE = {} as const;
 
@@ -23,7 +23,7 @@ export interface IPotPopoverProps {
     modelValue?: boolean;
 
     /** Popover position that relative to target */
-    position?: EPotAttachedBoxPosition | EPotAttachedBoxPosition[];
+    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
 
     /** Distance between popover and target */
     nudge?: number | number[];
@@ -42,6 +42,9 @@ export interface IPotPopoverProps {
 
     /** Target element */
     target?: Element | null;
+
+    /** Popover will be closed if target or box rect changed or on surrounding scroll/resize */
+    closeOnMove?: boolean;
 
     /** Popover will not focus first focusable element on container mount */
     noAutoFocus?: boolean;

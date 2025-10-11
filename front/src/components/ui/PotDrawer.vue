@@ -16,7 +16,8 @@ import { useClassList } from '@/composables/class-list';
 import { useDeviceIs } from '@/composables/device-is';
 import { useDeviceProperties } from '@/composables/device-properties';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
-import { useFocusTrap } from '@/composables/focus-trap';
+import { useSubscriptions } from '@/composables/subscriptions';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
@@ -48,13 +49,16 @@ const $dialog = useDialog({
 
 const $deviceIs = useDeviceIs();
 
-const $focusTrap = useFocusTrap();
+const $subscriptions = useSubscriptions();
 
 // Data
 const container = ref<Element | null>(null);
 
 // Lifecycle
-onUnmounted(() => $dialog.terminate());
+onUnmounted(() => {
+    $dialog.terminate();
+    $subscriptions.clear();
+});
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
@@ -81,16 +85,13 @@ const currentStyles = computed(() => ({
 // Watchers
 watch(
     () => [container.value, $props.noFocusTrap],
-    newValue => {
-        const [container] = newValue;
-
-        if (container instanceof Element) {
-            $focusTrap.setup(container, {
-                trap: !$props.noFocusTrap,
-                autofocus: !$props.noAutoFocus,
-            });
+    () => {
+        if (container.value instanceof Element) {
+            if (!$props.noFocusTrap) focusTrap();
+            if (!$props.noAutoFocus) autoFocus();
         } else {
-            $focusTrap.terminate();
+            $subscriptions.remove('focus-trap');
+            $subscriptions.remove('autofocus');
         }
     },
 );
@@ -104,6 +105,31 @@ function open() {
 function close() {
     $emit('close');
     $emit('update:modelValue', false);
+}
+
+function focusTrap() {
+    const containerElement = container.value as Element;
+
+    if (!containerElement) return;
+
+    $subscriptions.add(
+        () => useFocusTrap(containerElement),
+        controller => controller.abort(),
+        'focus-trap',
+    );
+}
+
+function autoFocus() {
+    const containerElement = container.value as Element;
+    const lastActiveElement = document.activeElement;
+
+    if (!containerElement) return;
+
+    $subscriptions.add(
+        () => useAutoFocus(containerElement, lastActiveElement),
+        controller => controller.abort(),
+        'autofocus',
+    );
 }
 
 // Exports

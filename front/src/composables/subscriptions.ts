@@ -36,7 +36,7 @@ export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KE
     }): AbortController {
         return add(
             () => data.target.addEventListener(data.eventName, data.listener, data.options),
-            () => data.target.removeEventListener(data.eventName, data.listener),
+            () => data.target.removeEventListener(data.eventName, data.listener, data.options),
             data.key,
         );
     }

@@ -38,12 +38,14 @@ export function setup(options: Partial<IDialogsSetupOptions> = {}) {
         target: window,
         eventName: 'keydown',
         listener: handleKeydown,
+        options: { capture: true },
     });
 
     $subscriptions.addEventListener({
         target: window,
         eventName: 'click',
         listener: handleClick,
+        options: { capture: true },
     });
 
     config.value = {

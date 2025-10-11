@@ -1,109 +1,119 @@
 // Types
-import type { EPotAttachedBoxPosition } from '@/types/components/attach-target';
-import type { IAttach, IAttachOptions } from '@/types/composables/attach';
-import type { ISurroundingData } from '@/types/composables/surrounding';
-
-// Constants
-import { POT_ATTACHED_BOX_POSITION } from '@/types/components/attach-target';
+import type { Ref } from 'vue';
+import type {
+    IAttach,
+    IAttachOptions,
+    IAttachSurroundingData,
+    EAttachedBoxPosition,
+} from '@/types/composables/attach';
 
 // Vue
 import { computed, ref } from 'vue';
 
 // Composables
-import { useSurrounding } from '@/composables/surrounding';
+import { useSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
 
-const STICKY_X_POSITIONS: EPotAttachedBoxPosition[] = [
-    POT_ATTACHED_BOX_POSITION.TOP_START,
-    POT_ATTACHED_BOX_POSITION.TOP_END,
-    POT_ATTACHED_BOX_POSITION.TOP_CENTER,
-    POT_ATTACHED_BOX_POSITION.BOTTOM_START,
-    POT_ATTACHED_BOX_POSITION.BOTTOM_END,
-    POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+// Constants
+import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
+
+const STICKY_X_POSITIONS: EAttachedBoxPosition[] = [
+    ATTACHED_BOX_POSITION.TOP_START,
+    ATTACHED_BOX_POSITION.TOP_END,
+    ATTACHED_BOX_POSITION.TOP_CENTER,
+    ATTACHED_BOX_POSITION.BOTTOM_START,
+    ATTACHED_BOX_POSITION.BOTTOM_END,
+    ATTACHED_BOX_POSITION.BOTTOM_CENTER,
 ];
 
-const STICKY_Y_POSITIONS: EPotAttachedBoxPosition[] = [
-    POT_ATTACHED_BOX_POSITION.LEFT_START,
-    POT_ATTACHED_BOX_POSITION.LEFT_END,
-    POT_ATTACHED_BOX_POSITION.LEFT_CENTER,
-    POT_ATTACHED_BOX_POSITION.RIGHT_START,
-    POT_ATTACHED_BOX_POSITION.RIGHT_END,
-    POT_ATTACHED_BOX_POSITION.RIGHT_CENTER,
+const STICKY_Y_POSITIONS: EAttachedBoxPosition[] = [
+    ATTACHED_BOX_POSITION.LEFT_START,
+    ATTACHED_BOX_POSITION.LEFT_END,
+    ATTACHED_BOX_POSITION.LEFT_CENTER,
+    ATTACHED_BOX_POSITION.RIGHT_START,
+    ATTACHED_BOX_POSITION.RIGHT_END,
+    ATTACHED_BOX_POSITION.RIGHT_CENTER,
 ];
 
-const X_OPPOSITE_POSITIONS: Record<EPotAttachedBoxPosition, EPotAttachedBoxPosition | null> = {
-    [POT_ATTACHED_BOX_POSITION.TOP_START]: null,
-    [POT_ATTACHED_BOX_POSITION.TOP_END]: null,
-    [POT_ATTACHED_BOX_POSITION.TOP_CENTER]: null,
+const X_OPPOSITE_POSITIONS: Record<EAttachedBoxPosition, EAttachedBoxPosition | null> = {
+    [ATTACHED_BOX_POSITION.TOP_START]: null,
+    [ATTACHED_BOX_POSITION.TOP_END]: null,
+    [ATTACHED_BOX_POSITION.TOP_CENTER]: null,
 
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_START]: null,
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_END]: null,
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_START]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_END]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_CENTER]: null,
 
-    [POT_ATTACHED_BOX_POSITION.LEFT_START]: POT_ATTACHED_BOX_POSITION.RIGHT_START,
-    [POT_ATTACHED_BOX_POSITION.LEFT_END]: POT_ATTACHED_BOX_POSITION.RIGHT_END,
-    [POT_ATTACHED_BOX_POSITION.LEFT_CENTER]: POT_ATTACHED_BOX_POSITION.RIGHT_CENTER,
+    [ATTACHED_BOX_POSITION.LEFT_START]: ATTACHED_BOX_POSITION.RIGHT_START,
+    [ATTACHED_BOX_POSITION.LEFT_END]: ATTACHED_BOX_POSITION.RIGHT_END,
+    [ATTACHED_BOX_POSITION.LEFT_CENTER]: ATTACHED_BOX_POSITION.RIGHT_CENTER,
 
-    [POT_ATTACHED_BOX_POSITION.RIGHT_START]: POT_ATTACHED_BOX_POSITION.LEFT_START,
-    [POT_ATTACHED_BOX_POSITION.RIGHT_END]: POT_ATTACHED_BOX_POSITION.LEFT_END,
-    [POT_ATTACHED_BOX_POSITION.RIGHT_CENTER]: POT_ATTACHED_BOX_POSITION.LEFT_CENTER,
+    [ATTACHED_BOX_POSITION.RIGHT_START]: ATTACHED_BOX_POSITION.LEFT_START,
+    [ATTACHED_BOX_POSITION.RIGHT_END]: ATTACHED_BOX_POSITION.LEFT_END,
+    [ATTACHED_BOX_POSITION.RIGHT_CENTER]: ATTACHED_BOX_POSITION.LEFT_CENTER,
 };
 
-const Y_OPPOSITE_POSITIONS: Record<EPotAttachedBoxPosition, EPotAttachedBoxPosition | null> = {
-    [POT_ATTACHED_BOX_POSITION.TOP_START]: POT_ATTACHED_BOX_POSITION.BOTTOM_START,
-    [POT_ATTACHED_BOX_POSITION.TOP_END]: POT_ATTACHED_BOX_POSITION.BOTTOM_END,
-    [POT_ATTACHED_BOX_POSITION.TOP_CENTER]: POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+const Y_OPPOSITE_POSITIONS: Record<EAttachedBoxPosition, EAttachedBoxPosition | null> = {
+    [ATTACHED_BOX_POSITION.TOP_START]: ATTACHED_BOX_POSITION.BOTTOM_START,
+    [ATTACHED_BOX_POSITION.TOP_END]: ATTACHED_BOX_POSITION.BOTTOM_END,
+    [ATTACHED_BOX_POSITION.TOP_CENTER]: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
 
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_START]: POT_ATTACHED_BOX_POSITION.TOP_START,
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_END]: POT_ATTACHED_BOX_POSITION.TOP_END,
-    [POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: POT_ATTACHED_BOX_POSITION.TOP_CENTER,
+    [ATTACHED_BOX_POSITION.BOTTOM_START]: ATTACHED_BOX_POSITION.TOP_START,
+    [ATTACHED_BOX_POSITION.BOTTOM_END]: ATTACHED_BOX_POSITION.TOP_END,
+    [ATTACHED_BOX_POSITION.BOTTOM_CENTER]: ATTACHED_BOX_POSITION.TOP_CENTER,
 
-    [POT_ATTACHED_BOX_POSITION.LEFT_START]: null,
-    [POT_ATTACHED_BOX_POSITION.LEFT_END]: null,
-    [POT_ATTACHED_BOX_POSITION.LEFT_CENTER]: null,
+    [ATTACHED_BOX_POSITION.LEFT_START]: null,
+    [ATTACHED_BOX_POSITION.LEFT_END]: null,
+    [ATTACHED_BOX_POSITION.LEFT_CENTER]: null,
 
-    [POT_ATTACHED_BOX_POSITION.RIGHT_START]: null,
-    [POT_ATTACHED_BOX_POSITION.RIGHT_END]: null,
-    [POT_ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_START]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_END]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
 };
 
-/** Composable for calculating attached to target box position */
-export function useAttach(options: IAttachOptions): IAttach {
-    const coordinates = computed<[x: number, y: number]>(getPosition);
+export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void): IAttach {
+    const $subscriptions = useSubscriptions();
+    const $surroundingSubscriptions = useSubscriptions();
+
+    const isTargetResizing = ref<boolean>(false);
+    const isBoxResizing = ref<boolean>(false);
 
     const targetElement = ref<Element | null>(null);
     const boxElement = ref<Element | null>(null);
 
-    const surrounding = useSurrounding({
-        onResize: handleSurroundingResize(),
-        onScroll: handleSurroundingScroll(),
-    });
-
-    const isTargetResizing = ref<boolean>(false);
-    const isBoxResizing = ref<boolean>(false);
-    const isSurroundingResizing = ref<boolean>(false);
-    const isScrolling = ref<boolean>(false);
-
     const targetRect = ref<DOMRect | null>(null);
     const boxRect = ref<DOMRect | null>(null);
 
-    const currentSurrounding = ref<ISurroundingData[]>([]);
+    const initialSurrounding = ref<IAttachSurroundingData[]>([]);
+    const currentSurrounding = ref<IAttachSurroundingData[]>([]);
+
+    const coordinates = computed<[x: number, y: number]>(getPosition);
+
+    let isTargetFirstResize = true;
+    let isBoxFirstResize = true;
+
+    const terminate = useDebounce({
+        delay: 50,
+        action: () => onTerminate?.(),
+    });
 
     const targetResizeObserver = new ResizeObserver(
         useDebounce<[ResizeObserverEntry[]]>({
             delay: 100,
-            immediateAction: async entries => {
-                if (targetRect.value === null) {
-                    await updateTargetRect(entries[0].target);
+            immediateAction: () => {
+                if (!isTargetFirstResize && options.value.terminateOnChange) {
+                    terminate();
                 } else {
                     isTargetResizing.value = true;
                 }
             },
             action: async entries => {
-                if (!isTargetResizing.value) return;
-
+                if (isTargetFirstResize) {
+                    isTargetFirstResize = false;
+                } else {
+                    await updateTargetRect(entries[0].target);
+                }
                 isTargetResizing.value = false;
-                await updateTargetRect(entries[0].target);
             },
         }),
     );
@@ -111,55 +121,51 @@ export function useAttach(options: IAttachOptions): IAttach {
     const boxResizeObserver = new ResizeObserver(
         useDebounce<[ResizeObserverEntry[]]>({
             delay: 100,
-            immediateAction: async entries => {
-                if (boxRect.value === null) {
-                    await updateBoxRect(entries[0].target);
+            immediateAction: () => {
+                if (!isBoxFirstResize && options.value.terminateOnChange) {
+                    terminate();
                 } else {
                     isBoxResizing.value = true;
                 }
             },
             action: async entries => {
-                if (!isBoxResizing.value) return;
-
+                if (isBoxFirstResize) {
+                    isBoxFirstResize = false;
+                } else {
+                    await updateBoxRect(entries[0].target);
+                }
                 isBoxResizing.value = false;
-                await updateBoxRect(entries[0].target);
             },
         }),
     );
 
-    /** Set box target element */
-    function setTarget(target: Element) {
+    async function start(target: Element, box: Element) {
+        if (!(target instanceof Element) || !(box instanceof Element)) return;
+
+        stop();
+
+        isTargetFirstResize = true;
+        isBoxFirstResize = true;
         targetElement.value = target;
-    }
-
-    /** Set box element */
-    function setBox(box: Element) {
         boxElement.value = box;
+
+        $subscriptions.observe('target-resize', target, targetResizeObserver);
+        $subscriptions.observe('box-resize', box, boxResizeObserver);
+        setupSurrounding(target);
+
+        await Promise.all([updateBoxRect(), updateTargetRect()]);
     }
 
-    /** Setup box, target and their surrounding observers */
-    function setup() {
-        if (!targetElement.value || !boxElement.value) return;
-
-        targetResizeObserver.observe(targetElement.value);
-        boxResizeObserver.observe(boxElement.value);
-
-        surrounding.setup(targetElement.value);
-        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
-    }
-
-    /** Terminate box, target and their surrounding observers */
-    function terminate() {
+    function stop() {
         targetElement.value = null;
         boxElement.value = null;
-
-        currentSurrounding.value = [];
         targetRect.value = null;
         boxRect.value = null;
+        isTargetFirstResize = false;
+        isBoxFirstResize = false;
 
-        targetResizeObserver.disconnect();
-        boxResizeObserver.disconnect();
-        surrounding.terminate();
+        $subscriptions.clear();
+        clearSurrounding();
     }
 
     function getPosition(): [x: number, y: number] {
@@ -167,10 +173,11 @@ export function useAttach(options: IAttachOptions): IAttach {
             return [0, 0];
         }
 
-        const offset = getOffset(currentSurrounding.value, surrounding.data.value);
+        const offset = getOffset(currentSurrounding.value, initialSurrounding.value);
+        const currentOptions = options.value;
 
         const { coordinates, position } = getCurrentPosition(
-            options,
+            currentOptions,
             offset,
             targetRect.value,
             boxRect.value,
@@ -178,7 +185,7 @@ export function useAttach(options: IAttachOptions): IAttach {
 
         return getStickyPosition(
             coordinates,
-            { ...options, position },
+            { ...currentOptions, position },
             offset,
             targetRect.value,
             boxRect.value,
@@ -186,8 +193,8 @@ export function useAttach(options: IAttachOptions): IAttach {
     }
 
     function getOffset(
-        currentSurrounding: ISurroundingData[],
-        initialSurrounding: ISurroundingData[],
+        currentSurrounding: IAttachSurroundingData[],
+        initialSurrounding: IAttachSurroundingData[],
     ): [x: number, y: number] {
         return currentSurrounding.reduce(
             ([x, y], data, index) => {
@@ -202,80 +209,170 @@ export function useAttach(options: IAttachOptions): IAttach {
         );
     }
 
-    /** Update target sizes */
-    async function updateTargetRect(targetElement: Element) {
-        targetRect.value = await getElementBounding(targetElement);
+    async function updateTargetRect(element: Element | null = targetElement.value) {
+        if (!(element instanceof Element)) return;
+        targetRect.value = await getElementBounding(element);
     }
 
-    /** Update box sizes */
-    async function updateBoxRect(targetElement: Element) {
-        boxRect.value = await getElementBounding(targetElement);
+    async function updateBoxRect(element: Element | null = boxElement.value) {
+        if (!(element instanceof Element)) return;
+        boxRect.value = await getElementBounding(element);
     }
 
-    /** Update surrounding scroll-data on scroll event */
-    function onScroll(data: ISurroundingData) {
-        const x = data.target === window ? window.scrollX : (data.target as Element).scrollLeft;
-        const y = data.target === window ? window.scrollY : (data.target as Element).scrollTop;
+    function setupSurrounding(target: Element) {
+        const surroundingData = getSurrounding(target);
+        const observer = new ResizeObserver(getSurroundingResizeHandler());
 
-        currentSurrounding.value = [
-            ...currentSurrounding.value.filter(v => v.id !== data.id),
-            { ...data, scrollX: x, scrollY: y },
-        ];
-    }
+        surroundingData.forEach(data => {
+            $surroundingSubscriptions.addEventListener({
+                eventName: 'scroll',
+                target: data.target,
+                listener: getSurroundingScrollHandler(data),
+                options: { passive: true },
+            });
 
-    /** Update surrounding after resize event */
-    async function onResize() {
-        if (!targetElement.value || !boxElement.value) return;
-
-        getElementBounding(targetElement.value).then(rect => (targetRect.value = rect));
-        getElementBounding(boxElement.value).then(rect => (boxRect.value = rect));
-
-        surrounding.setup(targetElement.value);
-        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
-    }
-
-    function handleSurroundingResize(): () => void {
-        return useDebounce({
-            delay: 200,
-            immediateAction: () => (isSurroundingResizing.value = true),
-            action: () => {
-                if (!isSurroundingResizing.value) return;
-                isSurroundingResizing.value = false;
-                onResize();
-            },
+            if (data.target === window) {
+                $surroundingSubscriptions.addEventListener({
+                    eventName: 'resize',
+                    target: data.target,
+                    listener: getSurroundingResizeHandler(),
+                    options: { capture: true },
+                });
+            } else if (data.target instanceof Element) {
+                $surroundingSubscriptions.observe(data.target, data.target, observer);
+            }
         });
+
+        initialSurrounding.value = surroundingData;
+        currentSurrounding.value = surroundingData.map(v => ({ ...v }));
     }
 
-    function handleSurroundingScroll(): (data: ISurroundingData) => void {
-        return useDebounce<[ISurroundingData]>({
-            delay: 100,
-            immediateAction: data => {
-                isScrolling.value = true;
+    function clearSurrounding() {
+        $surroundingSubscriptions.clear();
+        initialSurrounding.value = [];
+        currentSurrounding.value = [];
+    }
 
-                if (data.target === window || data.target instanceof Element) {
-                    onScroll(data);
+    function getSurroundingResizeHandler() {
+        let isFirst: boolean = true;
+        let isTerminated: boolean = false;
+
+        return useDebounce({
+            delay: 100,
+            immediateAction: () => {
+                if (!isFirst && !isTerminated && options.value.terminateOnChange) {
+                    isTerminated = true;
+                    terminate();
                 }
             },
             action: () => {
-                if (!isScrolling.value) return;
-                isScrolling.value = false;
+                if (!targetElement.value || !boxElement.value || isTerminated) return;
+
+                if (isFirst) {
+                    isFirst = false;
+                    return;
+                }
+
+                if (!isTargetResizing.value) updateTargetRect().then();
+                if (!isBoxResizing.value) updateBoxRect().then();
+
+                clearSurrounding();
+                setupSurrounding(targetElement.value);
             },
         });
+    }
+
+    function getSurroundingScrollHandler(data: IAttachSurroundingData) {
+        let isTerminated: boolean = false;
+
+        return () => {
+            if (options.value.terminateOnChange) {
+                if (!isTerminated) terminate();
+                isTerminated = true;
+                return;
+            }
+
+            const x = data.target === window ? window.scrollX : (data.target as Element).scrollLeft;
+            const y = data.target === window ? window.scrollY : (data.target as Element).scrollTop;
+
+            currentSurrounding.value = [
+                ...currentSurrounding.value.filter(v => v.id !== data.id),
+                { ...data, scrollX: x, scrollY: y },
+            ];
+        };
     }
 
     return {
         coordinates,
+        target: targetElement,
+        box: boxElement,
         targetRect,
         boxRect,
-        isTargetResizing,
-        isBoxResizing,
-        isSurroundingResizing,
-        isScrolling,
-        setup,
-        terminate,
-        setTarget,
-        setBox,
+        start,
+        stop,
     };
+}
+
+/** Get surrounding elements, with scroll\size characteristics */
+function getSurrounding(element: Element): IAttachSurroundingData[] {
+    const position = getComputedStyle(element).position;
+    const windowSurrounding: IAttachSurroundingData = {
+        id: 0,
+        target: window,
+        scrollY: window.scrollY,
+        scrollX: window.scrollX,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        position: null,
+    };
+
+    if (position === 'fixed') {
+        return [windowSurrounding];
+    }
+
+    const parents = getAllParents(element);
+    const parentsSurrounding: IAttachSurroundingData[] = [];
+
+    let savedPosition: string = '';
+
+    for (const parent of parents) {
+        const parentPosition = getComputedStyle(parent).position;
+
+        if (parentPosition === 'fixed') {
+            savedPosition = parentPosition;
+            break;
+        }
+
+        if (['sticky', 'absolute'].includes(savedPosition) && parentPosition !== 'relative') {
+            continue;
+        }
+
+        if (['sticky', 'absolute'].includes(savedPosition) && parentPosition === 'relative') {
+            savedPosition = '';
+        }
+
+        if (parentPosition === 'absolute' || parentPosition === 'sticky') {
+            savedPosition = parentPosition;
+        }
+
+        parentsSurrounding.push({
+            id: parentsSurrounding.length + 1,
+            target: parent,
+            scrollY: parent.scrollTop,
+            scrollX: parent.scrollLeft,
+            width: parent.clientWidth,
+            height: parent.clientHeight,
+            position: parentPosition,
+        });
+    }
+
+    if (['sticky', 'absolute'].includes(savedPosition)) {
+        return parentsSurrounding;
+    }
+
+    windowSurrounding.id = parentsSurrounding.length + 1;
+
+    return [...parentsSurrounding, windowSurrounding];
 }
 
 function getCurrentPosition(
@@ -285,7 +382,7 @@ function getCurrentPosition(
     boxRect: DOMRect,
 ): {
     coordinates: [x: number, y: number];
-    position: EPotAttachedBoxPosition;
+    position: EAttachedBoxPosition;
 } {
     const { height: boxHeight, width: boxWidth } = boxRect;
 
@@ -432,26 +529,26 @@ function calculateYForPosition(
     const targetY = targetYInitial + offset;
 
     switch (options.position) {
-        case POT_ATTACHED_BOX_POSITION.TOP_START:
-        case POT_ATTACHED_BOX_POSITION.TOP_END:
-        case POT_ATTACHED_BOX_POSITION.TOP_CENTER:
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
             return targetY - boxHeight - options.nudge;
 
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_START:
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_END:
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
             return targetY + targetHeight + options.nudge;
 
-        case POT_ATTACHED_BOX_POSITION.RIGHT_START:
-        case POT_ATTACHED_BOX_POSITION.LEFT_START:
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.LEFT_START:
             return targetY;
 
-        case POT_ATTACHED_BOX_POSITION.RIGHT_END:
-        case POT_ATTACHED_BOX_POSITION.LEFT_END:
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.LEFT_END:
             return targetY + targetHeight - boxHeight;
 
-        case POT_ATTACHED_BOX_POSITION.RIGHT_CENTER:
-        case POT_ATTACHED_BOX_POSITION.LEFT_CENTER:
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
             return targetY + targetHeight / 2 - boxHeight / 2;
 
         default:
@@ -471,26 +568,26 @@ function calculateXForPosition(
     const targetX = targetXInitial + offset;
 
     switch (options.position) {
-        case POT_ATTACHED_BOX_POSITION.TOP_CENTER:
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
             return targetX + targetWidth / 2 - boxWidth / 2;
 
-        case POT_ATTACHED_BOX_POSITION.TOP_START:
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_START:
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
             return targetX;
 
-        case POT_ATTACHED_BOX_POSITION.TOP_END:
-        case POT_ATTACHED_BOX_POSITION.BOTTOM_END:
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
             return targetX + targetWidth - boxWidth;
 
-        case POT_ATTACHED_BOX_POSITION.RIGHT_END:
-        case POT_ATTACHED_BOX_POSITION.RIGHT_START:
-        case POT_ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
             return targetX + targetWidth + options.nudge;
 
-        case POT_ATTACHED_BOX_POSITION.LEFT_END:
-        case POT_ATTACHED_BOX_POSITION.LEFT_START:
-        case POT_ATTACHED_BOX_POSITION.LEFT_CENTER:
+        case ATTACHED_BOX_POSITION.LEFT_END:
+        case ATTACHED_BOX_POSITION.LEFT_START:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
             return targetX - boxWidth - options.nudge;
 
         default:
@@ -507,4 +604,27 @@ async function getElementBounding(element: Element): Promise<DOMRect | null> {
         });
         observer.observe(element);
     });
+}
+
+/** Get all parents of element */
+function getAllParents(element: Element): Element[] {
+    if (!(element instanceof Element)) return [];
+
+    const root = element.getRootNode();
+
+    let result = [];
+    let currentElement: Element | null = element;
+
+    while (currentElement) {
+        currentElement = currentElement.parentElement;
+        result.push(currentElement);
+    }
+
+    if (root instanceof ShadowRoot) {
+        result = result.concat(getAllParents(root.host));
+    }
+
+    result = result.filter(Boolean) as Element[];
+
+    return result.filter(Boolean) as Element[];
 }
