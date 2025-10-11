@@ -48,32 +48,7 @@ const openedAccordions = ref<string[]>([]);
             height: 100vh;
             overflow: visible;
         "
-    >
-        {{ openedAccordions }}
-
-        <PotAccordionGroup
-            v-model="openedAccordions"
-            v-slot="{ singleBind, multipleBind }"
-        >
-            <PotAccordion v-bind="multipleBind('first')">
-                <template #title> Title 1 </template>
-
-                TEST 1
-            </PotAccordion>
-
-            <PotAccordion v-bind="multipleBind('second')">
-                <template #title> Title 2 </template>
-
-                TEST 2
-            </PotAccordion>
-
-            <PotAccordion v-bind="multipleBind('third')">
-                <template #title> Title 3 </template>
-
-                TEST 3
-            </PotAccordion>
-        </PotAccordionGroup>
-    </main>
+    ></main>
 </template>
 
 <style>
