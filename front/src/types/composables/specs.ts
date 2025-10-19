@@ -13,7 +13,7 @@ export interface ISpecsOptions<OPTION, VALUE_FIELD extends keyof OPTION = never>
     optionValue?: VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>);
 }
 
-export interface ISpecData<OPTION, VALUE_FIELD extends keyof OPTION> {
+export interface ISpec<OPTION, VALUE_FIELD extends keyof OPTION> {
     id: symbol;
     option: OPTION;
     value: TOptionValue<OPTION, VALUE_FIELD> | null;

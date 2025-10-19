@@ -32,6 +32,9 @@ export interface IPotButtonProps {
     /** If true, the button length will be equal to the width from the size prop */
     square?: boolean;
 
+    /** If true, the button will take all the available width */
+    fluid?: boolean;
+
     /** If true, the button will be disabled and inactive */
     disabled?: boolean;
 }

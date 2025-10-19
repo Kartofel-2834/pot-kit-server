@@ -38,6 +38,9 @@ export interface IPotInputProps {
     /** Если true, то инпут будет невалиден */
     invalid?: boolean;
 
+    /** Если true, то инпут будет полностью заполнен */
+    fluid?: boolean;
+
     type?: string;
     placeholder?: string;
     readonly?: boolean;

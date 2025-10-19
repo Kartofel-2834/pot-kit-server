@@ -17,6 +17,7 @@ import PotPopover from './components/ui/PotPopover.vue';
 import PotDrawer from './components/ui/PotDrawer.vue';
 import PotAccordion from './components/ui/PotAccordion.vue';
 import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
+import PotSelect from './components/ui/PotSelect.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -32,6 +33,17 @@ const $toast = useToast<string>();
 const position = ref<EPotToastPosition>(POT_TOAST_POSITION.TOP_LEFT);
 
 const openedAccordions = ref<string[]>([]);
+
+const someValue = ref<any>(null);
+const text = ref<string>('');
+
+const optionsA = ref<string[]>(['a', 'b', 'c']);
+const optionsB = ref<number[]>([1, 2, 3]);
+const optionsC = ref<boolean[]>([true, false]);
+const optionsD = ref<Array<{ name: string; value: number }>>([
+    { name: 'a', value: 1 },
+    { name: 'b', value: 2 },
+]);
 </script>
 
 <template>
@@ -43,12 +55,22 @@ const openedAccordions = ref<string[]>([]);
             position: relative;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center;
             width: 100vw;
             height: 100vh;
             overflow: visible;
         "
-    ></main>
+    >
+        <PotSelect
+            v-model="someValue"
+            v-model:text="text"
+            :options="optionsA"
+            editable
+            fluid
+        >
+            <template #header> KAMAL: {{ text }} </template>
+        </PotSelect>
+    </main>
 </template>
 
 <style>

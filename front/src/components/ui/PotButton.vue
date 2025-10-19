@@ -33,6 +33,7 @@ const classList = computed(() =>
     useClassList({
         ...properties.value,
         square: $props.square,
+        fluid: $props.fluid,
     }),
 );
 </script>
@@ -109,6 +110,11 @@ const classList = computed(() =>
 .pot-button._square {
     padding: 0;
     aspect-ratio: 1 / 1;
+}
+
+/* --- PotButton - Fluid --- */
+.pot-button._fluid {
+    width: 100%;
 }
 </style>
 

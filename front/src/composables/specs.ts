@@ -1,13 +1,13 @@
 // Types
 import type { ComputedRef, Ref } from 'vue';
-import type { ISpecData, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
+import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
 
 // Vue
 import { computed } from 'vue';
 
 export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
     specOptions: Ref<ISpecsOptions<OPTION, VALUE_FIELD>>,
-): ComputedRef<ISpecData<OPTION, VALUE_FIELD>[]> {
+): ComputedRef<ISpec<OPTION, VALUE_FIELD>[]> {
     function getLabel(option: OPTION): string {
         if (typeof specOptions.value.optionLabel === 'function') {
             return specOptions.value.optionLabel(option);
@@ -64,13 +64,13 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
         }
 
         if (specOptions.value.optionVisible === undefined) {
-            return false;
+            return true;
         }
 
         return Boolean(option[specOptions.value.optionVisible]);
     }
 
-    return computed<ISpecData<OPTION, VALUE_FIELD>[]>(() => {
+    return computed<ISpec<OPTION, VALUE_FIELD>[]>(() => {
         const filteredOptions = specOptions.value.options.filter(checkIsVisible);
 
         return filteredOptions.map(option => {

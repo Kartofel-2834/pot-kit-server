@@ -107,17 +107,6 @@ const properties = computed(() => {
     );
 });
 
-const attachOptions = computed<IAttachOptions>(() => ({
-    position: properties.value.position,
-    nudge: properties.value.nudge,
-    edgeMargin: properties.value.edgeMargin,
-    persistent: $props.persistent,
-    sticky: !$props.noSticky,
-    terminateOnChange: $props.closeOnMove,
-}));
-
-const $attach = useAttach(attachOptions, () => close());
-
 const classList = computed(() =>
     useClassListArray({
         position: properties.value.position,
@@ -139,6 +128,19 @@ const currentStyles = computed(() => {
 const triggers = computed(() => {
     return Array.from(new Set([...($props.openTriggers ?? []), ...($props.closeTriggers ?? [])]));
 });
+
+// Helper-hooks
+const $attach = useAttach(
+    computed<IAttachOptions>(() => ({
+        position: properties.value.position,
+        nudge: properties.value.nudge,
+        edgeMargin: properties.value.edgeMargin,
+        persistent: $props.persistent,
+        sticky: !$props.noSticky,
+        terminateOnChange: $props.closeOnMove,
+    })),
+    () => close(),
+);
 
 // Watchers
 watch(

@@ -53,6 +53,7 @@ const classList = computed(() =>
         focused: isFocused.value,
         disabled: $props.disabled,
         invalid: $props.invalid,
+        fluid: $props.fluid,
     }),
 );
 
@@ -170,6 +171,10 @@ function onBlur(event: FocusEvent) {
 
 .pot-input._disabled .pot-input__target {
     cursor: not-allowed;
+}
+
+.pot-input._fluid {
+    width: 100%;
 }
 
 .pot-input__target {

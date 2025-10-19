@@ -97,18 +97,16 @@ const properties = computed(() => {
     );
 });
 
-const attachOptions = computed<IAttachOptions>(() => ({
-    position: properties.value.position,
-    nudge: properties.value.nudge,
-    edgeMargin: properties.value.edgeMargin,
-    persistent: $props.persistent,
-    sticky: !$props.noSticky,
-    terminateOnChange: $props.closeOnMove,
-}));
-
-const $attach = useAttach(attachOptions, () => $dialog.close());
-
-const classList = computed(() => useClassListArray({ ...properties.value }));
+const classList = computed(() =>
+    useClassListArray({
+        position: properties.value.position,
+        color: properties.value.color,
+        size: properties.value.size,
+        radius: properties.value.radius,
+        opened: $dialog.isOpen.value,
+        closed: !$dialog.isOpen.value,
+    }),
+);
 
 const currentStyles = computed(() => {
     const [x, y] = $attach.coordinates.value ?? [0, 0];
@@ -118,6 +116,19 @@ const currentStyles = computed(() => {
         transform: `translate(${x}px, ${y}px)`,
     };
 });
+
+// Helper-hooks
+const $attach = useAttach(
+    computed<IAttachOptions>(() => ({
+        position: properties.value.position,
+        nudge: properties.value.nudge,
+        edgeMargin: properties.value.edgeMargin,
+        persistent: $props.persistent,
+        sticky: !$props.noSticky,
+        terminateOnChange: $props.closeOnMove,
+    })),
+    () => $dialog.close(),
+);
 
 // Watchers
 watch(
