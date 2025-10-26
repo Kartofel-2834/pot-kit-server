@@ -7,8 +7,7 @@ import { ref, computed } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs } from '@/composables/device-is';
-import { useDeviceProperties } from '@/composables/device-properties';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotInputProps>(), {
     value: undefined,

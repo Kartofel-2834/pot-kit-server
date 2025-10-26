@@ -7,8 +7,7 @@ import { computed } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceProperties } from '@/composables/device-properties';
-import { useDeviceIs } from '@/composables/device-is';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotButtonProps>(), {
     tag: 'button',

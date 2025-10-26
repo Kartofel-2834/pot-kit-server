@@ -15,8 +15,7 @@ import { computed, ref, inject, onUnmounted, provide } from 'vue';
 // Composables
 import { useToast } from '@/composables/toast';
 import { useClassList } from '@/composables/class-list';
-import { useDeviceProperties } from '@/composables/device-properties';
-import { useDeviceIs } from '@/composables/device-is';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 
 const $layer = DIALOG_LAYERS.TOAST as EDialogLayers;

@@ -13,8 +13,7 @@ import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vu
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs } from '@/composables/device-is';
-import { useDeviceProperties } from '@/composables/device-properties';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';

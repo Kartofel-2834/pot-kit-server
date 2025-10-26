@@ -15,13 +15,13 @@ import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // Composables
 import { useAttach } from '@/composables/attach';
-import { useDeviceIs } from '@/composables/device-is';
-import { useDeviceProperties } from '@/composables/device-properties';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useDebounce } from '@/composables/timer';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
+import { useFirstFocusableChild, useFocusableChildren, useFocusControl } from '@/composables/focus';
 
 const POT_SELECT_SIZE = {} as const;
 
@@ -35,13 +35,16 @@ type EPotSelectColor = (typeof POT_SELECT_COLOR)[keyof typeof POT_SELECT_COLOR];
 
 type EPotSelectRadius = (typeof POT_SELECT_RADIUS)[keyof typeof POT_SELECT_RADIUS];
 
+interface IPotSelectSpecData {
+    focused: boolean;
+}
+
 interface IPotSelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
     value?: TOptionValue<OPTION, VALUE_FIELD> | null;
     modelValue?: TOptionValue<OPTION, VALUE_FIELD> | null;
     options?: OPTION[];
     optionLabel?: keyof OPTION | ((option: OPTION) => string);
     optionDisabled?: keyof OPTION | ((option: OPTION) => boolean);
-    optionVisible?: keyof OPTION | ((option: OPTION) => boolean);
     optionValue?: VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>);
 
     text?: string;
@@ -106,6 +109,8 @@ const input = ref<HTMLInputElement | null>(null);
 
 const isFocused = ref<boolean>(false);
 const containerWidth = ref<number>(0);
+
+const focusedSpec = ref<ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null>(null);
 
 const resizeObserver = new ResizeObserver(
     useDebounce({
@@ -191,15 +196,22 @@ const $attach = useAttach(
 );
 
 const $specs = useSpecs(
-    computed<ISpecsOptions<OPTION, VALUE_FIELD>>(() => ({
+    computed<ISpecsOptions<OPTION, VALUE_FIELD, IPotSelectSpecData>>(() => ({
         values: currentValue.value ? [currentValue.value] : [],
         options: $props.options,
         optionLabel: $props.optionLabel,
         optionDisabled: $props.optionDisabled,
-        optionVisible: $props.optionVisible,
         optionValue: $props.optionValue,
+        optionData: (option: OPTION) => ({
+            focused: option,
+        }),
+        data: (option, value) => ({
+            focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
+        }),
     })),
 );
+
+const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
 
 // Watchers
 watch(
@@ -213,10 +225,24 @@ watch(
     },
 );
 
+watch(
+    () => dropdown.value,
+    () => {
+        if (dropdown.value) {
+            setupFocusControl();
+        } else {
+            $subscriptions.remove('focus-control');
+        }
+    },
+);
+
 // Listeners
+function onClick() {
+    open();
+}
+
 function onFocus() {
     isFocused.value = true;
-    open();
 }
 
 function onBlur() {
@@ -225,27 +251,178 @@ function onBlur() {
 
 function onInputText(event: Event) {
     const target = event.target as HTMLInputElement;
-    open();
     changeText(target.value);
 }
 
 function onInputKeydown(event: KeyboardEvent) {
-    if (event.key === ' ' && !isFocused.value) {
-        toggle();
+    const isEdit = isFocused.value && $props.editable;
+
+    // Space & Enter
+    if (event.key === ' ' || event.key === 'Enter') {
+        open();
+
+        if (!isEdit && focusedSpec.value) {
+            change(focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>);
+            close();
+        } else if (!isEdit && !focusedSpec.value) {
+            focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
+        }
+
+        return;
+    }
+
+    if (event.key === 'ArrowDown') {
+        open();
+        if (!isEdit) focusNext();
+        return;
+    }
+
+    if (event.key === 'ArrowUp') {
+        open();
+        if (!isEdit) focusPrev();
+        return;
+    }
+
+    if (event.key === 'Home') {
+        open();
+        if (!isEdit) focusFirst();
+        return;
+    }
+
+    if (event.key === 'End') {
+        open();
+        if (!isEdit) focusLast();
         return;
     }
 
     if (event.key === 'Tab') {
-        close();
+        if (dropdown.value) {
+            const focusableChildren = useFocusableChildren(dropdown.value);
+            const firstFocusableElement = focusableChildren[0];
+            const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
+
+            if (!firstFocusableElement && !lastFocusableElement) {
+                close();
+            } else if (!event.shiftKey) {
+                event.preventDefault();
+                firstFocusableElement.focus();
+            } else {
+                close();
+            }
+        }
         return;
+    }
+
+    if (event.key.length === 1 && event.key.trim()) {
+        open();
+        if (!isEdit && $dialog.isOpen.value) {
+            const spec = availableSpecs.value.find(spec => spec.label.startsWith(event.key));
+
+            focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
+        }
     }
 }
 
-function onOptionClick(spec: ISpec<OPTION, VALUE_FIELD>) {
+function onOptionClick(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     change(spec);
 }
 
+function onOptionKeydown(
+    event: KeyboardEvent,
+    spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>,
+) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        change(spec);
+    }
+}
+
 // Methods
+function focusFirst() {
+    if (!$dialog.isOpen.value) return;
+    focusedSpec.value = availableSpecs.value[0] ?? null;
+}
+
+function focusLast() {
+    if (!$dialog.isOpen.value) return;
+    focusedSpec.value = availableSpecs.value[availableSpecs.value.length - 1] ?? null;
+}
+
+function focusNext() {
+    if (!$dialog.isOpen.value) return;
+
+    if (!focusedSpec.value) {
+        focusFirst();
+        return;
+    }
+
+    const index = availableSpecs.value.findIndex(v => v.option === focusedSpec.value?.option);
+    const nextSpec = availableSpecs.value[index + 1];
+
+    if (!nextSpec || index === -1 || index === availableSpecs.value.length - 1) {
+        focusFirst();
+        return;
+    }
+
+    focusedSpec.value = nextSpec;
+}
+
+function focusPrev() {
+    if (!$dialog.isOpen.value) return;
+
+    if (!focusedSpec.value) {
+        focusLast();
+        return;
+    }
+
+    const index = availableSpecs.value.findIndex(v => v.value === focusedSpec.value?.value);
+    const prevSpec = availableSpecs.value[index - 1];
+
+    if (!prevSpec || index === -1 || index === 0) {
+        focusLast();
+        return;
+    }
+
+    focusedSpec.value = prevSpec;
+}
+
+function setupFocusControl() {
+    const dropdownElement = dropdown.value as Element;
+
+    if (!dropdownElement) return;
+
+    const focusableChild = useFirstFocusableChild(dropdownElement);
+
+    if (!focusableChild) return;
+
+    $subscriptions.add(
+        () => {
+            return useFocusControl(dropdownElement, {
+                nextFocus: trapInstance => {
+                    const focusableElements = trapInstance.focusableChildren ?? [];
+                    const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+                    if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+                        input.value?.focus?.();
+                        close();
+                    }
+                },
+                prevFocus: (trapInstance, event) => {
+                    const focusableElements = trapInstance.focusableChildren ?? [];
+                    const firstFocusableElement = focusableElements[0];
+
+                    if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+                        event.preventDefault();
+                        input.value?.focus?.();
+                    }
+                },
+            });
+        },
+        controller => controller.abort(),
+        'focus-control',
+    );
+}
+
 function toggle() {
     if ($dialog.isOpen.value) {
         $dialog.close();
@@ -262,9 +439,10 @@ function open() {
 function close() {
     if (!$dialog.isOpen.value) return;
     $dialog.isOpen.value = false;
+    focusedSpec.value = null;
 }
 
-function change(spec: ISpec<OPTION, VALUE_FIELD>) {
+function change(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     if (spec.disabled || spec.selected) return;
 
     $emit('change', spec.value, spec.option);
@@ -277,10 +455,11 @@ function changeText(text: string) {
     $emit('update:text', text);
 }
 
-function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
+function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>): string[] {
     return useClassListArray({
         selected: spec.selected,
         disabled: spec.disabled,
+        focused: spec.data?.focused,
     });
 }
 </script>
@@ -290,21 +469,22 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
         ref="container"
         :class="['pot-select', classList]"
         :data-pot-dialog-id="$dialog.id.description"
+        @click="onClick"
     >
         <input
             ref="input"
-            class="pot-select__input"
+            class="pot-select-input"
             placeholder="select"
             :value="label"
             :readonly="!editable"
             @input="onInputText"
-            @keydown="onInputKeydown"
             @focus="onFocus"
             @blur="onBlur"
+            @keydown="onInputKeydown"
         />
 
-        <div class="pot-select__icon">
-            <slot name="icon">
+        <div class="pot-select-icon">
+            <slot name="arrow-icon">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 -960 960 960"
@@ -325,7 +505,7 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
                 <div
                     v-if="$dialog.isOpen.value"
                     ref="dropdown"
-                    :class="['pot-select__dropdown', classList]"
+                    :class="['pot-select-dropdown', classList]"
                     :style="currentStyles"
                     :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                     :data-pot-dialog-id="$dialog.id.description"
@@ -346,7 +526,10 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
                         :toggle="toggle"
                         :change="change"
                     >
-                        <div class="pot-select__dropdown__options-list">
+                        <ul
+                            class="pot-select-options-list"
+                            role="listbox"
+                        >
                             <slot
                                 v-for="spec of $specs"
                                 name="option"
@@ -354,17 +537,18 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
                                 :spec="spec"
                                 :change="change"
                             >
-                                <div
-                                    :class="[
-                                        'pot-select__dropdown__options-list__option',
-                                        getSpecClassList(spec),
-                                    ]"
+                                <li
+                                    :class="['pot-select-option', getSpecClassList(spec)]"
+                                    :data-label="spec.label"
+                                    :data-value="spec.value"
+                                    role="option"
                                     @click="onOptionClick(spec)"
+                                    @keydown="onOptionKeydown($event, spec)"
                                 >
                                     {{ spec.label }}
-                                </div>
+                                </li>
                             </slot>
-                        </div>
+                        </ul>
                     </slot>
 
                     <slot
@@ -392,7 +576,7 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
 }
 
 /* --- PotSelect - Opened --- */
-.pot-select._opened .pot-select__icon {
+.pot-select._opened .pot-select-icon {
     transform: scaleY(-1);
 }
 
@@ -401,7 +585,7 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
     width: 100%;
 }
 
-.pot-select__icon {
+.pot-select-icon {
     pointer-events: none;
     display: flex;
     align-items: center;
@@ -410,34 +594,38 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD>): string[] {
     transition: transform 0.2s ease;
 }
 
-.pot-select__input {
+.pot-select-input {
     outline: none;
     height: 100%;
     flex-basis: 100%;
 }
 
-.pot-select__input:focus {
+.pot-select-input:focus {
     background-color: yellow;
 }
 
-.pot-select__dropdown {
+.pot-select-dropdown {
     position: fixed;
     top: 0;
     left: 0;
     background-color: red;
 }
 
-.pot-select__dropdown._fixed-width {
+.pot-select-dropdown._fixed-width {
     width: var(--pot-select-size-dropdown);
 }
 
-.pot-select__dropdown__options-list__option:hover:not(._selected) {
+.pot-select-option:hover:not(._selected) {
     background-color: blue;
     color: white;
     cursor: pointer;
 }
 
-.pot-select__dropdown__options-list__option._selected {
+.pot-select-option._focused {
+    background-color: pink;
+}
+
+.pot-select-option._selected {
     background-color: green;
     color: white;
     cursor: default;

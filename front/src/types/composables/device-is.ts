@@ -14,3 +14,9 @@ export type TDeviceIs<TDevice extends string = string> = {
     /** Current active breakpoint */
     device: Ref<TDevice | null>;
 };
+
+export type TDevicePropertyValue<T> = T extends unknown[] ? TDevicePropertyValue<T[number]> : T;
+
+export type TDeviceProperties<T> = {
+    [Property in keyof T]: TDevicePropertyValue<T[Property]>;
+};

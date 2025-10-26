@@ -5,9 +5,9 @@ import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/spe
 // Vue
 import { computed } from 'vue';
 
-export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
-    specOptions: Ref<ISpecsOptions<OPTION, VALUE_FIELD>>,
-): ComputedRef<ISpec<OPTION, VALUE_FIELD>[]> {
+export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknown>(
+    specOptions: Ref<ISpecsOptions<OPTION, VALUE_FIELD, DATA>>,
+): ComputedRef<ISpec<OPTION, VALUE_FIELD, DATA>[]> {
     function getLabel(option: OPTION): string {
         if (typeof specOptions.value.optionLabel === 'function') {
             return specOptions.value.optionLabel(option);
@@ -38,6 +38,18 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
         return value ?? null;
     }
 
+    function getData(
+        option: OPTION,
+        value: TOptionValue<OPTION, VALUE_FIELD> | null,
+        label: string,
+    ): DATA | null {
+        if (!specOptions.value.data) {
+            return null;
+        }
+
+        return specOptions.value.data(option, value, label);
+    }
+
     function checkIsDisabled(option: OPTION): boolean {
         if (typeof specOptions.value.optionDisabled === 'function') {
             return specOptions.value.optionDisabled(option);
@@ -58,24 +70,11 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
         return specOptions.value.values.includes(specValue);
     }
 
-    function checkIsVisible(option: OPTION): boolean {
-        if (typeof specOptions.value.optionVisible === 'function') {
-            return specOptions.value.optionVisible(option);
-        }
-
-        if (specOptions.value.optionVisible === undefined) {
-            return true;
-        }
-
-        return Boolean(option[specOptions.value.optionVisible]);
-    }
-
-    return computed<ISpec<OPTION, VALUE_FIELD>[]>(() => {
-        const filteredOptions = specOptions.value.options.filter(checkIsVisible);
-
-        return filteredOptions.map(option => {
+    return computed<ISpec<OPTION, VALUE_FIELD, DATA>[]>(() => {
+        return specOptions.value.options.map(option => {
             const value = getValue(option);
             const label = getLabel(option);
+            const data = getData(option, value, label);
             const disabled = checkIsDisabled(option);
             const selected = checkIsSelected(value);
 
@@ -86,6 +85,7 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION>(
                 label,
                 disabled,
                 selected,
+                data,
             };
         });
     });

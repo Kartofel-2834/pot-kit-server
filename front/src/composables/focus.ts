@@ -1,5 +1,5 @@
 // Types
-import type { IFocusTrapInstance } from '@/types/composables/focus';
+import type { IFocusTrapControl, IFocusTrapInstance } from '@/types/composables/focus';
 
 // Vue
 import { shallowRef, watch } from 'vue';
@@ -10,12 +10,12 @@ import { useDebounce } from '@/composables/timer';
 
 const $subscriptions = useSubscriptions();
 
-const trapsList = shallowRef<IFocusTrapInstance[]>([]);
+const controlsList = shallowRef<IFocusTrapControl[]>([]);
 
 watch(
-    () => trapsList.value,
+    () => controlsList.value,
     () => {
-        if (!trapsList.value.length) {
+        if (!controlsList.value.length) {
             $subscriptions.remove('focus-trap-keydown');
             return;
         }
@@ -26,46 +26,38 @@ watch(
             eventName: 'keydown',
             options: { capture: true },
             listener: event => {
-                const lastTrap = trapsList.value[trapsList.value.length - 1];
-                if (!lastTrap) return;
-                handleKeydown(lastTrap, event);
+                const lastControlInstance = controlsList.value[controlsList.value.length - 1];
+                if (!lastControlInstance) return;
+                handleKeydown(lastControlInstance, event);
             },
         });
     },
 );
 
-function handleKeydown(trapInstance: IFocusTrapInstance, event: KeyboardEvent) {
-    const focusableElements = trapInstance.focusableChildren ?? [];
-    const firstFocusableElement = focusableElements[0] ?? null;
-    const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
-
-    const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
-
+function handleKeydown(controlInstance: IFocusTrapControl, event: KeyboardEvent) {
     if (event.key !== 'Tab') {
         return;
     }
 
-    if (!firstFocusableElement || !lastFocusableElement) {
-        event.preventDefault();
-        return;
-    }
-
     /** Shift + Tab */
-    if (event.shiftKey && (document.activeElement === firstFocusableElement || !isInTrap)) {
-        lastFocusableElement.focus();
-        event.preventDefault();
+    if (event.shiftKey && controlInstance.prevFocus) {
+        controlInstance.prevFocus(controlInstance.trapInstance, event);
         return;
     }
 
-    /** Tab */
-    if (!event.shiftKey && (document.activeElement === lastFocusableElement || !isInTrap)) {
-        firstFocusableElement.focus();
-        event.preventDefault();
+    if (!event.shiftKey && controlInstance.nextFocus) {
+        controlInstance.nextFocus(controlInstance.trapInstance, event);
         return;
     }
 }
 
-export function useFocusTrap(element: Element): AbortController {
+export function useFocusControl(
+    element: Element,
+    options: {
+        nextFocus?: IFocusTrapControl['nextFocus'];
+        prevFocus?: IFocusTrapControl['prevFocus'];
+    },
+): AbortController {
     const instance: IFocusTrapInstance = {
         id: Symbol(),
         target: element,
@@ -81,20 +73,70 @@ export function useFocusTrap(element: Element): AbortController {
 
     return $subscriptions.add(
         () => {
+            const controlInstance: IFocusTrapControl = {
+                trapInstance: instance,
+                nextFocus: options.nextFocus,
+                prevFocus: options.prevFocus,
+            };
+
             mutationObserver.observe(element, {
                 childList: true,
                 subtree: true,
                 attributeFilter: ['tabindex', 'disabled'],
             });
 
-            (document.activeElement as HTMLElement)?.blur?.();
-            trapsList.value = [...trapsList.value.filter(v => v.id !== instance.id), instance];
+            controlsList.value = [
+                ...controlsList.value.filter(v => v.trapInstance.id !== instance.id),
+                controlInstance,
+            ];
         },
         () => {
             mutationObserver.disconnect();
-            trapsList.value = trapsList.value.filter(v => v.id !== instance.id);
+            controlsList.value = controlsList.value.filter(v => v.trapInstance.id !== instance.id);
         },
     );
+}
+
+export function useFocusTrap(element: Element): AbortController {
+    (document.activeElement as HTMLElement)?.blur?.();
+
+    return useFocusControl(element, {
+        nextFocus: (trapInstance, event) => {
+            const focusableElements = trapInstance.focusableChildren ?? [];
+            const firstFocusableElement = focusableElements[0] ?? null;
+            const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
+
+            if (!firstFocusableElement || !lastFocusableElement) {
+                event.preventDefault();
+                return;
+            }
+
+            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+
+            if (document.activeElement === lastFocusableElement || !isInTrap) {
+                event.preventDefault();
+                firstFocusableElement.focus();
+            }
+        },
+
+        prevFocus: (trapInstance, event) => {
+            const focusableElements = trapInstance.focusableChildren ?? [];
+            const firstFocusableElement = focusableElements[0] ?? null;
+            const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
+
+            if (!firstFocusableElement || !lastFocusableElement) {
+                event.preventDefault();
+                return;
+            }
+
+            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+
+            if (document.activeElement === firstFocusableElement || !isInTrap) {
+                event.preventDefault();
+                lastFocusableElement.focus();
+            }
+        },
+    });
 }
 
 export function useAutoFocus(

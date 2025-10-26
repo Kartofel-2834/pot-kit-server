@@ -23,8 +23,7 @@ import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Composables
-import { useDeviceProperties } from '@/composables/device-properties';
-import { useDeviceIs } from '@/composables/device-is';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 import { useClassListArray } from '@/composables/class-list';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useAttach } from '@/composables/attach';

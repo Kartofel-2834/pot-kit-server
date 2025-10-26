@@ -6,9 +6,8 @@ import type { IPotGridProps } from '@/types/components/grid';
 import { computed } from 'vue';
 
 // Composables
-import { useDeviceProperties } from '@/composables/device-properties';
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs } from '@/composables/device-is';
+import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotGridProps>(), {
     tag: 'div',

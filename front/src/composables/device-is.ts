@@ -1,9 +1,13 @@
 // Types
-import type { TDeviceIs } from '@/types/composables/device-is';
+import type {
+    TDeviceIs,
+    TDeviceProperties,
+    TDevicePropertyValue,
+} from '@/types/composables/device-is';
 import type { EPotDevice } from '@/types';
 
 // Constants
-import { ALL_DEVICES, POT_BREAKPOINT } from '@/types';
+import { ALL_DEVICES, ALL_DEVICES_REVERSED, POT_BREAKPOINT } from '@/types';
 
 // Composables
 import { useSubscriptions } from '@/composables/subscriptions';
@@ -69,6 +73,34 @@ function createQuery(
     return createdQuery;
 }
 
+/** Get value for current breakpoint */
+function getCurrentValue<T>(
+    values: T[keyof T],
+    currentDevice: EPotDevice | null,
+    devices: EPotDevice[],
+): TDevicePropertyValue<T[keyof T]> | null {
+    if (!Array.isArray(values)) return values as TDevicePropertyValue<T[keyof T]>;
+
+    if (!currentDevice) return values[0] ?? null;
+
+    const deviceIndex = ALL_DEVICES_REVERSED.indexOf(currentDevice as EPotDevice);
+
+    if (deviceIndex === -1) return null;
+
+    for (let index = deviceIndex; index >= 0; index--) {
+        const device = ALL_DEVICES_REVERSED[index];
+        const nearestDeviceIndex = devices.indexOf(device);
+
+        if (nearestDeviceIndex === -1) continue;
+
+        const value = values[nearestDeviceIndex];
+
+        if (value !== undefined) return value as TDevicePropertyValue<T[keyof T]>;
+    }
+
+    return null;
+}
+
 /** Terminate all media-queries listeners */
 export function terminate() {
     if (!queries) return;
@@ -110,4 +142,22 @@ export function setup() {
 /** Composable for get current screen breakpoint */
 export function useDeviceIs(): TDeviceIs<EPotDevice> {
     return { state, device };
+}
+
+/** Composable for getting values depending on screen breakpoints */
+export function useDeviceProperties<T extends object>(
+    properties: T,
+    currentDevice: EPotDevice | null,
+    devices?: EPotDevice[],
+): TDeviceProperties<T> {
+    const devicesList = devices ?? ALL_DEVICES_REVERSED;
+
+    return Object.keys(properties).reduce((res, property) => {
+        const values = properties[property as keyof T];
+
+        return {
+            ...res,
+            [property]: getCurrentValue(values, currentDevice, devicesList),
+        };
+    }, {}) as TDeviceProperties<T>;
 }
