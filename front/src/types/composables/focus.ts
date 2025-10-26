@@ -4,8 +4,10 @@ export interface IFocusTrapInstance {
     focusableChildren: HTMLElement[];
 }
 
+export type TFocusTrapAction = (trapInstance: IFocusTrapInstance, event: KeyboardEvent) => void;
+
 export interface IFocusTrapControl {
     trapInstance: IFocusTrapInstance;
-    nextFocus?: (trapInstance: IFocusTrapInstance, event: KeyboardEvent) => void;
-    prevFocus?: (trapInstance: IFocusTrapInstance, event: KeyboardEvent) => void;
+    next?: TFocusTrapAction;
+    previous?: TFocusTrapAction;
 }

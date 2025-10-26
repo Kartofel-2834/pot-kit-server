@@ -1,5 +1,9 @@
 // Types
-import type { IFocusTrapControl, IFocusTrapInstance } from '@/types/composables/focus';
+import type {
+    IFocusTrapControl,
+    IFocusTrapInstance,
+    TFocusTrapAction,
+} from '@/types/composables/focus';
 
 // Vue
 import { shallowRef, watch } from 'vue';
@@ -40,13 +44,13 @@ function handleKeydown(controlInstance: IFocusTrapControl, event: KeyboardEvent)
     }
 
     /** Shift + Tab */
-    if (event.shiftKey && controlInstance.prevFocus) {
-        controlInstance.prevFocus(controlInstance.trapInstance, event);
+    if (event.shiftKey && controlInstance.previous) {
+        controlInstance.previous(controlInstance.trapInstance, event);
         return;
     }
 
-    if (!event.shiftKey && controlInstance.nextFocus) {
-        controlInstance.nextFocus(controlInstance.trapInstance, event);
+    if (!event.shiftKey && controlInstance.next) {
+        controlInstance.next(controlInstance.trapInstance, event);
         return;
     }
 }
@@ -54,8 +58,8 @@ function handleKeydown(controlInstance: IFocusTrapControl, event: KeyboardEvent)
 export function useFocusControl(
     element: Element,
     options: {
-        nextFocus?: IFocusTrapControl['nextFocus'];
-        prevFocus?: IFocusTrapControl['prevFocus'];
+        next?: TFocusTrapAction;
+        previous?: TFocusTrapAction;
     },
 ): AbortController {
     const instance: IFocusTrapInstance = {
@@ -75,8 +79,8 @@ export function useFocusControl(
         () => {
             const controlInstance: IFocusTrapControl = {
                 trapInstance: instance,
-                nextFocus: options.nextFocus,
-                prevFocus: options.prevFocus,
+                next: options.next,
+                previous: options.previous,
             };
 
             mutationObserver.observe(element, {
@@ -97,11 +101,49 @@ export function useFocusControl(
     );
 }
 
+export function useFocusBox(
+    element: Element,
+    options: {
+        next?: TFocusTrapAction;
+        previous?: TFocusTrapAction;
+        leave?: TFocusTrapAction;
+        leaveForward?: TFocusTrapAction;
+        leaveBack?: TFocusTrapAction;
+    },
+): AbortController {
+    return useFocusControl(element, {
+        next: (trapInstance, event) => {
+            const focusableElements = trapInstance.focusableChildren ?? [];
+            const lastFocusableElement = focusableElements[focusableElements.length - 1];
+            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+
+            if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+                options?.leave?.(trapInstance, event);
+                options?.leaveForward?.(trapInstance, event);
+            } else if (isInTrap) {
+                options?.next?.(trapInstance, event);
+            }
+        },
+        previous: (trapInstance, event) => {
+            const focusableElements = trapInstance.focusableChildren ?? [];
+            const firstFocusableElement = focusableElements[0];
+            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+
+            if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+                options?.leave?.(trapInstance, event);
+                options?.leaveBack?.(trapInstance, event);
+            } else if (isInTrap) {
+                options?.previous?.(trapInstance, event);
+            }
+        },
+    });
+}
+
 export function useFocusTrap(element: Element): AbortController {
     (document.activeElement as HTMLElement)?.blur?.();
 
     return useFocusControl(element, {
-        nextFocus: (trapInstance, event) => {
+        next: (trapInstance, event) => {
             const focusableElements = trapInstance.focusableChildren ?? [];
             const firstFocusableElement = focusableElements[0] ?? null;
             const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
@@ -119,7 +161,7 @@ export function useFocusTrap(element: Element): AbortController {
             }
         },
 
-        prevFocus: (trapInstance, event) => {
+        previous: (trapInstance, event) => {
             const focusableElements = trapInstance.focusableChildren ?? [];
             const firstFocusableElement = focusableElements[0] ?? null;
             const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;

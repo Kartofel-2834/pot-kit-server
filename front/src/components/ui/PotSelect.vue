@@ -21,7 +21,7 @@ import { useDebounce } from '@/composables/timer';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
-import { useFirstFocusableChild, useFocusableChildren, useFocusControl } from '@/composables/focus';
+import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
 
 const POT_SELECT_SIZE = {} as const;
 
@@ -229,7 +229,7 @@ watch(
     () => dropdown.value,
     () => {
         if (dropdown.value) {
-            setupFocusControl();
+            setupFocusBox();
         } else {
             $subscriptions.remove('focus-control');
         }
@@ -386,7 +386,7 @@ function focusPrev() {
     focusedSpec.value = prevSpec;
 }
 
-function setupFocusControl() {
+function setupFocusBox() {
     const dropdownElement = dropdown.value as Element;
 
     if (!dropdownElement) return;
@@ -397,25 +397,10 @@ function setupFocusControl() {
 
     $subscriptions.add(
         () => {
-            return useFocusControl(dropdownElement, {
-                nextFocus: trapInstance => {
-                    const focusableElements = trapInstance.focusableChildren ?? [];
-                    const lastFocusableElement = focusableElements[focusableElements.length - 1];
-
-                    if (lastFocusableElement && document.activeElement === lastFocusableElement) {
-                        input.value?.focus?.();
-                        close();
-                    }
-                },
-                prevFocus: (trapInstance, event) => {
-                    const focusableElements = trapInstance.focusableChildren ?? [];
-                    const firstFocusableElement = focusableElements[0];
-
-                    if (firstFocusableElement && document.activeElement === firstFocusableElement) {
-                        event.preventDefault();
-                        input.value?.focus?.();
-                    }
-                },
+            return useFocusBox(dropdownElement, {
+                leave: () => input.value?.focus?.(),
+                leaveForward: () => close(),
+                leaveBack: (trapInstance, event) => event.preventDefault(),
             });
         },
         controller => controller.abort(),
