@@ -11,6 +11,7 @@ import { shallowRef, watch } from 'vue';
 // Composables
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
+import { useKeyboard } from '@/composables/keyboard';
 
 const $subscriptions = useSubscriptions();
 
@@ -24,36 +25,26 @@ watch(
             return;
         }
 
-        $subscriptions.addEventListener<KeyboardEvent>({
-            key: 'focus-trap-keydown',
-            target: window,
-            eventName: 'keydown',
-            options: { capture: true },
-            listener: event => {
-                const lastControlInstance = controlsList.value[controlsList.value.length - 1];
-                if (!lastControlInstance) return;
-                handleKeydown(lastControlInstance, event);
+        const keyboardController = useKeyboard(window, {
+            tab: event => {
+                const lastInstance = controlsList.value[controlsList.value.length - 1];
+                if (!lastInstance?.next) return;
+                lastInstance.next(lastInstance.trapInstance, event);
+            },
+            'shift + tab': event => {
+                const lastInstance = controlsList.value[controlsList.value.length - 1];
+                if (!lastInstance?.previous) return;
+                lastInstance.previous(lastInstance.trapInstance, event);
             },
         });
+
+        $subscriptions.add(
+            () => keyboardController,
+            controller => controller.abort(),
+            'focus-trap-keydown',
+        );
     },
 );
-
-function handleKeydown(controlInstance: IFocusTrapControl, event: KeyboardEvent) {
-    if (event.key !== 'Tab') {
-        return;
-    }
-
-    /** Shift + Tab */
-    if (event.shiftKey && controlInstance.previous) {
-        controlInstance.previous(controlInstance.trapInstance, event);
-        return;
-    }
-
-    if (!event.shiftKey && controlInstance.next) {
-        controlInstance.next(controlInstance.trapInstance, event);
-        return;
-    }
-}
 
 export function useFocusControl(
     element: Element,

@@ -22,6 +22,7 @@ import { useSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
 import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
+import { useKeydown } from '@/composables/keyboard';
 
 const POT_SELECT_SIZE = {} as const;
 
@@ -256,47 +257,51 @@ function onInputText(event: Event) {
 
 function onInputKeydown(event: KeyboardEvent) {
     const isEdit = isFocused.value && $props.editable;
+    const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
 
-    // Space & Enter
-    if (event.key === ' ' || event.key === 'Enter') {
+    const handleKeypress = (event: KeyboardEvent) => {
         open();
+        if (!isEdit) event.preventDefault;
+    };
 
-        if (!isEdit && focusedSpec.value) {
-            change(focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>);
-            close();
-        } else if (!isEdit && !focusedSpec.value) {
-            focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
-        }
+    useKeydown(event, {
+        space: event => {
+            handleKeypress(event);
+            if (!isEdit && spec) {
+                change(spec);
+                close();
+            } else if (!isEdit && !spec) {
+                focusSelected();
+            }
+        },
+        enter: event => {
+            handleKeypress(event);
+            if (!isEdit && spec) {
+                change(spec);
+                close();
+            } else if (!isEdit && !spec) {
+                focusSelected();
+            }
+        },
+        arrowDown: event => {
+            handleKeypress(event);
+            if (!isEdit) focusNext();
+        },
+        arrowUp: event => {
+            handleKeypress(event);
+            if (!isEdit) focusPrev();
+        },
+        home: event => {
+            handleKeypress(event);
+            if (!isEdit) focusFirst();
+        },
+        end: event => {
+            handleKeypress(event);
+            if (!isEdit) focusLast();
+        },
+        tab: event => {
+            if (!dropdown.value) return;
 
-        return;
-    }
-
-    if (event.key === 'ArrowDown') {
-        open();
-        if (!isEdit) focusNext();
-        return;
-    }
-
-    if (event.key === 'ArrowUp') {
-        open();
-        if (!isEdit) focusPrev();
-        return;
-    }
-
-    if (event.key === 'Home') {
-        open();
-        if (!isEdit) focusFirst();
-        return;
-    }
-
-    if (event.key === 'End') {
-        open();
-        if (!isEdit) focusLast();
-        return;
-    }
-
-    if (event.key === 'Tab') {
-        if (dropdown.value) {
             const focusableChildren = useFocusableChildren(dropdown.value);
             const firstFocusableElement = focusableChildren[0];
             const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
@@ -309,17 +314,12 @@ function onInputKeydown(event: KeyboardEvent) {
             } else {
                 close();
             }
-        }
-        return;
-    }
+        },
+    });
 
     if (event.key.length === 1 && event.key.trim()) {
-        open();
-        if (!isEdit && $dialog.isOpen.value) {
-            const spec = availableSpecs.value.find(spec => spec.label.startsWith(event.key));
-
-            focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
-        }
+        handleKeypress(event);
+        if (!isEdit) focusSameLabeled(event.key);
     }
 }
 
@@ -338,6 +338,17 @@ function onOptionKeydown(
 }
 
 // Methods
+function focusSameLabeled(text: string) {
+    if (!$dialog.isOpen.value) return;
+    const spec = availableSpecs.value.find(spec => spec.label.startsWith(text));
+    focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
+}
+
+function focusSelected() {
+    if (!$dialog.isOpen.value) return;
+    focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
+}
+
 function focusFirst() {
     if (!$dialog.isOpen.value) return;
     focusedSpec.value = availableSpecs.value[0] ?? null;

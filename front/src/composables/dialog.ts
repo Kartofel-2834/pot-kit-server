@@ -15,6 +15,7 @@ import { ref, watch } from 'vue';
 
 // Composables
 import { useSubscriptions } from '@/composables/subscriptions';
+import { useKeyboard } from '@/composables/keyboard';
 
 const $subscriptions = useSubscriptions();
 
@@ -34,12 +35,10 @@ const dialogsQueue = ref<IDialogManager[]>([]);
 export function setup(options: Partial<IDialogsSetupOptions> = {}) {
     dialogsQueue.value = [];
 
-    $subscriptions.addEventListener({
-        target: window,
-        eventName: 'keydown',
-        listener: handleKeydown,
-        options: { capture: true },
-    });
+    $subscriptions.add(
+        () => useKeyboard(window, { escape: handleEscape }, { capture: true }),
+        controller => controller.abort(),
+    );
 
     $subscriptions.addEventListener({
         target: window,
@@ -161,10 +160,8 @@ function handleClick(event: MouseEvent) {
     dialogManager.close();
 }
 
-/** Handle keydown event */
-function handleKeydown(event: KeyboardEvent) {
-    if (event.key !== 'Escape') return;
-
+/** Handle escape keydown event */
+function handleEscape() {
     const escapeTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('escape'));
     const dialogManager = escapeTriggerDialogs[escapeTriggerDialogs.length - 1] ?? null;
 

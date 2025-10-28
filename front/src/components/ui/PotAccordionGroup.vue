@@ -6,6 +6,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
 import { useFocusableChildren } from '@/composables/focus';
+import { useKeydown } from '@/composables/keyboard';
 
 const $props = withDefaults(
     defineProps<{
@@ -115,30 +116,21 @@ function closeAccordion(key: unknown) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-
-    event.stopPropagation();
     const headers = accordionsHeaders.value;
     const index = headers.indexOf(selectedHeader.value as HTMLElement);
 
     let nextIndex = 0;
 
-    if (event.key === 'ArrowDown') {
-        nextIndex = index === -1 || index === headers.length - 1 ? 0 : index + 1;
-    }
+    const isMatched = useKeydown(event, {
+        arrowDown: () => (nextIndex = index === -1 || index === headers.length - 1 ? 0 : index + 1),
+        arrowUp: () => (nextIndex = index === -1 || index === 0 ? headers.length - 1 : index - 1),
+        home: () => (nextIndex = 0),
+        end: () => (nextIndex = headers.length - 1),
+    });
 
-    if (event.key === 'ArrowUp') {
-        nextIndex = index === -1 || index === 0 ? headers.length - 1 : index - 1;
-    }
+    if (!isMatched) return;
 
-    if (event.key === 'Home') {
-        nextIndex = 0;
-    }
-
-    if (event.key === 'End') {
-        nextIndex = headers.length - 1;
-    }
-
+    event.preventDefault();
     headers[nextIndex]?.focus?.();
 }
 

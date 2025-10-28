@@ -65,6 +65,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             v-model="someValue"
             v-model:text="text"
             :options="optionsA"
+            editable
         >
             <template #header>
                 <button>KAMAL: {{ text }}</button>
@@ -74,8 +75,6 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                 <button>Filter</button>
             </template>
         </PotSelect>
-
-        <button>Test</button>
     </main>
 </template>
 
