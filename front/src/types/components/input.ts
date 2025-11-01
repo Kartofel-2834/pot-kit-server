@@ -1,4 +1,5 @@
 // Types
+import type { Ref } from 'vue';
 import type { EPotDevice } from '@/types';
 
 export const POT_INPUT_SIZE = {} as const;
@@ -57,4 +58,8 @@ export interface IPotInputSlots {
     preicon?: () => unknown;
     icon?: () => unknown;
     append?: () => unknown;
+}
+
+export interface IPotInputExpose {
+    input: Ref<HTMLInputElement | null>;
 }

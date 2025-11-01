@@ -5,7 +5,7 @@ export function useKeyboard(
     target: Window | Document | Element | null,
     handlers: Record<string, (event: KeyboardEvent) => void>,
     options?: boolean | AddEventListenerOptions,
-) {
+): AbortController {
     const controller = new AbortController();
 
     if (!target) return controller;
@@ -28,7 +28,6 @@ export function useKeyboard(
         listener: event => {
             const key = event.key === ' ' ? 'space' : event.key;
             pressedKeys.add(key);
-
             const pressedCombo = [...pressedKeys].join('+');
             const matchedPattern = data.find(pattern => pattern.regex.test(pressedCombo));
 

@@ -24,6 +24,9 @@ import { useClassListArray } from '@/composables/class-list';
 import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
 import { useKeydown } from '@/composables/keyboard';
 
+// Components
+import PotInput from '@/components/ui/PotInput.vue';
+
 const POT_SELECT_SIZE = {} as const;
 
 const POT_SELECT_COLOR = {} as const;
@@ -104,9 +107,8 @@ const $dialog = useDialog({
 const $subscriptions = useSubscriptions();
 
 // Data
-const container = ref<HTMLElement | null>(null);
+const container = ref<InstanceType<typeof PotInput> | null>(null);
 const dropdown = ref<HTMLElement | null>(null);
-const input = ref<HTMLInputElement | null>(null);
 
 const isFocused = ref<boolean>(false);
 const containerWidth = ref<number>(0);
@@ -124,12 +126,11 @@ const resizeObserver = new ResizeObserver(
 onMounted(() => {
     if (!container.value) return;
 
-    $subscriptions.observe('resize', container.value, resizeObserver);
+    $subscriptions.observe('resize', container.value.$el, resizeObserver);
 });
 
 onUnmounted(() => {
     $dialog.terminate();
-    $attach.stop();
     $subscriptions.clear();
 });
 
@@ -176,6 +177,8 @@ const classList = computed(() =>
     }),
 );
 
+const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
+
 const selectedSpec = computed(() => $specs.value.find(spec => spec.selected) ?? null);
 
 const label = computed(() => {
@@ -212,16 +215,14 @@ const $specs = useSpecs(
     })),
 );
 
-const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
-
 // Watchers
 watch(
     () => [container.value, dropdown.value],
     () => {
         if (container.value && dropdown.value) {
-            $attach.start(container.value, dropdown.value);
+            setupAttach();
         } else {
-            $attach.stop();
+            terminateAttach();
         }
     },
 );
@@ -232,7 +233,7 @@ watch(
         if (dropdown.value) {
             setupFocusBox();
         } else {
-            $subscriptions.remove('focus-control');
+            terminateFocusBox();
         }
     },
 );
@@ -250,9 +251,8 @@ function onBlur() {
     isFocused.value = false;
 }
 
-function onInputText(event: Event) {
-    const target = event.target as HTMLInputElement;
-    changeText(target.value);
+function onInputText(text: string) {
+    changeText(text);
 }
 
 function onInputKeydown(event: KeyboardEvent) {
@@ -397,6 +397,21 @@ function focusPrev() {
     focusedSpec.value = prevSpec;
 }
 
+function setupAttach() {
+    const containerElement = container.value?.$el;
+    const dropdownElement = dropdown.value;
+
+    if (!containerElement || !dropdownElement) return;
+
+    $subscriptions.add(
+        () => $attach.start(containerElement, dropdownElement),
+        () => $attach.stop(),
+        'attach',
+    );
+}
+
+function terminateAttach() {}
+
 function setupFocusBox() {
     const dropdownElement = dropdown.value as Element;
 
@@ -409,7 +424,7 @@ function setupFocusBox() {
     $subscriptions.add(
         () => {
             return useFocusBox(dropdownElement, {
-                leave: () => input.value?.focus?.(),
+                leave: () => container.value?.input?.focus?.(),
                 leaveForward: () => close(),
                 leaveBack: (trapInstance, event) => event.preventDefault(),
             });
@@ -417,6 +432,10 @@ function setupFocusBox() {
         controller => controller.abort(),
         'focus-control',
     );
+}
+
+function terminateFocusBox() {
+    $subscriptions.remove('focus-control');
 }
 
 function toggle() {
@@ -461,26 +480,25 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>):
 </script>
 
 <template>
-    <label
+    <PotInput
         ref="container"
         :class="['pot-select', classList]"
         :data-pot-dialog-id="$dialog.id.description"
+        :value="label"
+        :readonly="!editable"
+        placeholder="select"
         @click="onClick"
+        @input="onInputText"
+        @focus="onFocus"
+        @blur="onBlur"
+        @keydown="onInputKeydown"
     >
-        <input
-            ref="input"
-            class="pot-select-input"
-            placeholder="select"
-            :value="label"
-            :readonly="!editable"
-            @input="onInputText"
-            @focus="onFocus"
-            @blur="onBlur"
-            @keydown="onInputKeydown"
-        />
+        <template #preicon>
+            <slot name="preicon" />
+        </template>
 
-        <div class="pot-select-icon">
-            <slot name="arrow-icon">
+        <template #icon>
+            <slot name="icon">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 -960 960 960"
@@ -491,73 +509,75 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>):
                     <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
                 </svg>
             </slot>
-        </div>
+        </template>
 
-        <Teleport
-            :to="teleportTo"
-            :disabled="!to"
-        >
-            <Transition :name="transition">
-                <div
-                    v-if="$dialog.isOpen.value"
-                    ref="dropdown"
-                    :class="['pot-select-dropdown', classList]"
-                    :style="currentStyles"
-                    :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                    :data-pot-dialog-id="$dialog.id.description"
-                >
-                    <slot
-                        name="header"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
-                    />
-
-                    <slot
-                        name="options-list"
-                        :specs="$specs"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
+        <template #append>
+            <Teleport
+                :to="teleportTo"
+                :disabled="!to"
+            >
+                <Transition :name="transition">
+                    <div
+                        v-if="$dialog.isOpen.value"
+                        ref="dropdown"
+                        :class="['pot-select-dropdown', classList]"
+                        :style="currentStyles"
+                        :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+                        :data-pot-dialog-id="$dialog.id.description"
                     >
-                        <ul
-                            class="pot-select-options-list"
-                            role="listbox"
-                        >
-                            <slot
-                                v-for="spec of $specs"
-                                name="option"
-                                :key="spec.id"
-                                :spec="spec"
-                                :change="change"
-                            >
-                                <li
-                                    :class="['pot-select-option', getSpecClassList(spec)]"
-                                    :data-label="spec.label"
-                                    :data-value="spec.value"
-                                    role="option"
-                                    @click="onOptionClick(spec)"
-                                    @keydown="onOptionKeydown($event, spec)"
-                                >
-                                    {{ spec.label }}
-                                </li>
-                            </slot>
-                        </ul>
-                    </slot>
+                        <slot
+                            name="header"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        />
 
-                    <slot
-                        name="footer"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
-                    />
-                </div>
-            </Transition>
-        </Teleport>
-    </label>
+                        <slot
+                            name="options-list"
+                            :specs="$specs"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        >
+                            <ul
+                                class="pot-select-options-list"
+                                role="listbox"
+                            >
+                                <slot
+                                    v-for="spec of $specs"
+                                    name="option"
+                                    :key="spec.id"
+                                    :spec="spec"
+                                    :change="change"
+                                >
+                                    <li
+                                        :class="['pot-select-option', getSpecClassList(spec)]"
+                                        :data-label="spec.label"
+                                        :data-value="spec.value"
+                                        role="option"
+                                        @click="onOptionClick(spec)"
+                                        @keydown="onOptionKeydown($event, spec)"
+                                    >
+                                        {{ spec.label }}
+                                    </li>
+                                </slot>
+                            </ul>
+                        </slot>
+
+                        <slot
+                            name="footer"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        />
+                    </div>
+                </Transition>
+            </Teleport>
+        </template>
+    </PotInput>
 </template>
 
 <style>

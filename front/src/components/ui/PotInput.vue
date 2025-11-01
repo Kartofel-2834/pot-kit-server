@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Types
-import type { IPotInputProps, IPotInputSlots } from '@/types/components/input';
+import type { IPotInputExpose, IPotInputProps, IPotInputSlots } from '@/types/components/input';
 
 // Vue
 import { ref, computed } from 'vue';
@@ -27,6 +27,9 @@ const $emit = defineEmits<{
 const $slots = defineSlots<IPotInputSlots>();
 
 const $deviceIs = useDeviceIs();
+
+// Data
+const input = ref<HTMLInputElement | null>(null);
 
 const isFocused = ref<boolean>(false);
 
@@ -81,6 +84,11 @@ function onBlur(event: FocusEvent) {
     $emit('blur', event);
     isFocused.value = false;
 }
+
+// Exports
+defineExpose<IPotInputExpose>({
+    input: input,
+});
 </script>
 
 <template>
@@ -92,6 +100,7 @@ function onBlur(event: FocusEvent) {
         </div>
 
         <input
+            ref="input"
             class="pot-input__target"
             :value="currentValue"
             :type="type"
@@ -150,9 +159,9 @@ function onBlur(event: FocusEvent) {
     font-weight: 400;
     line-height: 1;
     transition:
-        color 0.4s,
-        background-color 0.4s,
-        border-color 0.4s;
+        color 0.2s,
+        background-color 0.2s,
+        border-color 0.2s;
 
     /* --- PotInput - Color --- */
     color: var(--pot-input-color-text);

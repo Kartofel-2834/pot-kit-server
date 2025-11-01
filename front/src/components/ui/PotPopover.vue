@@ -73,7 +73,6 @@ const box = ref<Element | null>(null);
 onUnmounted(() => {
     $dialog.terminate();
     $subscriptions.clear();
-    $attach.stop();
 });
 
 // Computed
@@ -134,9 +133,9 @@ watch(
     () => [currentTarget.value, box.value],
     () => {
         if (currentTarget.value && box.value) {
-            $attach.start(currentTarget.value, box.value);
+            setupAttach();
         } else {
-            $attach.stop();
+            terminateAttach();
         }
     },
 );
@@ -145,11 +144,11 @@ watch(
     () => [$dialog.isOpen.value, box.value],
     () => {
         if ($dialog.isOpen.value && box.value) {
-            if (!$props.noFocusTrap) focusTrap();
-            if (!$props.noAutoFocus) autoFocus();
+            if (!$props.noFocusTrap) setupFocusTrap();
+            if (!$props.noAutoFocus) setupAutoFocus();
         } else {
-            $subscriptions.remove('focus-trap');
-            $subscriptions.remove('autofocus');
+            terminateFocusTrap();
+            terminateAutoFocus();
         }
     },
 );
@@ -165,7 +164,24 @@ function close() {
     $emit('update:modelValue', false);
 }
 
-function focusTrap() {
+function setupAttach() {
+    const targetElement = currentTarget.value;
+    const boxElement = currentTarget.value;
+
+    if (!targetElement || !boxElement) return;
+
+    $subscriptions.add(
+        () => $attach.start(targetElement, boxElement),
+        () => $attach.stop(),
+        'attach',
+    );
+}
+
+function terminateAttach() {
+    $subscriptions.remove('attach');
+}
+
+function setupFocusTrap() {
     const boxElement = box.value as Element;
 
     if (!boxElement) return;
@@ -177,7 +193,11 @@ function focusTrap() {
     );
 }
 
-function autoFocus() {
+function terminateFocusTrap() {
+    $subscriptions.remove('focus-trap');
+}
+
+function setupAutoFocus() {
     const boxElement = box.value as Element;
     const lastActiveElement = document.activeElement;
 
@@ -188,6 +208,10 @@ function autoFocus() {
         controller => controller.abort(),
         'autofocus',
     );
+}
+
+function terminateAutoFocus() {
+    $subscriptions.remove('autofocus');
 }
 
 function findTarget(vnode: VNode): VNode | null {
