@@ -6,34 +6,29 @@ import type { IPotButtonProps } from '@/types/components/button';
 import { computed } from 'vue';
 
 // Composables
-import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useClassListArray } from '@/composables/class-list';
+import { useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotButtonProps>(), {
     tag: 'button',
 });
 
-const $deviceIs = useDeviceIs();
-
 // Computed
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const properties = useDeviceProperties(
+    computed(() => ({
+        color: $props.color,
+        size: $props.size,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
-const classList = computed(() =>
-    useClassList({
+const classList = useClassListArray(
+    computed(() => ({
         ...properties.value,
         square: $props.square,
         fluid: $props.fluid,
-    }),
+    })),
 );
 </script>
 
@@ -76,10 +71,10 @@ const classList = computed(() =>
     font-weight: 500;
     line-height: 1;
     transition:
-        color 0.4s ease,
-        border-color 0.4s ease,
-        outline-color 0.4s ease,
-        background-color 0.4s ease;
+        color 0.2s ease,
+        border-color 0.2s ease,
+        outline-color 0.2s ease,
+        background-color 0.2s ease;
 
     /* --- PotButton - Color --- */
     border-color: var(--pot-button-color-border);

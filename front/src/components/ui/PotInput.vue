@@ -36,27 +36,24 @@ const isFocused = ref<boolean>(false);
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue);
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const properties = useDeviceProperties(
+    computed(() => ({
+        size: $props.size,
+        color: $props.color,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
 /** Классы модификаторы */
-const classList = computed(() =>
-    useClassList({
+const classList = useClassList(
+    computed(() => ({
         ...properties.value,
         focused: isFocused.value,
         disabled: $props.disabled,
         invalid: $props.invalid,
         fluid: $props.fluid,
-    }),
+    })),
 );
 
 // Methods
@@ -95,13 +92,13 @@ defineExpose<IPotInputExpose>({
     <label :class="['pot-input', classList]">
         <slot name="prepend"></slot>
 
-        <div class="pot-input__icon pot-input__icon_left">
+        <div class="pot-input-icon pot-input-left-icon">
             <slot name="preicon" />
         </div>
 
         <input
             ref="input"
-            class="pot-input__target"
+            class="pot-input-target"
             :value="currentValue"
             :type="type"
             :name="name"
@@ -121,7 +118,7 @@ defineExpose<IPotInputExpose>({
             @keyup="$emit('keyup', $event)"
         />
 
-        <div class="pot-input__icon pot-input__icon_right">
+        <div class="pot-input-icon pot-input-right-icon">
             <slot name="icon" />
         </div>
 
@@ -135,6 +132,8 @@ defineExpose<IPotInputExpose>({
     --pot-input-color-border: transparent;
     --pot-input-color-background: transparent;
     --pot-input-color-text: inherit;
+    --pot-input-color-caret: currentColor;
+    --pot-input-color-placeholder: inherit;
     --pot-input-color-icon: initial;
 
     /* --- Size - Configuration --- */
@@ -155,7 +154,6 @@ defineExpose<IPotInputExpose>({
     width: 100%;
     border-style: solid;
     cursor: text;
-    background-color: inherit;
     font-weight: 400;
     line-height: 1;
     transition:
@@ -165,7 +163,8 @@ defineExpose<IPotInputExpose>({
 
     /* --- PotInput - Color --- */
     color: var(--pot-input-color-text);
-    border-color: var(--input-color-border);
+    background-color: var(--pot-input-color-background);
+    border-color: var(--pot-input-color-border);
 
     /* --- PotInput - Size --- */
     padding: 0 var(--pot-input-size-padding);
@@ -177,7 +176,7 @@ defineExpose<IPotInputExpose>({
     border-radius: var(--pot-input-radius-value);
 }
 
-.pot-input._disabled .pot-input__target {
+.pot-input._disabled .pot-input-target {
     cursor: not-allowed;
 }
 
@@ -185,7 +184,7 @@ defineExpose<IPotInputExpose>({
     width: 100%;
 }
 
-.pot-input__target {
+.pot-input-target {
     outline: none;
     padding: 0;
     border: none;
@@ -199,27 +198,28 @@ defineExpose<IPotInputExpose>({
 
     /* Color */
     color: inherit;
-    background-color: var(--input-color-background);
+    background-color: transparent;
+    caret-color: var(--pot-input-color-caret);
 
     /* Size */
-    height: var(--input-size-height);
+    height: var(--pot-input-size-height);
 }
 
-.pot-input__target[type='number']::-webkit-inner-spin-button,
-.pot-input__target[type='number']::-webkit-outer-spin-button {
+.pot-input-target[type='number']::-webkit-inner-spin-button,
+.pot-input-target[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.pot-input__target[disabled] {
+.pot-input-target[disabled] {
     opacity: 1;
 }
 
-.pot-input__target::-ms-clear {
+.pot-input-target::-ms-clear {
     display: none;
 }
 
-.pot-input__icon {
+.pot-input-icon {
     flex-shrink: 0;
     pointer-events: none;
     font-size: inherit;

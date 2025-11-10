@@ -23,7 +23,7 @@ import { DIALOG_LAYERS } from '@/types/composables/dialog';
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 
 // Composables
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 import { useAttach } from '@/composables/attach';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useClassListArray } from '@/composables/class-list';
@@ -42,7 +42,6 @@ const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     position: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
     nudge: 10,
     edgeMargin: 10,
-    noSticky: true,
     to: 'body',
     transition: 'pot-popover-transition',
 });
@@ -52,8 +51,6 @@ const $emit = defineEmits<{
     close: [];
     'update:modelValue': [isVisible: boolean];
 }>();
-
-const $deviceIs = useDeviceIs();
 
 const $dialog = useDialog({
     triggers: ['clickoutside', 'escape'],
@@ -80,30 +77,28 @@ const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            nudge: $props.nudge,
-            edgeMargin: $props.edgeMargin,
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        nudge: $props.nudge,
+        edgeMargin: $props.edgeMargin,
+        color: $props.color,
+        size: $props.size,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
-const classList = computed(() =>
-    useClassListArray({
+const classList = useClassListArray(
+    computed(() => ({
         position: properties.value.position,
         color: properties.value.color,
         size: properties.value.size,
         radius: properties.value.radius,
         opened: $dialog.isOpen.value,
         closed: !$dialog.isOpen.value,
-    }),
+    })),
+    'popover',
 );
 
 const currentStyles = computed(() => {
@@ -239,10 +234,11 @@ function findTarget(vnode: VNode): VNode | null {
 provide('pot-dialog-layer', $dialog.layer);
 
 defineExpose<IPotPopoverExpose>({
+    dialogId: $dialog.id,
     isOpen: readonly($dialog.isOpen),
     coordinates: $attach.coordinates.value,
-    target: currentTarget.value,
-    popover: box.value,
+    target: currentTarget,
+    popover: box,
     open: () => $dialog.open(),
     close: () => $dialog.close(),
 });
@@ -263,13 +259,16 @@ defineExpose<IPotPopoverExpose>({
                 :style="currentStyles"
                 :data-pot-dialog-id="$dialog.id.description"
             >
-                <slot />
+                <slot :dialog-id="$dialog.id" />
             </div>
         </Transition>
     </Teleport>
 
     <PotSlotCatcher :map-v-node="findTarget">
-        <slot name="target" />
+        <slot
+            name="target"
+            :dialog-id="$dialog.id"
+        />
     </PotSlotCatcher>
 </template>
 

@@ -6,7 +6,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
 import { useFocusableChildren } from '@/composables/focus';
-import { useKeydown } from '@/composables/keyboard';
+import { handleKeyboardEvent } from '@/composables/keyboard';
 
 const $props = withDefaults(
     defineProps<{
@@ -121,7 +121,7 @@ function handleKeydown(event: KeyboardEvent) {
 
     let nextIndex = 0;
 
-    const isMatched = useKeydown(event, {
+    const isMatched = handleKeyboardEvent(event, {
         arrowDown: () => (nextIndex = index === -1 || index === headers.length - 1 ? 0 : index + 1),
         arrowUp: () => (nextIndex = index === -1 || index === 0 ? headers.length - 1 : index - 1),
         home: () => (nextIndex = 0),

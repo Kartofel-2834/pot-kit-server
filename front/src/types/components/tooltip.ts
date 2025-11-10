@@ -84,6 +84,9 @@ export interface IPotTooltipProps {
 }
 
 export interface IPotTooltipExpose {
+    /** Tooltip dialog unique id */
+    dialogId: Symbol;
+
     /** Tooltip visibility flag */
     isOpen: Readonly<Ref<boolean>>;
 

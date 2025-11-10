@@ -1,31 +1,29 @@
 <script setup lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION">
 // Types
-import type { Ref, RendererElement } from 'vue';
-import type { IAttachOptions, EAttachedBoxPosition } from '@/types/composables/attach';
+import type { RendererElement } from 'vue';
+import type { EAttachedBoxPosition } from '@/types/composables/attach';
 import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
 import type { EPotDevice } from '@/types';
-import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
-import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // Composables
-import { useAttach } from '@/composables/attach';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+import { useDeviceProperties } from '@/composables/device-is';
 import { useDebounce } from '@/composables/timer';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
 import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
-import { useKeydown } from '@/composables/keyboard';
+import { handleKeyboardEvent } from '@/composables/keyboard';
 
 // Components
 import PotInput from '@/components/ui/PotInput.vue';
+import PotOption from '@/components/ui/PotOption.vue';
+import PotPopover from '@/components/ui/PotPopover.vue';
 
 const POT_SELECT_SIZE = {} as const;
 
@@ -72,9 +70,6 @@ interface IPotSelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
     devices?: EPotDevice[];
 }
 
-const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
-
 const $props = withDefaults(defineProps<IPotSelectProps<OPTION, VALUE_FIELD>>(), {
     value: null,
     modelValue: null,
@@ -94,22 +89,29 @@ const $emit = defineEmits<{
     'update:text': [text: string];
 }>();
 
-const $deviceIs = useDeviceIs();
-
-const $dialog = useDialog({
-    triggers: ['escape', 'clickoutside'],
-    isOpen: ref<boolean>(false),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
-    close,
-    open,
-});
-
 const $subscriptions = useSubscriptions();
+
+const $specs = useSpecs(
+    computed<ISpecsOptions<OPTION, VALUE_FIELD, IPotSelectSpecData>>(() => ({
+        values: currentValue.value ? [currentValue.value] : [],
+        options: $props.options,
+        optionLabel: $props.optionLabel,
+        optionDisabled: $props.optionDisabled,
+        optionValue: $props.optionValue,
+        optionData: (option: OPTION) => ({
+            focused: option,
+        }),
+        data: (option, value) => ({
+            focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
+        }),
+    })),
+);
 
 // Data
 const container = ref<InstanceType<typeof PotInput> | null>(null);
-const dropdown = ref<HTMLElement | null>(null);
+const dropdown = ref<InstanceType<typeof PotPopover> | null>(null);
 
+const isOpen = ref<boolean>(false);
 const isFocused = ref<boolean>(false);
 const containerWidth = ref<number>(0);
 
@@ -130,51 +132,46 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    $dialog.terminate();
     $subscriptions.clear();
 });
 
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue ?? null);
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            nudge: $props.nudge,
-            edgeMargin: $props.edgeMargin,
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        nudge: $props.nudge,
+        edgeMargin: $props.edgeMargin,
+        color: $props.color,
+        size: $props.size,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
-const teleportTo = computed(() => $props.to ?? 'body');
-
-const currentStyles = computed(() => {
-    const [x, y] = $attach.coordinates.value ?? [0, 0];
+const dropdownStyles = computed(() => {
     const dropdownWidth = containerWidth.value ? `${containerWidth.value}px` : '';
 
     return {
         '--pot-select-size-dropdown': dropdownWidth,
-        zIndex: useDialogZIndex($dialog),
-        transform: `translate(${x}px, ${y}px)`,
     };
 });
 
-const classList = computed(() =>
-    useClassListArray({
+const classList = useClassListArray(
+    computed(() => ({
         position: properties.value.position,
+        color: properties.value.color,
+        size: properties.value.size,
+        radius: properties.value.radius,
         editable: $props.editable,
-        opened: $dialog.isOpen.value,
-        closed: !$dialog.isOpen.value,
+        opened: isOpen.value,
+        closed: !isOpen.value,
         focused: isFocused.value,
         fluid: $props.fluid,
         'fixed-width': $props.fixedDropdownWidth,
-    }),
+    })),
+    'select',
 );
 
 const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
@@ -186,49 +183,9 @@ const label = computed(() => {
     return $props.editable && isFocused.value ? $props.text : selectedLabel;
 });
 
-// Helper-hooks
-const $attach = useAttach(
-    computed<IAttachOptions>(() => ({
-        position: properties.value.position,
-        nudge: properties.value.nudge,
-        edgeMargin: properties.value.edgeMargin,
-        persistent: $props.persistent,
-        sticky: !$props.noSticky,
-        terminateOnChange: $props.closeOnMove,
-    })),
-    () => $dialog.close(),
-);
-
-const $specs = useSpecs(
-    computed<ISpecsOptions<OPTION, VALUE_FIELD, IPotSelectSpecData>>(() => ({
-        values: currentValue.value ? [currentValue.value] : [],
-        options: $props.options,
-        optionLabel: $props.optionLabel,
-        optionDisabled: $props.optionDisabled,
-        optionValue: $props.optionValue,
-        optionData: (option: OPTION) => ({
-            focused: option,
-        }),
-        data: (option, value) => ({
-            focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
-        }),
-    })),
-);
-
 // Watchers
 watch(
-    () => [container.value, dropdown.value],
-    () => {
-        if (container.value && dropdown.value) {
-            setupAttach();
-        } else {
-            terminateAttach();
-        }
-    },
-);
-
-watch(
-    () => dropdown.value,
+    () => dropdown.value?.popover,
     () => {
         if (dropdown.value) {
             setupFocusBox();
@@ -264,7 +221,7 @@ function onInputKeydown(event: KeyboardEvent) {
         if (!isEdit) event.preventDefault;
     };
 
-    useKeydown(event, {
+    handleKeyboardEvent(event, {
         space: event => {
             handleKeypress(event);
             if (!isEdit && spec) {
@@ -300,9 +257,9 @@ function onInputKeydown(event: KeyboardEvent) {
             if (!isEdit) focusLast();
         },
         tab: event => {
-            if (!dropdown.value) return;
+            if (!dropdown.value?.popover) return;
 
-            const focusableChildren = useFocusableChildren(dropdown.value);
+            const focusableChildren = useFocusableChildren(dropdown.value.popover);
             const firstFocusableElement = focusableChildren[0];
             const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
 
@@ -327,40 +284,30 @@ function onOptionClick(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     change(spec);
 }
 
-function onOptionKeydown(
-    event: KeyboardEvent,
-    spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>,
-) {
-    if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        change(spec);
-    }
-}
-
 // Methods
 function focusSameLabeled(text: string) {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
     const spec = availableSpecs.value.find(spec => spec.label.startsWith(text));
     focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
 }
 
 function focusSelected() {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
     focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
 }
 
 function focusFirst() {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
     focusedSpec.value = availableSpecs.value[0] ?? null;
 }
 
 function focusLast() {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
     focusedSpec.value = availableSpecs.value[availableSpecs.value.length - 1] ?? null;
 }
 
 function focusNext() {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
 
     if (!focusedSpec.value) {
         focusFirst();
@@ -379,7 +326,7 @@ function focusNext() {
 }
 
 function focusPrev() {
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
 
     if (!focusedSpec.value) {
         focusLast();
@@ -397,23 +344,8 @@ function focusPrev() {
     focusedSpec.value = prevSpec;
 }
 
-function setupAttach() {
-    const containerElement = container.value?.$el;
-    const dropdownElement = dropdown.value;
-
-    if (!containerElement || !dropdownElement) return;
-
-    $subscriptions.add(
-        () => $attach.start(containerElement, dropdownElement),
-        () => $attach.stop(),
-        'attach',
-    );
-}
-
-function terminateAttach() {}
-
 function setupFocusBox() {
-    const dropdownElement = dropdown.value as Element;
+    const dropdownElement = dropdown.value?.popover as Element;
 
     if (!dropdownElement) return;
 
@@ -439,21 +371,21 @@ function terminateFocusBox() {
 }
 
 function toggle() {
-    if ($dialog.isOpen.value) {
-        $dialog.close();
+    if (isOpen.value) {
+        close();
     } else {
-        $dialog.open();
+        open();
     }
 }
 
 function open() {
-    if ($dialog.isOpen.value) return;
-    $dialog.isOpen.value = true;
+    if (isOpen.value) return;
+    isOpen.value = true;
 }
 
 function close() {
-    if (!$dialog.isOpen.value) return;
-    $dialog.isOpen.value = false;
+    if (!isOpen.value) return;
+    isOpen.value = false;
     focusedSpec.value = null;
 }
 
@@ -462,20 +394,12 @@ function change(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
 
     $emit('change', spec.value, spec.option);
     $emit('update:modelValue', spec.value);
-    $dialog.close();
+    close();
 }
 
 function changeText(text: string) {
     $emit('changeText', text);
     $emit('update:text', text);
-}
-
-function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>): string[] {
-    return useClassListArray({
-        selected: spec.selected,
-        disabled: spec.disabled,
-        focused: spec.data?.focused,
-    });
 }
 </script>
 
@@ -483,9 +407,10 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>):
     <PotInput
         ref="container"
         :class="['pot-select', classList]"
-        :data-pot-dialog-id="$dialog.id.description"
+        :data-pot-dialog-id="dropdown?.dialogId"
         :value="label"
         :readonly="!editable"
+        :devices="devices"
         placeholder="select"
         @click="onClick"
         @input="onInputText"
@@ -512,139 +437,220 @@ function getSpecClassList(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>):
         </template>
 
         <template #append>
-            <Teleport
-                :to="teleportTo"
-                :disabled="!to"
+            <PotPopover
+                ref="dropdown"
+                :visible="isOpen"
+                :target="container?.$el"
+                :to="to"
+                :transition="transition"
+                :position="position"
+                :nudge="nudge"
+                :edge-margin="edgeMargin"
+                :persistent="persistent"
+                :no-sticky="noSticky"
+                :close-on-move="closeOnMove"
+                :devices="devices"
+                no-auto-focus
+                no-focus-trap
+                @close="close"
+                @open="open"
             >
-                <Transition :name="transition">
-                    <div
-                        v-if="$dialog.isOpen.value"
-                        ref="dropdown"
-                        :class="['pot-select-dropdown', classList]"
-                        :style="currentStyles"
-                        :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                        :data-pot-dialog-id="$dialog.id.description"
+                <div
+                    :class="['pot-select-dropdown', classList]"
+                    :style="dropdownStyles"
+                >
+                    <slot
+                        name="header"
+                        :open="open"
+                        :close="close"
+                        :toggle="toggle"
+                        :change="change"
+                    />
+
+                    <slot
+                        name="options-list"
+                        :specs="$specs"
+                        :open="open"
+                        :close="close"
+                        :toggle="toggle"
+                        :change="change"
                     >
-                        <slot
-                            name="header"
-                            :open="open"
-                            :close="close"
-                            :toggle="toggle"
-                            :change="change"
-                        />
-
-                        <slot
-                            name="options-list"
-                            :specs="$specs"
-                            :open="open"
-                            :close="close"
-                            :toggle="toggle"
-                            :change="change"
+                        <ul
+                            class="pot-select-options-list"
+                            role="listbox"
                         >
-                            <ul
-                                class="pot-select-options-list"
-                                role="listbox"
+                            <slot
+                                v-for="spec of $specs"
+                                name="option"
+                                :key="spec.id"
+                                :spec="spec"
+                                :change="change"
                             >
-                                <slot
-                                    v-for="spec of $specs"
-                                    name="option"
-                                    :key="spec.id"
-                                    :spec="spec"
-                                    :change="change"
-                                >
-                                    <li
-                                        :class="['pot-select-option', getSpecClassList(spec)]"
-                                        :data-label="spec.label"
-                                        :data-value="spec.value"
-                                        role="option"
-                                        @click="onOptionClick(spec)"
-                                        @keydown="onOptionKeydown($event, spec)"
-                                    >
-                                        {{ spec.label }}
-                                    </li>
-                                </slot>
-                            </ul>
-                        </slot>
+                                <PotOption
+                                    tag="li"
+                                    :class="['pot-select-option', classList]"
+                                    role="option"
+                                    :value="spec.value"
+                                    :label="spec.label"
+                                    :disabled="spec.disabled"
+                                    :selected="spec.selected"
+                                    :focused="spec.data?.focused"
+                                    fluid
+                                    @click="onOptionClick(spec)"
+                                />
+                            </slot>
+                        </ul>
+                    </slot>
 
-                        <slot
-                            name="footer"
-                            :open="open"
-                            :close="close"
-                            :toggle="toggle"
-                            :change="change"
-                        />
-                    </div>
-                </Transition>
-            </Teleport>
+                    <slot
+                        name="footer"
+                        :open="open"
+                        :close="close"
+                        :toggle="toggle"
+                        :change="change"
+                    />
+                </div>
+            </PotPopover>
         </template>
     </PotInput>
 </template>
 
 <style>
 .pot-select {
-    display: flex;
-    align-items: center;
+    /* --- Color - Configuration --- */
+    --pot-select-color-border: transparent;
+    --pot-select-color-background: transparent;
+    --pot-select-color-text: inherit;
+    --pot-select-color-caret: currentColor;
+    --pot-select-color-placeholder: inherit;
+    --pot-select-color-icon: initial;
+
+    /* --- Size - Configuration --- */
+    --pot-select-size-height: auto;
+    --pot-select-size-padding: 0;
+    --pot-select-size-border: 0;
+    --pot-select-size-text: inherit;
+    --pot-select-size-gap: 1rem;
+    --pot-select-size-icon: auto;
+    --pot-select-size-outline: initial;
+    --pot-select-size-outline-offset: initial;
+
+    /* --- Radius - Configuration --- */
+    --pot-select-radius-value: 0;
 }
 
-/* --- PotSelect - Focused --- */
-.pot-select._focused {
-    background-color: purple;
+.pot-select.pot-input {
+    /* --- Input - Color - Configuration --- */
+    --pot-input-color-border: var(--pot-select-color-border);
+    --pot-input-color-background: var(--pot-select-color-background);
+    --pot-input-color-text: var(--pot-select-color-text);
+    --pot-input-color-caret: var(--pot-select-color-caret);
+    --pot-input-color-placeholder: var(--pot-select-color-placeholder);
+    --pot-input-color-icon: var(--pot-select-color-icon);
+
+    /* --- Input - Size - Configuration --- */
+    --pot-input-size-height: var(--pot-select-size-height);
+    --pot-input-size-padding: var(--pot-select-size-padding);
+    --pot-input-size-border: var(--pot-select-size-border);
+    --pot-input-size-text: var(--pot-select-size-text);
+    --pot-input-size-gap: var(--pot-select-size-border);
+    --pot-input-size-icon: var(--pot-select-size-icon);
+    --pot-input-size-outline: var(--pot-select-size-outline);
+    --pot-input-size-outline-offset: var(--pot-select-size-outline-offset);
+
+    /* --- Input - Radius - Configuration --- */
+    --pot-input-radius-value: var(--pot-select-radius-value);
 }
 
 /* --- PotSelect - Opened --- */
-.pot-select._opened .pot-select-icon {
+.pot-select._select-opened .pot-input-icon {
     transform: scaleY(-1);
 }
 
 /* --- PotSelect - Fluid --- */
-.pot-select._fluid {
+.pot-select._select-fluid {
     width: 100%;
 }
 
-.pot-select-icon {
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-
-.pot-select-input {
-    outline: none;
-    height: 100%;
-    flex-basis: 100%;
-}
-
-.pot-select-input:focus {
-    background-color: yellow;
-}
-
-.pot-select-dropdown {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: red;
-}
-
-.pot-select-dropdown._fixed-width {
+/* --- PotSelect - Dropdown - Fixed Width --- */
+.pot-select-dropdown._select-fixed-width {
     width: var(--pot-select-size-dropdown);
 }
 
-.pot-select-option:hover:not(._selected) {
-    background-color: blue;
-    color: white;
-    cursor: pointer;
+.pot-select-dropdown {
+    /* --- Dropdown - Color - Configuration --- */
+    --pot-select-color-dropdown-background: transparent;
+    --pot-select-color-dropdown-border: transparent;
+    --pot-select-color-dropdown-text: inherit;
+    --pot-select-color-option-background: transparent;
+
+    /* --- Dropdown - Size - Configuration --- */
+    --pot-select-size-dropdown-border: 0;
+    --pot-select-size-dropdown-padding: 0;
+    --pot-select-size-dropdown-shadow: none;
+    --pot-select-size-dropdown-text: inherit;
+
+    /* --- Dropdown - Radius - Configuration --- */
+    --pot-select-radius-dropdown-value: 0;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-style: solid;
+
+    /* --- PotSelect - Dropdown - Color --- */
+    border-color: var(--pot-select-color-dropdown-border);
+    background-color: var(--pot-select-color-dropdown-background);
+    color: var(--pot-select-color-dropdown-text);
+
+    /* --- PotSelect - Dropdown - Size --- */
+    border-width: var(--pot-select-size-dropdown-border);
+    padding: var(--pot-select-size-dropdown-padding);
+    box-shadow: var(--pot-select-size-dropdown-shadow);
+    font-size: var(--pot-select-size-dropdown-text);
+
+    /* --- PotSelect - Dropdown - Radius --- */
+    border-radius: var(--pot-select-radius-dropdown-value);
 }
 
-.pot-select-option._focused {
-    background-color: pink;
+.pot-select-option {
+    /* --- Color - Configuration --- */
+    --pot-select-color-option-border: transparent;
+    --pot-select-color-option-background: transparent;
+    --pot-select-color-option-text: inherit;
+    --pot-select-color-option-outline: initial;
+
+    /* --- Size - Configuration --- */
+    --pot-select-size-option-height: auto;
+    --pot-select-size-option-gap: 0;
+    --pot-select-size-option-padding: 0;
+    --pot-select-size-option-border: 0;
+    --pot-select-size-option-text: inherit;
+    --pot-select-size-option-outline: initial;
+    --pot-select-size-option-outline-offset: initial;
+
+    /* ---  Radius - Configuration --- */
+    --pot-select-radius-option-value: 0;
 }
 
-.pot-select-option._selected {
-    background-color: green;
-    color: white;
-    cursor: default;
+.pot-select-option.pot-option {
+    /* --- Option - Color - Configuration --- */
+    --pot-option-color-border: var(--pot-select-color-option-border);
+    --pot-option-color-background: var(--pot-select-color-option-background);
+    --pot-option-color-text: var(--pot-select-color-option-text);
+    --pot-option-color-outline: var(--pot-select-color-option-outline);
+
+    /* --- Option - Size - Configuration --- */
+    --pot-option-size-height: var(--pot-select-size-option-height);
+    --pot-option-size-gap: var(--pot-select-size-option-gap);
+    --pot-option-size-padding: var(--pot-select-size-option-padding);
+    --pot-option-size-border: var(--pot-select-size-option-border);
+    --pot-option-size-text: var(--pot-select-size-option-text);
+    --pot-option-size-outline: var(--pot-select-size-option-outline);
+    --pot-option-size-outline-offset: var(--pot-select-size-option-outline-offset);
+
+    /* --- Option - Radius - Configuration --- */
+    --pot-option-radius-value: var(--pot-select-radius-option-value);
 }
 
 /* --- PotSelect - Transition --- */

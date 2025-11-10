@@ -86,11 +86,11 @@ watch(
     () => [container.value, $props.noFocusTrap],
     () => {
         if (container.value instanceof Element) {
-            if (!$props.noFocusTrap) focusTrap();
-            if (!$props.noAutoFocus) autoFocus();
+            if (!$props.noFocusTrap) setupFocusTrap();
+            if (!$props.noAutoFocus) setupAutoFocus();
         } else {
-            $subscriptions.remove('focus-trap');
-            $subscriptions.remove('autofocus');
+            if (!$props.noFocusTrap) terminateFocusTrap();
+            if (!$props.noAutoFocus) terminateAutoFocus();
         }
     },
 );
@@ -106,7 +106,7 @@ function close() {
     $emit('update:modelValue', false);
 }
 
-function focusTrap() {
+function setupFocusTrap() {
     const containerElement = container.value as Element;
 
     if (!containerElement) return;
@@ -118,7 +118,7 @@ function focusTrap() {
     );
 }
 
-function autoFocus() {
+function setupAutoFocus() {
     const containerElement = container.value as Element;
     const lastActiveElement = document.activeElement;
 
@@ -129,6 +129,14 @@ function autoFocus() {
         controller => controller.abort(),
         'autofocus',
     );
+}
+
+function terminateFocusTrap() {
+    $subscriptions.remove('focus-trap');
+}
+
+function terminateAutoFocus() {
+    $subscriptions.remove('autofocus');
 }
 
 // Exports

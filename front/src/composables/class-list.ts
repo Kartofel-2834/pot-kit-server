@@ -1,25 +1,51 @@
-export function useClassList(properties: Record<string, unknown>): Record<string, boolean> {
-    if (!properties && typeof properties !== 'object') return {};
+// Types
+import type { ComputedRef, MaybeRef } from 'vue';
 
-    return Object.entries(properties).reduce((res, [property, value]) => {
-        let key = `_${property}`;
-        key += typeof value !== 'boolean' ? `-${value}` : '';
+// Vue
+import { computed, unref } from 'vue';
 
-        return { ...res, [key]: Boolean(value) };
-    }, {});
+export function useClassList(
+    properties: MaybeRef<Record<string, unknown>>,
+    prefix: MaybeRef<string> = '',
+): ComputedRef<Record<string, boolean>> {
+    return computed(() => {
+        const data = unref(properties);
+        const prefixValue = unref(prefix);
+
+        if (!data && typeof data !== 'object') return {};
+
+        return Object.entries(data).reduce((res, [property, value]) => {
+            const key = [prefixValue, property, typeof value !== 'boolean' ? value : '']
+                .filter(Boolean)
+                .join('-');
+
+            if (!value) return res;
+
+            return { ...res, [`_${key}`]: Boolean(value) };
+        }, {});
+    });
 }
 
-export function useClassListArray(properties: Record<string, unknown>): string[] {
-    if (!properties && typeof properties !== 'object') return [];
+export function useClassListArray(
+    properties: MaybeRef<Record<string, unknown>>,
+    prefix: MaybeRef<string> = '',
+): ComputedRef<string[]> {
+    return computed(() => {
+        const data = unref(properties);
+        const prefixValue = unref(prefix);
 
-    const classList = Object.entries(properties).reduce((res, [property, value]) => {
-        let key = `_${property}`;
-        key += typeof value !== 'boolean' ? `-${value}` : '';
+        if (!data && typeof data !== 'object') return [];
 
-        if (!value) return res;
+        const classList = Object.entries(data).reduce((res, [property, value]) => {
+            const key = [prefixValue, property, typeof value !== 'boolean' ? value : '']
+                .filter(Boolean)
+                .join('-');
 
-        return [...res, key];
-    }, [] as string[]);
+            if (!value) return res;
 
-    return [...new Set(classList.filter(Boolean))];
+            return [...res, `_${key}`];
+        }, [] as string[]);
+
+        return [...new Set(classList.filter(Boolean))];
+    });
 }

@@ -75,13 +75,11 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             </template>
         </PotSelect>
 
-        <PotPopover v-model="isOpen">
-            <template #target>
-                <button @click="isOpen = true">Test</button>
-            </template>
+        <button>Kamal</button>
 
-            <button>Content</button>
-        </PotPopover>
+        <PotButton :square="isOpen"> Test {{ isOpen }}</PotButton>
+
+        <PotButton @click="isOpen = !isOpen">Kamal</PotButton>
     </main>
 </template>
 

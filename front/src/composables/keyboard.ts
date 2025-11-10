@@ -52,7 +52,7 @@ export function useKeyboard(
     return controller;
 }
 
-export function useKeydown(
+export function handleKeyboardEvent(
     event: KeyboardEvent,
     handlers: Record<string, (event: KeyboardEvent) => void>,
 ): boolean {

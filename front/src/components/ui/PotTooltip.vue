@@ -339,6 +339,7 @@ function findTarget(vnode: VNode): VNode | null {
 provide('pot-dialog-layer', $dialog.layer);
 
 defineExpose<IPotTooltipExpose>({
+    dialogId: $dialog.id,
     isOpen: readonly($dialog.isOpen),
     coordinates: $attach.coordinates.value,
     target: currentTarget.value,
@@ -365,7 +366,10 @@ defineExpose<IPotTooltipExpose>({
                 :style="currentStyles"
                 :data-pot-dialog-id="$dialog.id.description"
             >
-                <slot name="content">
+                <slot
+                    name="content"
+                    :dialog-id="$dialog.id"
+                >
                     {{ text }}
                 </slot>
             </div>
@@ -373,7 +377,7 @@ defineExpose<IPotTooltipExpose>({
     </Teleport>
 
     <PotSlotCatcher :map-v-node="findTarget">
-        <slot />
+        <slot :dialog-id="$dialog.id" />
     </PotSlotCatcher>
 </template>
 
