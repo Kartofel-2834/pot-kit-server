@@ -7,7 +7,7 @@ import { ref, computed } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotInputProps>(), {
     value: undefined,
@@ -25,8 +25,6 @@ const $emit = defineEmits<{
 }>();
 
 const $slots = defineSlots<IPotInputSlots>();
-
-const $deviceIs = useDeviceIs();
 
 // Data
 const input = ref<HTMLInputElement | null>(null);
@@ -167,7 +165,7 @@ defineExpose<IPotInputExpose>({
     border-color: var(--pot-input-color-border);
 
     /* --- PotInput - Size --- */
-    padding: 0 var(--pot-input-size-padding);
+    padding: var(--pot-input-size-padding);
     gap: var(--pot-input-size-gap);
     font-size: var(--pot-input-size-text);
     border-width: var(--pot-input-size-border);

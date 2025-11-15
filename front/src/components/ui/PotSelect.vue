@@ -1,9 +1,7 @@
 <script setup lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION">
 // Types
-import type { RendererElement } from 'vue';
-import type { EAttachedBoxPosition } from '@/types/composables/attach';
 import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
-import type { EPotDevice } from '@/types';
+import type { IPotSelectProps, IPotSelectSpecData } from '@/types/components/select';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
@@ -24,51 +22,6 @@ import { handleKeyboardEvent } from '@/composables/keyboard';
 import PotInput from '@/components/ui/PotInput.vue';
 import PotOption from '@/components/ui/PotOption.vue';
 import PotPopover from '@/components/ui/PotPopover.vue';
-
-const POT_SELECT_SIZE = {} as const;
-
-const POT_SELECT_COLOR = {} as const;
-
-const POT_SELECT_RADIUS = {} as const;
-
-type EPotSelectSize = (typeof POT_SELECT_SIZE)[keyof typeof POT_SELECT_SIZE];
-
-type EPotSelectColor = (typeof POT_SELECT_COLOR)[keyof typeof POT_SELECT_COLOR];
-
-type EPotSelectRadius = (typeof POT_SELECT_RADIUS)[keyof typeof POT_SELECT_RADIUS];
-
-interface IPotSelectSpecData {
-    focused: boolean;
-}
-
-interface IPotSelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
-    value?: TOptionValue<OPTION, VALUE_FIELD> | null;
-    modelValue?: TOptionValue<OPTION, VALUE_FIELD> | null;
-    options?: OPTION[];
-    optionLabel?: keyof OPTION | ((option: OPTION) => string);
-    optionDisabled?: keyof OPTION | ((option: OPTION) => boolean);
-    optionValue?: VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>);
-
-    text?: string;
-    editable?: boolean;
-    fluid?: boolean;
-    fixedDropdownWidth?: boolean;
-
-    to?: string | RendererElement | null;
-    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
-    nudge?: number | number[];
-    edgeMargin?: number | number[];
-    persistent?: boolean;
-    noSticky?: boolean;
-    closeOnMove?: boolean;
-    transition?: string;
-
-    size?: EPotSelectSize | EPotSelectSize[] | null;
-    color?: EPotSelectColor | EPotSelectColor[] | null;
-    radius?: EPotSelectRadius | EPotSelectRadius[] | null;
-
-    devices?: EPotDevice[];
-}
 
 const $props = withDefaults(defineProps<IPotSelectProps<OPTION, VALUE_FIELD>>(), {
     value: null,
@@ -664,3 +617,7 @@ function changeText(text: string) {
     opacity: 0;
 }
 </style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/select.css" />
+<!-- Styles - END -->

@@ -65,6 +65,9 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             v-model="someValue"
             v-model:text="text"
             :options="optionsA"
+            color="pot"
+            size="medium"
+            radius="circle"
         >
             <template #header>
                 <button>KAMAL: {{ text }}</button>

@@ -1,6 +1,6 @@
 {
     "components": "./src/components/ui/",
-    "styles": "./src/assets/css/ui/",
+    "styles": "./src/assets/css/styles/test",
     "composables": "./src/composables/",
     "types": "./src/types/",
     "imports": {
@@ -8,7 +8,6 @@
     },
     "options": {
         "potServer": true,
-        "overwrite": true,
-        "prefix": "ui"
+        "overwrite": true
     }
 }
