@@ -13,7 +13,7 @@ import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vu
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
@@ -41,12 +41,10 @@ const $emit = defineEmits<{
 const $dialog = useDialog({
     triggers: ['escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
+    layer: useDialogLayer($layer, $parentLayer),
     close,
     open,
 });
-
-const $deviceIs = useDeviceIs();
 
 const $subscriptions = useSubscriptions();
 
@@ -55,31 +53,27 @@ const container = ref<Element | null>(null);
 
 // Lifecycle
 onUnmounted(() => {
-    $dialog.terminate();
     $subscriptions.clear();
 });
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const zIndex = useDialogZIndex($dialog);
+
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        size: $props.size,
+        color: $props.color,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
 const classList = computed(() => useClassList({ ...properties.value }));
 
-const currentStyles = computed(() => ({
-    zIndex: useDialogZIndex($dialog),
-}));
+const currentStyles = computed(() => ({ zIndex: zIndex.value }));
 
 // Watchers
 watch(

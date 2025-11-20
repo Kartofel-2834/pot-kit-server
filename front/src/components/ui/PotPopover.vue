@@ -55,7 +55,7 @@ const $emit = defineEmits<{
 const $dialog = useDialog({
     triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
+    layer: useDialogLayer($layer, $parentLayer),
     close,
     open,
 });
@@ -68,7 +68,6 @@ const box = ref<Element | null>(null);
 
 // Lifecycle
 onUnmounted(() => {
-    $dialog.terminate();
     $subscriptions.clear();
 });
 
@@ -76,6 +75,8 @@ onUnmounted(() => {
 const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
+
+const zIndex = useDialogZIndex($dialog);
 
 const properties = useDeviceProperties(
     computed(() => ({
@@ -105,7 +106,7 @@ const currentStyles = computed(() => {
     const [x, y] = $attach.coordinates.value ?? [0, 0];
 
     return {
-        zIndex: useDialogZIndex($dialog),
+        zIndex: zIndex.value,
         transform: `translate(${x}px, ${y}px)`,
     };
 });

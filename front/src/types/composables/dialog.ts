@@ -1,5 +1,5 @@
 // Types
-import type { Ref } from 'vue';
+import type { ComputedRef, MaybeRef, Ref } from 'vue';
 
 export type TDialogTrigger = 'clickoutside' | 'escape';
 
@@ -19,19 +19,19 @@ export interface IDialogsSetupOptions {
 
 export interface IDialogOptions {
     /** Flag that indicates whether dialog is open */
-    isOpen: Ref<boolean>;
+    isOpen: MaybeRef<boolean>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EDialogLayers>;
+    layer: MaybeRef<EDialogLayers>;
+
+    /** Triggers that will close dialog */
+    triggers: MaybeRef<TDialogTrigger[]>;
 
     /** Close dialog */
     close: () => void;
 
     /** Open dialog */
     open: () => void;
-
-    /** Triggers that will close dialog */
-    triggers: TDialogTrigger[];
 }
 
 export interface IDialog {
@@ -39,39 +39,39 @@ export interface IDialog {
     readonly id: Symbol;
 
     /** Triggers that will close dialog */
-    readonly triggers: TDialogTrigger[];
+    readonly triggers: ComputedRef<TDialogTrigger[]>;
 
     /** Flag that indicates whether dialog is open */
-    isOpen: Ref<boolean>;
+    readonly isOpen: ComputedRef<boolean>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EDialogLayers>;
+    readonly layer: ComputedRef<EDialogLayers>;
 
     /** Close dialog */
     close: () => void;
 
     /** Open dialog */
     open: () => void;
-
-    /** Terminate dialogs watchers and listeners */
-    terminate: () => void;
 }
 
 export interface IDialogManager {
     /** Dialog unique id */
     id: Symbol;
 
+    /** Flag that indicates whether dialog is open */
+    isOpen: boolean;
+
     /** Dialog layer z-index value */
     layer: EDialogLayers;
+
+    /** Triggers that will close dialog */
+    triggers: TDialogTrigger[];
 
     /** Open dialog */
     open: () => void;
 
     /** Close dialog */
     close: () => void;
-
-    /** Triggers that will close dialog */
-    triggers: TDialogTrigger[];
 
     /** The time in ms when the dialog was created changed */
     createdAt: number;

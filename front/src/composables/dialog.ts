@@ -6,12 +6,13 @@ import type {
     IDialogOptions,
     IDialogsSetupOptions,
 } from '@/types/composables/dialog';
+import type { ComputedRef, MaybeRef } from 'vue';
 
 // Constants
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { ref, watch } from 'vue';
+import { computed, onUnmounted, ref, unref, watch } from 'vue';
 
 // Composables
 import { useSubscriptions } from '@/composables/subscriptions';
@@ -64,51 +65,53 @@ export function terminate() {
 }
 
 /** Composable for getting dialog's current z-index */
-export function useDialogZIndex(dialog: IDialog): number {
-    const currentLayer = dialog.layer.value;
-    const nextLayer = layers[layers.indexOf(currentLayer) + 1] ?? Infinity;
+export function useDialogZIndex(dialog: IDialog): ComputedRef<number> {
+    return computed(() => {
+        const currentLayer = dialog.layer.value;
+        const nextLayer = layers[layers.indexOf(currentLayer) + 1] ?? Infinity;
 
-    const layerQueue = dialogsQueue.value.filter(v => v.layer === currentLayer);
-    const index = layerQueue.findIndex(v => v.id === dialog.id);
+        const layerQueue = dialogsQueue.value.filter(v => v.layer === currentLayer);
+        const index = layerQueue.findIndex(v => v.id === dialog.id);
 
-    const zIndex = currentLayer + Math.max(0, index);
+        const zIndex = currentLayer + Math.max(0, index);
 
-    return zIndex < nextLayer ? zIndex : nextLayer;
+        return zIndex < nextLayer ? zIndex : nextLayer - 1;
+    });
 }
 
-export function useDialogLayer(...layers: Array<EDialogLayers | undefined>): EDialogLayers {
-    return Math.max(...layers.filter(v => v !== undefined)) as EDialogLayers;
+export function useDialogLayer(
+    ...layers: MaybeRef<EDialogLayers | undefined>[]
+): ComputedRef<EDialogLayers> {
+    return computed(() => {
+        const layersValues = layers.map(v => unref(v));
+        return Math.max(...layersValues.filter(v => v !== undefined)) as EDialogLayers;
+    });
 }
 
 /** Composable for adding dialogs to global queue with triggers */
 export function useDialog(options: IDialogOptions): IDialog {
-    const newDialogId = generateDialogId();
-    const dialogManager: IDialogManager = {
-        id: newDialogId,
-        layer: options.layer.value,
-        triggers: options.triggers ?? ['escape'],
+    const id = generateDialogId();
+    const createdAt = Date.now();
+
+    const dialogManager = computed<IDialogManager>(() => ({
+        id,
+        createdAt,
+        isOpen: unref(options.isOpen),
+        layer: unref(options.layer),
+        triggers: unref(options.triggers) ?? ['escape'],
         updatedAt: Date.now(),
-        createdAt: Date.now(),
         open: () => options.open(),
         close: () => options.close(),
-    };
+    }));
 
     const unwatch = watch(
-        () => [options.isOpen.value, options.layer.value],
-        (newValue, oldValue) => {
-            const [newIsOpen, newLayer] = newValue as [boolean, EDialogLayers];
-            const [oldIsOpen] = oldValue ?? [false, 0];
+        () => dialogManager.value,
+        (newManager, oldManager) => {
+            if (oldManager && newManager.isOpen === oldManager.isOpen) return;
 
-            if (newIsOpen === oldIsOpen) return;
+            const updatedQueue = dialogsQueue.value.filter(v => v.id !== id);
 
-            dialogManager.updatedAt = Date.now();
-            dialogManager.layer = newLayer;
-
-            const updatedQueue = dialogsQueue.value.filter(v => v.id !== newDialogId);
-
-            if (newIsOpen) {
-                updatedQueue.push(dialogManager);
-            }
+            if (newManager.isOpen) updatedQueue.push(newManager);
 
             dialogsQueue.value = updatedQueue.sort(
                 (a, b) => a.layer - b.layer || a.createdAt - b.createdAt,
@@ -117,17 +120,18 @@ export function useDialog(options: IDialogOptions): IDialog {
         { immediate: true },
     );
 
+    onUnmounted(() => {
+        unwatch();
+        dialogsQueue.value = dialogsQueue.value.filter(v => v.id !== id);
+    });
+
     return {
-        id: newDialogId,
-        isOpen: options.isOpen,
-        triggers: options.triggers,
-        layer: options.layer,
+        id,
+        isOpen: computed(() => dialogManager.value.isOpen),
+        triggers: computed(() => dialogManager.value.triggers),
+        layer: computed(() => dialogManager.value.layer),
         close: () => options.close(),
         open: () => options.open(),
-        terminate: () => {
-            unwatch();
-            dialogsQueue.value = dialogsQueue.value.filter(v => v.id !== newDialogId);
-        },
     };
 }
 

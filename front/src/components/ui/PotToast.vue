@@ -10,12 +10,12 @@ import { POT_TOAST_POSITION } from '@/types/components/toast';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, ref, inject, onUnmounted, provide } from 'vue';
+import { computed, ref, inject, provide } from 'vue';
 
 // Composables
 import { useToast } from '@/composables/toast';
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 
 const $layer = DIALOG_LAYERS.TOAST as EDialogLayers;
@@ -28,25 +28,18 @@ const $props = withDefaults(defineProps<IPotToastProps<T>>(), {
     transition: 'pot-toast-transition',
 });
 
-const $deviceIs = useDeviceIs();
-
 const $toast = useToast<T>();
 
 const $dialog = useDialog({
     triggers: [],
     isOpen: computed(() => Boolean($toast.list.value.length)),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
+    layer: useDialogLayer($layer, $parentLayer),
     close: pop,
     open: () => {},
 });
 
 // Data
 const toastDialogsList = ref<HTMLElement[]>([]);
-
-// Lifecycle
-onUnmounted(() => {
-    $dialog.terminate();
-});
 
 // Computed
 const toastsList = computed(() => {
@@ -55,24 +48,21 @@ const toastsList = computed(() => {
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const zIndex = useDialogZIndex($dialog);
+
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        size: $props.size,
+        color: $props.color,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
 const classList = computed(() => useClassList({ ...properties.value }));
 
-const currentStyles = computed(() => ({
-    zIndex: useDialogZIndex($dialog),
-}));
+const currentStyles = computed(() => ({ zIndex: zIndex.value }));
 
 // Methods
 function getData(toast: IToastDialog): T {

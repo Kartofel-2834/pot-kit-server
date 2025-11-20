@@ -360,7 +360,7 @@ function changeText(text: string) {
     <PotInput
         ref="container"
         :class="['pot-select', classList]"
-        :data-pot-dialog-id="dropdown?.dialogId"
+        :data-pot-dialog-id="dropdown?.dialogId.description"
         :value="label"
         :readonly="!editable"
         :devices="devices"
@@ -513,6 +513,8 @@ function changeText(text: string) {
 
     /* --- Input - Radius - Configuration --- */
     --pot-input-radius-value: var(--pot-select-radius-value);
+
+    cursor: pointer;
 }
 
 /* --- PotSelect - Opened --- */

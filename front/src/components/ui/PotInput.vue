@@ -154,6 +154,7 @@ defineExpose<IPotInputExpose>({
     cursor: text;
     font-weight: 400;
     line-height: 1;
+    cursor: text;
     transition:
         color 0.2s,
         background-color 0.2s,
@@ -193,6 +194,7 @@ defineExpose<IPotInputExpose>({
     appearance: none;
     width: 100%;
     font-size: inherit;
+    cursor: inherit;
 
     /* Color */
     color: inherit;

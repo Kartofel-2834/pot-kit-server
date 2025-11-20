@@ -65,6 +65,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             v-model="someValue"
             v-model:text="text"
             :options="optionsA"
+            :nudge="20"
             color="pot"
             size="medium"
             radius="circle"
@@ -78,7 +79,9 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             </template>
         </PotSelect>
 
-        <button>Kamal</button>
+        <PotTooltip text="Kamal">
+            <button>Kamal</button>
+        </PotTooltip>
 
         <PotButton :square="isOpen"> Test {{ isOpen }}</PotButton>
 
@@ -87,6 +90,10 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
 </template>
 
 <style>
+html {
+    font-size: 10px !important;
+}
+
 .main {
     overflow: auto;
     display: flex;

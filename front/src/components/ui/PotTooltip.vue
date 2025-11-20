@@ -23,7 +23,7 @@ import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Composables
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 import { useClassListArray } from '@/composables/class-list';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useAttach } from '@/composables/attach';
@@ -59,16 +59,6 @@ const $emit = defineEmits<{
     'trigger:close': [event: Event, trigger: string];
 }>();
 
-const $deviceIs = useDeviceIs();
-
-const $dialog = useDialog({
-    triggers: ['escape'],
-    isOpen: ref<boolean>(false),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
-    close,
-    open,
-});
-
 const $subscriptions = useSubscriptions();
 const $targetSubscriptions = useSubscriptions();
 const $boxSubscriptions = useSubscriptions();
@@ -77,12 +67,21 @@ const $boxSubscriptions = useSubscriptions();
 const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
 
+const isOpen = ref<boolean>(false);
+
+const $dialog = useDialog({
+    triggers: ['escape'],
+    isOpen,
+    layer: useDialogLayer($layer, $parentLayer),
+    close,
+    open,
+});
+
 // Lifecycle
 onUnmounted(() => {
     $subscriptions.clear();
     $targetSubscriptions.clear();
     $boxSubscriptions.clear();
-    $dialog.terminate();
     $attach.stop();
 });
 
@@ -91,20 +90,19 @@ const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            nudge: $props.nudge,
-            edgeMargin: $props.edgeMargin,
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+const zIndex = useDialogZIndex($dialog);
+
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        nudge: $props.nudge,
+        edgeMargin: $props.edgeMargin,
+        color: $props.color,
+        size: $props.size,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
 
 const classList = computed(() =>
     useClassListArray({
@@ -119,7 +117,7 @@ const currentStyles = computed(() => {
     const [x, y] = $attach.coordinates.value ?? [0, 0];
 
     return {
-        zIndex: useDialogZIndex($dialog),
+        zIndex: zIndex.value,
         transform: `translate(${x}px, ${y}px)`,
     };
 });
@@ -143,9 +141,9 @@ const $attach = useAttach(
 
 // Watchers
 watch(
-    () => [$dialog.isOpen.value, box.value],
+    () => [isOpen.value, box.value],
     () => {
-        if ($dialog.isOpen.value && box.value) {
+        if (isOpen.value && box.value) {
             if (!$props.noFocusTrap) focusTrap();
             if (!$props.noAutoFocus) autoFocus();
         } else {
@@ -257,18 +255,18 @@ function open() {
         );
     }
 
-    if ($dialog.isOpen.value) return;
+    if (isOpen.value) return;
 
-    $dialog.isOpen.value = true;
+    isOpen.value = true;
     $emit('open');
 }
 
 function close() {
     if ($props.autoCloseDelay) $subscriptions.remove('autoclose');
 
-    if (!$dialog.isOpen.value) return;
+    if (!isOpen.value) return;
 
-    $dialog.isOpen.value = false;
+    isOpen.value = false;
     $emit('close');
 }
 
@@ -276,13 +274,13 @@ function handleTrigger(trigger: string, event: Event) {
     const isOpenTrigger = $props.openTriggers?.includes?.(trigger) ?? false;
     const isCloseTrigger = $props.closeTriggers?.includes?.(trigger) ?? false;
 
-    if (isOpenTrigger && (!$dialog.isOpen.value || $subscriptions.has('delayed-close'))) {
+    if (isOpenTrigger && (!isOpen.value || $subscriptions.has('delayed-close'))) {
         $emit('trigger:open', event, trigger);
         delayedOpen();
         return;
     }
 
-    if (isCloseTrigger && ($dialog.isOpen.value || $subscriptions.has('delayed-open'))) {
+    if (isCloseTrigger && (isOpen.value || $subscriptions.has('delayed-open'))) {
         $emit('trigger:close', event, trigger);
         delayedClose();
         return;
