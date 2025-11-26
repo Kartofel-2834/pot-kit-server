@@ -6,17 +6,7 @@ import type { EDialogLayers } from '@/types/composables/dialog';
 import type { IAttachOptions } from '@/types/composables/attach';
 
 // Vue
-import {
-    cloneVNode,
-    computed,
-    inject,
-    isVNode,
-    onUnmounted,
-    provide,
-    readonly,
-    ref,
-    watch,
-} from 'vue';
+import { cloneVNode, computed, inject, isVNode, provide, readonly, ref, watch } from 'vue';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
@@ -27,7 +17,7 @@ import { useDeviceProperties } from '@/composables/device-is';
 import { useClassListArray } from '@/composables/class-list';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useAttach } from '@/composables/attach';
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 // Components
@@ -59,9 +49,9 @@ const $emit = defineEmits<{
     'trigger:close': [event: Event, trigger: string];
 }>();
 
-const $subscriptions = useSubscriptions();
-const $targetSubscriptions = useSubscriptions();
-const $boxSubscriptions = useSubscriptions();
+const $subscriptions = useComponentSubscriptions();
+const $targetSubscriptions = useComponentSubscriptions();
+const $boxSubscriptions = useComponentSubscriptions();
 
 // Data
 const target = ref<Element | null>(null);
@@ -75,14 +65,6 @@ const $dialog = useDialog({
     layer: useDialogLayer($layer, $parentLayer),
     close,
     open,
-});
-
-// Lifecycle
-onUnmounted(() => {
-    $subscriptions.clear();
-    $targetSubscriptions.clear();
-    $boxSubscriptions.clear();
-    $attach.stop();
 });
 
 // Computed
@@ -139,31 +121,38 @@ const $attach = useAttach(
     () => close(),
 );
 
+// Subscriptions
+$subscriptions.bind(
+    computed(() => ($props.noFocusTrap || !isOpen.value ? null : box.value)),
+    boxElement => useFocusTrap(boxElement),
+    controller => controller.abort(),
+);
+
+$subscriptions.bind(
+    computed(() => ($props.noAutoFocus || !isOpen.value ? null : box.value)),
+    boxElement => useAutoFocus(boxElement, document.activeElement),
+    controller => controller.abort(),
+);
+
+$subscriptions.bind(
+    computed(() => (currentTarget.value && box.value ? [currentTarget.value, box.value] : null)),
+    ([targetElement, boxElement]) => $attach.start(targetElement, boxElement),
+    () => $attach.stop(),
+);
+
+$boxSubscriptions.addEventListener({
+    eventName: 'mouseenter',
+    target: computed(() => ($props.enterable ? box.value : null)),
+    listener: enter,
+});
+
+$boxSubscriptions.addEventListener({
+    eventName: 'mouseleave',
+    target: computed(() => ($props.enterable ? box.value : null)),
+    listener: leave,
+});
+
 // Watchers
-watch(
-    () => [isOpen.value, box.value],
-    () => {
-        if (isOpen.value && box.value) {
-            if (!$props.noFocusTrap) focusTrap();
-            if (!$props.noAutoFocus) autoFocus();
-        } else {
-            $subscriptions.remove('focus-trap');
-            $subscriptions.remove('autofocus');
-        }
-    },
-);
-
-watch(
-    () => [currentTarget.value, box.value],
-    () => {
-        if (currentTarget.value && box.value) {
-            $attach.start(currentTarget.value, box.value);
-        } else {
-            $attach.stop();
-        }
-    },
-);
-
 watch(
     () => [currentTarget.value, triggers.value],
     () => {
@@ -178,31 +167,6 @@ watch(
                 listener: event => handleTrigger(triggger, event),
             }),
         );
-    },
-);
-
-watch(
-    () => [box.value, $props.enterable],
-    () => {
-        if (!box.value || !$props.enterable) {
-            $boxSubscriptions.remove('enter');
-            $boxSubscriptions.remove('leave');
-            return;
-        }
-
-        $boxSubscriptions.addEventListener({
-            eventName: 'mouseenter',
-            target: box.value,
-            listener: enter,
-            key: 'enter',
-        });
-
-        $boxSubscriptions.addEventListener({
-            eventName: 'mouseleave',
-            target: box.value,
-            listener: leave,
-            key: 'leave',
-        });
     },
 );
 
@@ -285,31 +249,6 @@ function handleTrigger(trigger: string, event: Event) {
         delayedClose();
         return;
     }
-}
-
-function focusTrap() {
-    const boxElement = box.value as Element;
-
-    if (!boxElement) return;
-
-    $subscriptions.add(
-        () => useFocusTrap(boxElement),
-        controller => controller.abort(),
-        'focus-trap',
-    );
-}
-
-function autoFocus() {
-    const boxElement = box.value as Element;
-    const lastActiveElement = document.activeElement;
-
-    if (!boxElement) return;
-
-    $subscriptions.add(
-        () => useAutoFocus(boxElement, lastActiveElement),
-        controller => controller.abort(),
-        'autofocus',
-    );
 }
 
 function findTarget(vnode: VNode): VNode | null {

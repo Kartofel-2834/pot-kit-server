@@ -9,13 +9,13 @@ import { POT_DIALOG_POSITION } from '@/types/components/dialog';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
+import { computed, inject, provide, readonly, ref } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
@@ -46,15 +46,24 @@ const $dialog = useDialog({
     open,
 });
 
-const $subscriptions = useSubscriptions();
+const $subscriptions = useComponentSubscriptions();
+
+// Focus Trap
+$subscriptions.bind(
+    computed(() => ($props.noFocusTrap ? null : container.value)),
+    element => useFocusTrap(element),
+    controller => controller.abort(),
+);
+
+// Auto Focus
+$subscriptions.bind(
+    computed(() => ($props.noAutoFocus ? null : container.value)),
+    element => useAutoFocus(element, document.activeElement),
+    controller => controller.abort(),
+);
 
 // Data
 const container = ref<Element | null>(null);
-
-// Lifecycle
-onUnmounted(() => {
-    $subscriptions.clear();
-});
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
@@ -75,20 +84,6 @@ const classList = computed(() => useClassList({ ...properties.value }));
 
 const currentStyles = computed(() => ({ zIndex: zIndex.value }));
 
-// Watchers
-watch(
-    () => [container.value, $props.noFocusTrap],
-    () => {
-        if (container.value instanceof Element) {
-            if (!$props.noFocusTrap) setupFocusTrap();
-            if (!$props.noAutoFocus) setupAutoFocus();
-        } else {
-            if (!$props.noFocusTrap) terminateFocusTrap();
-            if (!$props.noAutoFocus) terminateAutoFocus();
-        }
-    },
-);
-
 // Methods
 function open() {
     $emit('open');
@@ -98,39 +93,6 @@ function open() {
 function close() {
     $emit('close');
     $emit('update:modelValue', false);
-}
-
-function setupFocusTrap() {
-    const containerElement = container.value as Element;
-
-    if (!containerElement) return;
-
-    $subscriptions.add(
-        () => useFocusTrap(containerElement),
-        controller => controller.abort(),
-        'focus-trap',
-    );
-}
-
-function setupAutoFocus() {
-    const containerElement = container.value as Element;
-    const lastActiveElement = document.activeElement;
-
-    if (!containerElement) return;
-
-    $subscriptions.add(
-        () => useAutoFocus(containerElement, lastActiveElement),
-        controller => controller.abort(),
-        'autofocus',
-    );
-}
-
-function terminateFocusTrap() {
-    $subscriptions.remove('focus-trap');
-}
-
-function terminateAutoFocus() {
-    $subscriptions.remove('autofocus');
 }
 
 // Exports

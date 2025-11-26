@@ -7,12 +7,12 @@ import type { IPotSelectProps, IPotSelectSpecData } from '@/types/components/sel
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 
 // Vue
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 // Composables
 import { useDeviceProperties } from '@/composables/device-is';
 import { useDebounce } from '@/composables/timer';
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
 import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
@@ -42,7 +42,7 @@ const $emit = defineEmits<{
     'update:text': [text: string];
 }>();
 
-const $subscriptions = useSubscriptions();
+const $subscriptions = useComponentSubscriptions();
 
 const $specs = useSpecs(
     computed<ISpecsOptions<OPTION, VALUE_FIELD, IPotSelectSpecData>>(() => ({
@@ -76,17 +76,6 @@ const resizeObserver = new ResizeObserver(
         delay: 100,
     }),
 );
-
-// Lifecycle
-onMounted(() => {
-    if (!container.value) return;
-
-    $subscriptions.observe('resize', container.value.$el, resizeObserver);
-});
-
-onUnmounted(() => {
-    $subscriptions.clear();
-});
 
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue ?? null);
@@ -136,16 +125,29 @@ const label = computed(() => {
     return $props.editable && isFocused.value ? $props.text : selectedLabel;
 });
 
-// Watchers
-watch(
-    () => dropdown.value?.popover,
-    () => {
-        if (dropdown.value) {
-            setupFocusBox();
-        } else {
-            terminateFocusBox();
-        }
+// Subscriptions
+$subscriptions.observe({
+    key: 'resize',
+    target: computed(() => container.value?.$el ?? null),
+    observer: resizeObserver,
+});
+
+$subscriptions.bind(
+    computed(() => {
+        const dropdownElement = dropdown.value?.popover;
+
+        if (!dropdownElement || !useFirstFocusableChild(dropdownElement)) return null;
+
+        return dropdownElement;
+    }),
+    dropdownElement => {
+        return useFocusBox(dropdownElement, {
+            leave: () => container.value?.input?.focus?.(),
+            leaveForward: () => close(),
+            leaveBack: (trapInstance, event) => event.preventDefault(),
+        });
     },
+    controller => controller.abort(),
 );
 
 // Listeners
@@ -295,32 +297,6 @@ function focusPrev() {
     }
 
     focusedSpec.value = prevSpec;
-}
-
-function setupFocusBox() {
-    const dropdownElement = dropdown.value?.popover as Element;
-
-    if (!dropdownElement) return;
-
-    const focusableChild = useFirstFocusableChild(dropdownElement);
-
-    if (!focusableChild) return;
-
-    $subscriptions.add(
-        () => {
-            return useFocusBox(dropdownElement, {
-                leave: () => container.value?.input?.focus?.(),
-                leaveForward: () => close(),
-                leaveBack: (trapInstance, event) => event.preventDefault(),
-            });
-        },
-        controller => controller.abort(),
-        'focus-control',
-    );
-}
-
-function terminateFocusBox() {
-    $subscriptions.remove('focus-control');
 }
 
 function toggle() {
@@ -548,9 +524,6 @@ function changeText(text: string) {
     /* --- Dropdown - Radius - Configuration --- */
     --pot-select-radius-dropdown-value: 0;
 
-    position: fixed;
-    top: 0;
-    left: 0;
     border-style: solid;
 
     /* --- PotSelect - Dropdown - Color --- */

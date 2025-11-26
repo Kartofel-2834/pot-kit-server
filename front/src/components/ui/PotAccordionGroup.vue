@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Vue
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 // Composables
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
 import { useFocusableChildren } from '@/composables/focus';
 import { handleKeyboardEvent } from '@/composables/keyboard';
@@ -24,8 +24,8 @@ const $emit = defineEmits<{
     'update:modelValue': [newValues: unknown[]];
 }>();
 
-const $subscriptions = useSubscriptions();
-const $accordionSubscriptions = useSubscriptions();
+const $subscriptions = useComponentSubscriptions();
+const $accordionSubscriptions = useComponentSubscriptions();
 
 // Data
 const container = ref<Element | null>(null);
@@ -39,22 +39,22 @@ const mutationObserver = new MutationObserver(
     }),
 );
 
-// Lifecycle
-onMounted(() => {
-    if (!container.value) return;
-
-    accordionsHeaders.value = getAccordionHeaders();
-
-    $subscriptions.observe('focusable-elements-change', container.value, mutationObserver, {
-        childList: true,
-        subtree: true,
-        attributeFilter: ['tabindex', 'disabled'],
-    });
+$subscriptions.observe({
+    key: 'focusable-elements-change',
+    target: container,
+    observer: mutationObserver,
+    arguments: [
+        {
+            childList: true,
+            subtree: true,
+            attributeFilter: ['tabindex', 'disabled'],
+        },
+    ],
 });
 
-onUnmounted(() => {
-    $subscriptions.clear();
-    $accordionSubscriptions.clear();
+// Lifecycle
+onMounted(() => {
+    accordionsHeaders.value = getAccordionHeaders();
 });
 
 // Computed

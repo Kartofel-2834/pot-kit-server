@@ -149,8 +149,18 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
         targetElement.value = target;
         boxElement.value = box;
 
-        $subscriptions.observe('target-resize', target, targetResizeObserver);
-        $subscriptions.observe('box-resize', box, boxResizeObserver);
+        $subscriptions.observe({
+            key: 'target-resize',
+            target: target,
+            observer: targetResizeObserver,
+        });
+
+        $subscriptions.observe({
+            key: 'box-resize',
+            target: box,
+            observer: boxResizeObserver,
+        });
+
         setupSurrounding(target);
 
         await Promise.all([updateBoxRect(), updateTargetRect()]);
@@ -239,7 +249,11 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
                     options: { capture: true },
                 });
             } else if (data.target instanceof Element) {
-                $surroundingSubscriptions.observe(data.target, data.target, observer);
+                $surroundingSubscriptions.observe({
+                    key: data.target,
+                    target: data.target,
+                    observer: observer,
+                });
             }
         });
 

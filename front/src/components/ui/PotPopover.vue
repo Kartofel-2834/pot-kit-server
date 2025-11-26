@@ -6,17 +6,7 @@ import type { IAttachOptions } from '@/types/composables/attach';
 import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Vue
-import {
-    cloneVNode,
-    computed,
-    inject,
-    isVNode,
-    onUnmounted,
-    provide,
-    readonly,
-    ref,
-    watch,
-} from 'vue';
+import { cloneVNode, computed, inject, isVNode, provide, readonly, ref, watch } from 'vue';
 
 // Constants
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
@@ -27,7 +17,7 @@ import { useDeviceProperties } from '@/composables/device-is';
 import { useAttach } from '@/composables/attach';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useClassListArray } from '@/composables/class-list';
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 // Components
@@ -60,16 +50,11 @@ const $dialog = useDialog({
     open,
 });
 
-const $subscriptions = useSubscriptions();
+const $subscriptions = useComponentSubscriptions();
 
 // Data
 const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
-
-// Lifecycle
-onUnmounted(() => {
-    $subscriptions.clear();
-});
 
 // Computed
 const currentTarget = computed(() => $props.target ?? target.value ?? null);
@@ -124,29 +109,23 @@ const $attach = useAttach(
     () => $dialog.close(),
 );
 
-// Watchers
-watch(
-    () => [currentTarget.value, box.value],
-    () => {
-        if (currentTarget.value && box.value) {
-            setupAttach();
-        } else {
-            terminateAttach();
-        }
-    },
+// Subscriptions
+$subscriptions.bind(
+    computed(() => (currentTarget.value && box.value ? [currentTarget.value, box.value] : null)),
+    ([targetElement, boxElement]) => $attach.start(targetElement, boxElement),
+    () => $attach.stop(),
 );
 
-watch(
-    () => [$dialog.isOpen.value, box.value],
-    () => {
-        if ($dialog.isOpen.value && box.value) {
-            if (!$props.noFocusTrap) setupFocusTrap();
-            if (!$props.noAutoFocus) setupAutoFocus();
-        } else {
-            terminateFocusTrap();
-            terminateAutoFocus();
-        }
-    },
+$subscriptions.bind(
+    computed(() => ($props.noFocusTrap ? null : box.value)),
+    boxElement => useFocusTrap(boxElement),
+    controller => controller.abort(),
+);
+
+$subscriptions.bind(
+    computed(() => ($props.noAutoFocus ? null : box.value)),
+    boxElement => useAutoFocus(boxElement, document.activeElement),
+    controller => controller.abort(),
 );
 
 // Methods
@@ -158,56 +137,6 @@ function open() {
 function close() {
     $emit('close');
     $emit('update:modelValue', false);
-}
-
-function setupAttach() {
-    const targetElement = currentTarget.value;
-    const boxElement = currentTarget.value;
-
-    if (!targetElement || !boxElement) return;
-
-    $subscriptions.add(
-        () => $attach.start(targetElement, boxElement),
-        () => $attach.stop(),
-        'attach',
-    );
-}
-
-function terminateAttach() {
-    $subscriptions.remove('attach');
-}
-
-function setupFocusTrap() {
-    const boxElement = box.value as Element;
-
-    if (!boxElement) return;
-
-    $subscriptions.add(
-        () => useFocusTrap(boxElement),
-        controller => controller.abort(),
-        'focus-trap',
-    );
-}
-
-function terminateFocusTrap() {
-    $subscriptions.remove('focus-trap');
-}
-
-function setupAutoFocus() {
-    const boxElement = box.value as Element;
-    const lastActiveElement = document.activeElement;
-
-    if (!boxElement) return;
-
-    $subscriptions.add(
-        () => useAutoFocus(boxElement, lastActiveElement),
-        controller => controller.abort(),
-        'autofocus',
-    );
-}
-
-function terminateAutoFocus() {
-    $subscriptions.remove('autofocus');
 }
 
 function findTarget(vnode: VNode): VNode | null {
