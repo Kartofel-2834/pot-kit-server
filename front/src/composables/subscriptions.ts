@@ -119,7 +119,7 @@ export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KE
         }
 
         const disposeData = subscribe();
-        const controller = createController(() => {
+        const controller = createAbortController(() => {
             dispose(disposeData);
             subscriptions.delete(currentKey);
         });
@@ -152,7 +152,9 @@ export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KE
     };
 }
 
-function createController(dispose: (controller: AbortController) => void): AbortController {
+export function createAbortController(
+    dispose: (controller: AbortController) => void,
+): AbortController {
     const controller = new AbortController();
 
     function abort() {
