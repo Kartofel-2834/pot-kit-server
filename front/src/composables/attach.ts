@@ -1,5 +1,5 @@
 // Types
-import type { Ref } from 'vue';
+import type { ComputedRef, MaybeRef, Ref } from 'vue';
 import type {
     IAttach,
     IAttachOptions,
@@ -8,11 +8,11 @@ import type {
 } from '@/types/composables/attach';
 
 // Vue
-import { computed, ref } from 'vue';
+import { computed, readonly, ref, unref, watch } from 'vue';
 
 // Composables
-import { useSubscriptions } from '@/composables/subscriptions';
-import { useDebounce } from '@/composables/timer';
+import { useComponentSubscriptions, useSubscriptions } from '@/composables/subscriptions';
+import { useDebounce, useThrottle } from '@/composables/timer';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
@@ -71,144 +71,141 @@ const Y_OPPOSITE_POSITIONS: Record<EAttachedBoxPosition, EAttachedBoxPosition | 
     [ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
 };
 
-export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void): IAttach {
-    const $subscriptions = useSubscriptions();
-    const $surroundingSubscriptions = useSubscriptions();
+export function useAttach(options: IAttachOptions): IAttach {
+    const $subscriptions = useComponentSubscriptions();
 
-    const isTargetResizing = ref<boolean>(false);
-    const isBoxResizing = ref<boolean>(false);
+    const change = useThrottle({
+        delay: 50,
+        action: () => options.onChange?.(),
+    });
 
-    const targetElement = ref<Element | null>(null);
-    const boxElement = ref<Element | null>(null);
+    const { handler: targetResizeHandler, isResizing: isTargetResizing } = getResizeHandler(
+        entries => updateTargetRect(entries[0].target).then(),
+        () => change(),
+    );
+
+    const { handler: boxResizeHandler, isResizing: isBoxResizing } = getResizeHandler(
+        entries => updateBoxRect(entries[0].target).then(),
+        () => change(),
+    );
+
+    const targetResizeObserver = new ResizeObserver(targetResizeHandler);
+    const boxResizeObserver = new ResizeObserver(boxResizeHandler);
 
     const targetRect = ref<DOMRect | null>(null);
     const boxRect = ref<DOMRect | null>(null);
 
-    const initialSurrounding = ref<IAttachSurroundingData[]>([]);
-    const currentSurrounding = ref<IAttachSurroundingData[]>([]);
+    // Computed
+    const target = computed<Element | null>(() => {
+        const currentTarget = unref(options.target);
+        const currentBox = unref(options.box);
 
-    const coordinates = computed<[x: number, y: number]>(getPosition);
-
-    let isTargetFirstResize = true;
-    let isBoxFirstResize = true;
-
-    const terminate = useDebounce({
-        delay: 50,
-        action: () => onTerminate?.(),
+        return currentTarget && currentBox ? currentTarget : null;
     });
 
-    const targetResizeObserver = new ResizeObserver(
-        useDebounce<[ResizeObserverEntry[]]>({
-            delay: 100,
-            immediateAction: () => {
-                if (!isTargetFirstResize && options.value.terminateOnChange) {
-                    terminate();
-                } else {
-                    isTargetResizing.value = true;
-                }
-            },
-            action: async entries => {
-                if (isTargetFirstResize) {
-                    isTargetFirstResize = false;
-                } else {
-                    await updateTargetRect(entries[0].target);
-                }
-                isTargetResizing.value = false;
-            },
-        }),
+    const box = computed<Element | null>(() => {
+        const currentTarget = unref(options.target);
+        const currentBox = unref(options.box);
+
+        return currentTarget && currentBox ? currentBox : null;
+    });
+
+    const { currentSurrounding, initialSurrounding } = useSurrounding({
+        target: target,
+        onChange: () => change(),
+        onResize: () => {
+            if (!isTargetResizing.value) updateTargetRect().then();
+            if (!isBoxResizing.value) updateBoxRect().then();
+        },
+    });
+
+    const offset = useOffset(initialSurrounding, currentSurrounding);
+    const offsetX = computed(() => offset.value[0]);
+    const offsetY = computed(() => offset.value[1]);
+
+    const position = usePosition({
+        targetRect,
+        boxRect,
+        offset,
+        position: options.position,
+        persistent: options.persistent,
+        nudge: options.nudge,
+        edgeMargin: options.edgeMargin,
+        oppositeSideX: options.oppositeSideX,
+        oppositeSideY: options.oppositeSideY,
+    });
+
+    const x = useX({
+        targetRect,
+        boxRect,
+        position,
+        offset: offsetX,
+        edgeMargin: options.edgeMargin,
+        nudge: options.nudge,
+        sticky: options.sticky,
+    });
+
+    const y = useY({
+        targetRect,
+        boxRect,
+        position,
+        offset: offsetY,
+        edgeMargin: options.edgeMargin,
+        nudge: options.nudge,
+        sticky: options.sticky,
+    });
+
+    // Watchers
+    watch(
+        () => target.value,
+        async newValue => updateTargetRect(newValue),
     );
 
-    const boxResizeObserver = new ResizeObserver(
-        useDebounce<[ResizeObserverEntry[]]>({
-            delay: 100,
-            immediateAction: () => {
-                if (!isBoxFirstResize && options.value.terminateOnChange) {
-                    terminate();
-                } else {
-                    isBoxResizing.value = true;
-                }
-            },
-            action: async entries => {
-                if (isBoxFirstResize) {
-                    isBoxFirstResize = false;
-                } else {
-                    await updateBoxRect(entries[0].target);
-                }
-                isBoxResizing.value = false;
-            },
-        }),
+    watch(
+        () => box.value,
+        async newValue => updateBoxRect(newValue),
     );
 
-    async function start(target: Element, box: Element) {
-        if (!(target instanceof Element) || !(box instanceof Element)) return;
+    // Subscriptions
+    $subscriptions.observe({
+        target: target,
+        observer: targetResizeObserver,
+    });
 
-        stop();
+    $subscriptions.observe({
+        target: box,
+        observer: boxResizeObserver,
+    });
 
-        isTargetFirstResize = true;
-        isBoxFirstResize = true;
-        targetElement.value = target;
-        boxElement.value = box;
-
-        $subscriptions.observe({
-            key: 'target-resize',
-            target: target,
-            observer: targetResizeObserver,
-        });
-
-        $subscriptions.observe({
-            key: 'box-resize',
-            target: box,
-            observer: boxResizeObserver,
-        });
-
-        setupSurrounding(target);
-
-        await Promise.all([updateBoxRect(), updateTargetRect()]);
+    async function updateTargetRect(element?: Element | null) {
+        const data = element === undefined ? unref(options.target) : element;
+        targetRect.value = data instanceof Element ? await getElementBounding(data) : null;
     }
 
-    function stop() {
-        targetElement.value = null;
-        boxElement.value = null;
-        targetRect.value = null;
-        boxRect.value = null;
-        isTargetFirstResize = false;
-        isBoxFirstResize = false;
-
-        $subscriptions.clear();
-        clearSurrounding();
+    async function updateBoxRect(element?: Element | null) {
+        const data = element === undefined ? unref(options.box) : element;
+        boxRect.value = data instanceof Element ? await getElementBounding(data) : null;
     }
 
-    function getPosition(): [x: number, y: number] {
-        if (!targetRect.value || !boxRect.value) {
-            return [0, 0];
-        }
+    return {
+        x,
+        y,
+        targetRect: readonly(targetRect),
+        boxRect: readonly(boxRect),
+    };
+}
 
-        const offset = getOffset(currentSurrounding.value, initialSurrounding.value);
-        const currentOptions = options.value;
+function useOffset(
+    initialSurrounding: MaybeRef<IAttachSurroundingData[]>,
+    currentSurrounding: MaybeRef<IAttachSurroundingData[]>,
+): ComputedRef<[x: number, y: number]> {
+    return computed(() => {
+        const initial = unref(initialSurrounding);
+        const current = unref(currentSurrounding);
 
-        const { coordinates, position } = getCurrentPosition(
-            currentOptions,
-            offset,
-            targetRect.value,
-            boxRect.value,
-        );
-
-        return getStickyPosition(
-            coordinates,
-            { ...currentOptions, position },
-            offset,
-            targetRect.value,
-            boxRect.value,
-        );
-    }
-
-    function getOffset(
-        currentSurrounding: IAttachSurroundingData[],
-        initialSurrounding: IAttachSurroundingData[],
-    ): [x: number, y: number] {
-        return currentSurrounding.reduce(
+        return current.reduce(
             ([x, y], data, index) => {
-                const initialData = initialSurrounding[index];
+                const initialData = initial[index];
 
                 return [
                     x + (initialData.scrollX - data.scrollX),
@@ -217,27 +214,38 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
             },
             [0, 0],
         );
-    }
+    });
+}
 
-    async function updateTargetRect(element: Element | null = targetElement.value) {
-        if (!(element instanceof Element)) return;
-        targetRect.value = await getElementBounding(element);
-    }
+function useSurrounding(options: {
+    target: MaybeRef<Element | null>;
+    onResize?: () => void;
+    onScroll?: () => void;
+    onChange?: () => void;
+}): {
+    currentSurrounding: Readonly<Ref<IAttachSurroundingData[]>>;
+    initialSurrounding: Readonly<Ref<IAttachSurroundingData[]>>;
+    controller: AbortController;
+} {
+    const $subscriptions = useComponentSubscriptions();
+    const $surroundingSubscriptions = useSubscriptions();
 
-    async function updateBoxRect(element: Element | null = boxElement.value) {
-        if (!(element instanceof Element)) return;
-        boxRect.value = await getElementBounding(element);
-    }
+    const currentSurrounding = ref<IAttachSurroundingData[]>([]);
+    const initialSurrounding = ref<IAttachSurroundingData[]>([]);
 
     function setupSurrounding(target: Element) {
         const surroundingData = getSurrounding(target);
-        const observer = new ResizeObserver(getSurroundingResizeHandler());
+
+        const resizeHandler = getSurroundingResizeHandler();
+        const observer = new ResizeObserver(resizeHandler);
 
         surroundingData.forEach(data => {
+            const scrollHandler = getSurroundingScrollHandler(data);
+
             $surroundingSubscriptions.addEventListener({
                 eventName: 'scroll',
                 target: data.target,
-                listener: getSurroundingScrollHandler(data),
+                listener: scrollHandler,
                 options: { passive: true },
             });
 
@@ -245,7 +253,7 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
                 $surroundingSubscriptions.addEventListener({
                     eventName: 'resize',
                     target: data.target,
-                    listener: getSurroundingResizeHandler(),
+                    listener: resizeHandler,
                     options: { capture: true },
                 });
             } else if (data.target instanceof Element) {
@@ -267,47 +275,29 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
         currentSurrounding.value = [];
     }
 
-    function getSurroundingResizeHandler() {
-        let isFirst: boolean = true;
-        let isTerminated: boolean = false;
+    function getSurroundingResizeHandler(): (entries: ResizeObserverEntry[]) => void {
+        const { handler } = getResizeHandler(
+            () => {
+                const target = unref(options.target);
 
-        return useDebounce({
-            delay: 100,
-            immediateAction: () => {
-                if (!isFirst && !isTerminated && options.value.terminateOnChange) {
-                    isTerminated = true;
-                    terminate();
-                }
-            },
-            action: () => {
-                if (!targetElement.value || !boxElement.value || isTerminated) return;
+                if (!target) return;
 
-                if (isFirst) {
-                    isFirst = false;
-                    return;
-                }
-
-                if (!isTargetResizing.value) updateTargetRect().then();
-                if (!isBoxResizing.value) updateBoxRect().then();
-
+                options.onResize?.();
                 clearSurrounding();
-                setupSurrounding(targetElement.value);
+                setupSurrounding(target);
             },
-        });
+            () => options.onChange?.(),
+        );
+
+        return handler;
     }
 
     function getSurroundingScrollHandler(data: IAttachSurroundingData) {
-        let isTerminated: boolean = false;
-
         return () => {
-            if (options.value.terminateOnChange) {
-                if (!isTerminated) terminate();
-                isTerminated = true;
-                return;
-            }
+            options.onChange?.();
 
-            const x = data.target === window ? window.scrollX : (data.target as Element).scrollLeft;
-            const y = data.target === window ? window.scrollY : (data.target as Element).scrollTop;
+            const x = data.target instanceof Element ? data.target.scrollLeft : window.scrollX;
+            const y = data.target instanceof Element ? data.target.scrollTop : window.scrollY;
 
             currentSurrounding.value = [
                 ...currentSurrounding.value.filter(v => v.id !== data.id),
@@ -316,15 +306,408 @@ export function useAttach(options: Ref<IAttachOptions>, onTerminate?: () => void
         };
     }
 
+    const controller = $subscriptions.bind(
+        options.target,
+        element => setupSurrounding(element),
+        () => clearSurrounding(),
+    );
+
     return {
-        coordinates,
-        target: targetElement,
-        box: boxElement,
-        targetRect,
-        boxRect,
-        start,
-        stop,
+        currentSurrounding,
+        initialSurrounding,
+        controller,
     };
+}
+
+function usePosition(options: {
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    offset: MaybeRef<[x: number, y: number]>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    persistent: MaybeRef<boolean>;
+    nudge: MaybeRef<number>;
+    edgeMargin: MaybeRef<number>;
+    oppositeSideX?: MaybeRef<EAttachedBoxPosition>;
+    oppositeSideY?: MaybeRef<EAttachedBoxPosition>;
+}): ComputedRef<EAttachedBoxPosition | null> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+        const persistent = unref(options.persistent);
+
+        if (!boxRect || !targetRect || !position) return null;
+
+        if (persistent) return position;
+
+        const currentOffset = unref(options.offset);
+        const oppositeSideX = unref(options.oppositeSideX) ?? X_OPPOSITE_POSITIONS[position];
+        const oppositeSideY = unref(options.oppositeSideY) ?? Y_OPPOSITE_POSITIONS[position];
+        const nudge = unref(options.nudge);
+        const edgeMargin = unref(options.edgeMargin) || 0;
+
+        const { height: boxHeight, width: boxWidth } = boxRect;
+        const {
+            y: yTargetInitial,
+            x: xTargetInitial,
+            width: targetWidth,
+            height: targetHeight,
+        } = targetRect;
+        const [offsetX, offsetY] = currentOffset;
+
+        const yTargetStart = yTargetInitial + offsetY;
+        const yTargetEnd = yTargetStart + targetHeight;
+        const xTargetStart = xTargetInitial + offsetX;
+        const xTargetEnd = xTargetStart + targetWidth;
+
+        const yStart = calculateYForPosition({
+            position,
+            targetRect: targetRect,
+            boxRect: boxRect,
+            nudge,
+            offset: offsetY,
+        });
+        const xStart = calculateXForPosition({
+            position,
+            targetRect: targetRect,
+            boxRect: boxRect,
+            nudge,
+            offset: offsetX,
+        });
+        const yEnd = yStart + boxHeight;
+        const xEnd = xStart + boxWidth;
+
+        const topLimit = edgeMargin;
+        const bottomLimit = window.innerHeight - edgeMargin;
+        const leftLimit = edgeMargin;
+        const rightLimit = window.innerWidth - edgeMargin;
+
+        if (oppositeSideY && yStart < topLimit && yEnd <= yTargetStart) {
+            // If it goes beyond the TOP edge of the screen
+            return oppositeSideY;
+        } else if (oppositeSideY && yEnd > bottomLimit && yStart >= yTargetEnd) {
+            // If it goes beyond the BOTTOM edge of the screen
+            return oppositeSideY;
+        } else if (oppositeSideX && xStart < leftLimit && xEnd <= xTargetStart) {
+            // If it goes beyond the LEFT edge of the screen
+            return oppositeSideX;
+        } else if (oppositeSideX && xEnd > rightLimit && xStart >= xTargetEnd) {
+            // If it goes beyond the RIGHT edge of the screen
+            return oppositeSideX;
+        }
+
+        return position;
+    });
+}
+
+function useY(options: {
+    sticky: MaybeRef<boolean>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+    nudge: MaybeRef<number>;
+}): ComputedRef<number> {
+    const yPure = usePureY(options);
+
+    return computed(() => {
+        const sticky = unref(options.sticky);
+
+        if (!sticky) return yPure.value;
+
+        const ySticky = useStickyY({
+            ...options,
+            y: yPure.value,
+        });
+
+        return unref(ySticky);
+    });
+}
+
+function useX(options: {
+    sticky: MaybeRef<boolean>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+    nudge: MaybeRef<number>;
+}): ComputedRef<number> {
+    const xPure = usePureX(options);
+
+    return computed(() => {
+        const sticky = unref(options.sticky);
+
+        if (!sticky) return xPure.value;
+
+        const xSticky = useStickyX({
+            ...options,
+            x: xPure.value,
+        });
+
+        return unref(xSticky);
+    });
+}
+
+function useStickyY(options: {
+    y: MaybeRef<number>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const y = unref(options.y);
+        const position = unref(options.position);
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+
+        if (!targetRect || !boxRect || !position) return y;
+
+        if (!STICKY_Y_POSITIONS.includes(position)) return y;
+
+        const offsetY = unref(options.offset);
+        const edgeMargin = unref(options.edgeMargin);
+
+        const { y: targetYInitial, height: targetHeight } = targetRect;
+        const { height: boxHeight } = boxRect;
+
+        const yStart = y;
+        const yEnd = yStart + boxHeight;
+
+        const targetStartY = targetYInitial + offsetY;
+        const targetEndY = targetStartY + targetHeight;
+
+        const topLimit = edgeMargin;
+        const bottomLimit = window.innerHeight - edgeMargin;
+
+        if (yStart < topLimit) {
+            const stickyLimit = targetEndY;
+            return Math.min(Math.max(yStart, topLimit), stickyLimit);
+        } else if (yEnd > bottomLimit) {
+            const stickyLimit = targetStartY;
+            return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
+        }
+
+        return y;
+    });
+}
+
+function useStickyX(options: {
+    x: MaybeRef<number>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const x = unref(options.x);
+        const position = unref(options.position);
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+
+        if (!targetRect || !boxRect || !position) return x;
+
+        if (!STICKY_X_POSITIONS.includes(position)) return x;
+
+        const offsetX = unref(options.offset);
+        const edgeMargin = unref(options.edgeMargin);
+
+        const { x: targetXInitial, width: targetWidth } = targetRect;
+        const { width: boxWidth } = boxRect;
+
+        const xStart = x;
+        const xEnd = xStart + boxWidth;
+
+        const targetStartX = targetXInitial + offsetX;
+        const targetEndX = targetStartX + targetWidth;
+
+        const leftLimit = edgeMargin;
+        const rightLimit = window.innerWidth - edgeMargin;
+
+        if (xStart < leftLimit) {
+            const stickyLimit = targetEndX;
+            return Math.min(Math.max(xStart, leftLimit), stickyLimit);
+        } else if (xEnd > rightLimit) {
+            const stickyLimit = targetStartX;
+            return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
+        }
+
+        return x;
+    });
+}
+
+/** Get pure box Y coordinate, without limited by screen and target sizes */
+function usePureY(options: {
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    nudge: MaybeRef<number>;
+    offset: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+
+        if (!targetRect || !boxRect || !position) return 0;
+
+        const nudge = unref(options.nudge);
+        const offset = unref(options.offset);
+
+        return calculateYForPosition({
+            position,
+            nudge,
+            offset,
+            targetRect,
+            boxRect,
+        });
+    });
+}
+
+/** Get pure box X coordinate, without limited by screen and target sizes */
+function usePureX(options: {
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    nudge: MaybeRef<number>;
+    offset: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+
+        if (!targetRect || !boxRect || !position) return 0;
+
+        const nudge = unref(options.nudge);
+        const offset = unref(options.offset);
+
+        return calculateXForPosition({
+            position,
+            nudge,
+            offset,
+            targetRect,
+            boxRect,
+        });
+    });
+}
+
+/** Get pure box Y coordinate, without limited by screen and target sizes */
+function calculateYForPosition(options: {
+    position: EAttachedBoxPosition;
+    targetRect: DOMRect;
+    boxRect: DOMRect;
+    nudge: number;
+    offset: number;
+}): number {
+    const { y: targetYInitial, height: targetHeight } = options.targetRect;
+    const { height: boxHeight } = options.boxRect;
+    const targetY = targetYInitial + options.offset;
+
+    switch (options.position) {
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
+            return targetY - boxHeight - options.nudge;
+
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+            return targetY + targetHeight + options.nudge;
+
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.LEFT_START:
+            return targetY;
+
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.LEFT_END:
+            return targetY + targetHeight - boxHeight;
+
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
+            return targetY + targetHeight / 2 - boxHeight / 2;
+
+        default:
+            return 0;
+    }
+}
+
+/** Get pure box X coordinate, without limited by screen and target sizes */
+function calculateXForPosition(options: {
+    position: EAttachedBoxPosition;
+    targetRect: DOMRect;
+    boxRect: DOMRect;
+    nudge: number;
+    offset: number;
+}): number {
+    const { x: targetXInitial, width: targetWidth } = options.targetRect;
+    const { width: boxWidth } = options.boxRect;
+    const targetX = targetXInitial + options.offset;
+
+    switch (options.position) {
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+            return targetX + targetWidth / 2 - boxWidth / 2;
+
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
+            return targetX;
+
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
+            return targetX + targetWidth - boxWidth;
+
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
+            return targetX + targetWidth + options.nudge;
+
+        case ATTACHED_BOX_POSITION.LEFT_END:
+        case ATTACHED_BOX_POSITION.LEFT_START:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
+            return targetX - boxWidth - options.nudge;
+
+        default:
+            return 0;
+    }
+}
+
+/** Get element bounding rect */
+async function getElementBounding(element: Element): Promise<DOMRect | null> {
+    return new Promise(resolve => {
+        const observer = new IntersectionObserver(entries => {
+            resolve(entries?.[0]?.boundingClientRect ?? null);
+            observer.disconnect();
+        });
+        observer.observe(element);
+    });
+}
+
+/** Get all parents of element */
+function getAllParents(element: Element): Element[] {
+    if (!(element instanceof Element)) return [];
+
+    const root = element.getRootNode();
+
+    let result = [];
+    let currentElement: Element | null = element;
+
+    while (currentElement) {
+        currentElement = currentElement.parentElement;
+        result.push(currentElement);
+    }
+
+    if (root instanceof ShadowRoot) {
+        result = result.concat(getAllParents(root.host));
+    }
+
+    result = result.filter(Boolean) as Element[];
+
+    return result.filter(Boolean) as Element[];
 }
 
 /** Get surrounding elements, with scroll\size characteristics */
@@ -389,256 +772,34 @@ function getSurrounding(element: Element): IAttachSurroundingData[] {
     return [...parentsSurrounding, windowSurrounding];
 }
 
-function getCurrentPosition(
-    options: IAttachOptions,
-    offset: [x: number, y: number],
-    targetRect: DOMRect,
-    boxRect: DOMRect,
+function getResizeHandler(
+    action: (entries: ResizeObserverEntry[]) => void,
+    immediateAction: (entries: ResizeObserverEntry[]) => void,
+    delay: number = 100,
 ): {
-    coordinates: [x: number, y: number];
-    position: EAttachedBoxPosition;
+    handler: (entries: ResizeObserverEntry[]) => void;
+    isResizing: Ref<boolean>;
 } {
-    const { height: boxHeight, width: boxWidth } = boxRect;
+    let isFirstResize: boolean = true;
+    const isResizing = ref<boolean>(false);
 
-    const [offsetX, offsetY] = offset;
+    const handler = useDebounce<[ResizeObserverEntry[]]>({
+        delay,
+        immediateAction: entries => {
+            if (isFirstResize) return;
+            isResizing.value = true;
+            immediateAction(entries);
+        },
+        action: async entries => {
+            if (isFirstResize) {
+                isFirstResize = false;
+                return;
+            }
 
-    const yStart = calculateYForPosition(options, offsetY, targetRect, boxRect);
-    const yEnd = yStart + boxHeight;
-    const xStart = calculateXForPosition(options, offsetX, targetRect, boxRect);
-    const xEnd = xStart + boxWidth;
-
-    if (options.persistent) {
-        return {
-            coordinates: [xStart, yStart],
-            position: options.position,
-        };
-    }
-
-    const edgeMargin = options.edgeMargin || 0;
-    const topLimit = edgeMargin;
-    const bottomLimit = window.innerHeight - edgeMargin;
-    const leftLimit = edgeMargin;
-    const rightLimit = window.innerWidth - edgeMargin;
-
-    const oppositeSideX = options.oppositeSideX ?? X_OPPOSITE_POSITIONS[options.position];
-    const oppositeSideY = options.oppositeSideY ?? Y_OPPOSITE_POSITIONS[options.position];
-
-    const xOptions = { ...options, position: oppositeSideX } as IAttachOptions;
-    const yOptions = { ...options, position: oppositeSideY } as IAttachOptions;
-
-    let currentPosition = options.position;
-    let x: number = xStart;
-    let y: number = yStart;
-
-    if (oppositeSideY && yStart < topLimit) {
-        // If it goes beyond the TOP edge of the screen
-        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
-
-        y = newY > yStart ? newY : yStart;
-        x = newY > yStart ? newX : xStart;
-        currentPosition = oppositeSideY;
-    } else if (oppositeSideY && yEnd > bottomLimit) {
-        // If it goes beyond the BOTTOM edge of the screen
-        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
-
-        y = newY < yStart ? newY : yStart;
-        x = newY < yStart ? newX : xStart;
-        currentPosition = oppositeSideY;
-    } else if (oppositeSideX && xStart < leftLimit) {
-        // If it goes beyond the LEFT edge of the screen
-        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
-
-        y = newX > xStart ? newY : yStart;
-        x = newX > xStart ? newX : xStart;
-        currentPosition = oppositeSideX;
-    } else if (oppositeSideX && xEnd > rightLimit) {
-        // If it goes beyond the RIGHT edge of the screen
-        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
-
-        y = newX < xStart ? newY : yStart;
-        x = newX < xStart ? newX : xStart;
-        currentPosition = oppositeSideX;
-    }
-
-    return {
-        coordinates: [x, y],
-        position: currentPosition,
-    };
-}
-
-function getStickyPosition(
-    coordinates: [x: number, y: number],
-    options: IAttachOptions,
-    offset: [x: number, y: number],
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): [x: number, y: number] {
-    if (!options.sticky) {
-        return [...coordinates];
-    }
-
-    const {
-        x: targetXInitial,
-        y: targetYInitial,
-        height: targetHeight,
-        width: targetWidth,
-    } = targetRect;
-    const { height: boxHeight, width: boxWidth } = boxRect;
-
-    const [xStart, yStart] = coordinates;
-    const [offsetX, offsetY] = offset;
-
-    const yEnd = yStart + boxHeight;
-    const xEnd = xStart + boxWidth;
-
-    const targetStartY = targetYInitial + offsetY;
-    const targetEndY = targetStartY + targetHeight;
-    const targetStartX = targetXInitial + offsetX;
-    const targetEndX = targetStartX + targetWidth;
-
-    const edgeMargin = options.edgeMargin || 0;
-    const topLimit = edgeMargin;
-    const bottomLimit = window.innerHeight - edgeMargin;
-    const leftLimit = edgeMargin;
-    const rightLimit = window.innerWidth - edgeMargin;
-
-    const isXSticky = STICKY_X_POSITIONS.includes(options.position);
-    const isYSticky = STICKY_Y_POSITIONS.includes(options.position);
-
-    let x: number = xStart;
-    let y: number = yStart;
-
-    if (isXSticky && xStart < leftLimit) {
-        const stickyLimit = targetEndX;
-        x = Math.min(Math.max(xStart, leftLimit), stickyLimit);
-    } else if (isXSticky && xEnd > rightLimit) {
-        const stickyLimit = targetStartX;
-        x = Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
-    }
-
-    if (isYSticky && yStart < topLimit) {
-        const stickyLimit = targetEndY;
-        y = Math.min(Math.max(yStart, topLimit), stickyLimit);
-    } else if (isYSticky && yEnd > bottomLimit) {
-        const stickyLimit = targetStartY;
-        y = Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
-    }
-
-    return [x, y];
-}
-
-/** Get pure box Y coordinate, without limited by screen and target sizes */
-function calculateYForPosition(
-    options: IAttachOptions,
-    offset: number,
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): number {
-    const { y: targetYInitial, height: targetHeight } = targetRect;
-    const { height: boxHeight } = boxRect;
-    const targetY = targetYInitial + offset;
-
-    switch (options.position) {
-        case ATTACHED_BOX_POSITION.TOP_START:
-        case ATTACHED_BOX_POSITION.TOP_END:
-        case ATTACHED_BOX_POSITION.TOP_CENTER:
-            return targetY - boxHeight - options.nudge;
-
-        case ATTACHED_BOX_POSITION.BOTTOM_START:
-        case ATTACHED_BOX_POSITION.BOTTOM_END:
-        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
-            return targetY + targetHeight + options.nudge;
-
-        case ATTACHED_BOX_POSITION.RIGHT_START:
-        case ATTACHED_BOX_POSITION.LEFT_START:
-            return targetY;
-
-        case ATTACHED_BOX_POSITION.RIGHT_END:
-        case ATTACHED_BOX_POSITION.LEFT_END:
-            return targetY + targetHeight - boxHeight;
-
-        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
-        case ATTACHED_BOX_POSITION.LEFT_CENTER:
-            return targetY + targetHeight / 2 - boxHeight / 2;
-
-        default:
-            return 0;
-    }
-}
-
-/** Get pure box X coordinate, without limited by screen and target sizes */
-function calculateXForPosition(
-    options: IAttachOptions,
-    offset: number,
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): number {
-    const { x: targetXInitial, width: targetWidth } = targetRect;
-    const { width: boxWidth } = boxRect;
-    const targetX = targetXInitial + offset;
-
-    switch (options.position) {
-        case ATTACHED_BOX_POSITION.TOP_CENTER:
-        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
-            return targetX + targetWidth / 2 - boxWidth / 2;
-
-        case ATTACHED_BOX_POSITION.TOP_START:
-        case ATTACHED_BOX_POSITION.BOTTOM_START:
-            return targetX;
-
-        case ATTACHED_BOX_POSITION.TOP_END:
-        case ATTACHED_BOX_POSITION.BOTTOM_END:
-            return targetX + targetWidth - boxWidth;
-
-        case ATTACHED_BOX_POSITION.RIGHT_END:
-        case ATTACHED_BOX_POSITION.RIGHT_START:
-        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
-            return targetX + targetWidth + options.nudge;
-
-        case ATTACHED_BOX_POSITION.LEFT_END:
-        case ATTACHED_BOX_POSITION.LEFT_START:
-        case ATTACHED_BOX_POSITION.LEFT_CENTER:
-            return targetX - boxWidth - options.nudge;
-
-        default:
-            return 0;
-    }
-}
-
-/** Get element bounding rect */
-async function getElementBounding(element: Element): Promise<DOMRect | null> {
-    return new Promise(resolve => {
-        const observer = new IntersectionObserver(entries => {
-            resolve(entries?.[0]?.boundingClientRect ?? null);
-            observer.disconnect();
-        });
-        observer.observe(element);
+            isResizing.value = false;
+            action(entries);
+        },
     });
-}
 
-/** Get all parents of element */
-function getAllParents(element: Element): Element[] {
-    if (!(element instanceof Element)) return [];
-
-    const root = element.getRootNode();
-
-    let result = [];
-    let currentElement: Element | null = element;
-
-    while (currentElement) {
-        currentElement = currentElement.parentElement;
-        result.push(currentElement);
-    }
-
-    if (root instanceof ShadowRoot) {
-        result = result.concat(getAllParents(root.host));
-    }
-
-    result = result.filter(Boolean) as Element[];
-
-    return result.filter(Boolean) as Element[];
+    return { handler, isResizing };
 }

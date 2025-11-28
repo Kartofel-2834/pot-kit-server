@@ -1,5 +1,5 @@
 // Types
-import type { ComputedRef, Ref } from 'vue';
+import type { ComputedRef, MaybeRef, Ref } from 'vue';
 
 export const ATTACHED_BOX_POSITION = {
     TOP_START: 'top-start',
@@ -33,50 +33,38 @@ export interface IAttachSurroundingData {
 }
 
 export interface IAttachOptions {
+    target: MaybeRef<Element | null>;
+
+    box: MaybeRef<Element | null>;
+
     /** Position of box relative to the target */
-    position: EAttachedBoxPosition;
+    position: MaybeRef<EAttachedBoxPosition>;
 
     /** Distance between box and target */
-    nudge: number;
+    nudge: MaybeRef<number>;
 
     /** Distance between box and edge */
-    edgeMargin: number;
+    edgeMargin: MaybeRef<number>;
 
     /** Fixed box position without moving to opposite sides */
-    persistent: boolean;
+    persistent: MaybeRef<boolean>;
 
     /** Sticky box that will follow target */
-    sticky: boolean;
-
-    /** Terminates on rect change or surrounding scroll/resize */
-    terminateOnChange?: boolean;
+    sticky: MaybeRef<boolean>;
 
     /** The side to which the tooltip will be moved if it does not fit in the X direction */
-    oppositeSideX?: EAttachedBoxPosition;
+    oppositeSideX?: MaybeRef<EAttachedBoxPosition>;
 
     /** The side to which the tooltip will be moved if it does not fit in the Y direction */
-    oppositeSideY?: EAttachedBoxPosition;
+    oppositeSideY?: MaybeRef<EAttachedBoxPosition>;
+
+    /** Calls on rect change or surrounding scroll/resize */
+    onChange?: () => void;
 }
 
 export interface IAttach {
-    /** Box top-left corner coordinates on screen */
-    coordinates: ComputedRef<[x: number, y: number]>;
-
-    /** Target element */
-    target: Ref<Element | null>;
-
-    /** Box element */
-    box: Ref<Element | null>;
-
-    /** Target rect */
-    targetRect: Ref<DOMRect | null>;
-
-    /** Box rect */
-    boxRect: Ref<DOMRect | null>;
-
-    /** Setup box, target and their surrounding observers */
-    start: (target: Element, box: Element) => Promise<void>;
-
-    /** Terminate box, target and their surrounding observers */
-    stop: () => void;
+    x: ComputedRef<number>;
+    y: ComputedRef<number>;
+    targetRect: Readonly<Ref<DOMRect | null>>;
+    boxRect: Readonly<Ref<DOMRect | null>>;
 }

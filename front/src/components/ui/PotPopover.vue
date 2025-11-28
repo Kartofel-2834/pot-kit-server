@@ -88,7 +88,8 @@ const classList = useClassListArray(
 );
 
 const currentStyles = computed(() => {
-    const [x, y] = $attach.coordinates.value ?? [0, 0];
+    const x = $attach.x.value;
+    const y = $attach.y.value;
 
     return {
         zIndex: zIndex.value,
@@ -97,25 +98,20 @@ const currentStyles = computed(() => {
 });
 
 // Helper-hooks
-const $attach = useAttach(
-    computed<IAttachOptions>(() => ({
-        position: properties.value.position,
-        nudge: properties.value.nudge,
-        edgeMargin: properties.value.edgeMargin,
-        persistent: $props.persistent,
-        sticky: !$props.noSticky,
-        terminateOnChange: $props.closeOnMove,
-    })),
-    () => $dialog.close(),
-);
+const $attach = useAttach({
+    target: currentTarget,
+    box: box,
+    position: computed(() => properties.value.position),
+    nudge: computed(() => properties.value.nudge),
+    edgeMargin: computed(() => properties.value.edgeMargin),
+    persistent: $props.persistent,
+    sticky: !$props.noSticky,
+    onChange: () => {
+        if ($props.closeOnMove) $dialog.close();
+    },
+});
 
 // Subscriptions
-$subscriptions.bind(
-    computed(() => (currentTarget.value && box.value ? [currentTarget.value, box.value] : null)),
-    ([targetElement, boxElement]) => $attach.start(targetElement, boxElement),
-    () => $attach.stop(),
-);
-
 $subscriptions.bind(
     computed(() => ($props.noFocusTrap ? null : box.value)),
     boxElement => useFocusTrap(boxElement),
@@ -166,7 +162,7 @@ provide('pot-dialog-layer', $dialog.layer);
 defineExpose<IPotPopoverExpose>({
     dialogId: $dialog.id,
     isOpen: readonly($dialog.isOpen),
-    coordinates: $attach.coordinates.value,
+    coordinates: [$attach.x.value, $attach.y.value],
     target: currentTarget,
     popover: box,
     open: () => $dialog.open(),

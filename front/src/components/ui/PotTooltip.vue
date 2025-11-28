@@ -96,7 +96,8 @@ const classList = computed(() =>
 );
 
 const currentStyles = computed(() => {
-    const [x, y] = $attach.coordinates.value ?? [0, 0];
+    const x = $attach.x.value;
+    const y = $attach.y.value;
 
     return {
         zIndex: zIndex.value,
@@ -109,17 +110,18 @@ const triggers = computed(() => {
 });
 
 // Helper-hooks
-const $attach = useAttach(
-    computed<IAttachOptions>(() => ({
-        position: properties.value.position,
-        nudge: properties.value.nudge,
-        edgeMargin: properties.value.edgeMargin,
-        persistent: $props.persistent,
-        sticky: !$props.noSticky,
-        terminateOnChange: $props.closeOnMove,
-    })),
-    () => close(),
-);
+const $attach = useAttach({
+    target: currentTarget,
+    box: box,
+    position: properties.value.position,
+    nudge: properties.value.nudge,
+    edgeMargin: properties.value.edgeMargin,
+    persistent: $props.persistent,
+    sticky: !$props.noSticky,
+    onChange: () => {
+        if ($props.closeOnMove) close();
+    },
+});
 
 // Subscriptions
 $subscriptions.bind(
@@ -132,12 +134,6 @@ $subscriptions.bind(
     computed(() => ($props.noAutoFocus || !isOpen.value ? null : box.value)),
     boxElement => useAutoFocus(boxElement, document.activeElement),
     controller => controller.abort(),
-);
-
-$subscriptions.bind(
-    computed(() => (currentTarget.value && box.value ? [currentTarget.value, box.value] : null)),
-    ([targetElement, boxElement]) => $attach.start(targetElement, boxElement),
-    () => $attach.stop(),
 );
 
 $boxSubscriptions.addEventListener({
@@ -278,7 +274,7 @@ provide('pot-dialog-layer', $dialog.layer);
 defineExpose<IPotTooltipExpose>({
     dialogId: $dialog.id,
     isOpen: readonly($dialog.isOpen),
-    coordinates: $attach.coordinates.value,
+    coordinates: [$attach.x.value, $attach.y.value],
     target: currentTarget.value,
     tooltip: box.value,
     open,

@@ -57,7 +57,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             justify-content: center;
             align-items: center;
             width: 100vw;
-            height: 100vh;
+            height: 300vh;
             overflow: visible;
         "
     >
@@ -66,9 +66,11 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             v-model:text="text"
             :options="optionsA"
             :nudge="20"
+            :position="['bottom-center', 'left-center']"
             color="pot"
             size="medium"
             radius="circle"
+            style="width: 20rem"
         >
             <template #header>
                 <button>KAMAL: {{ text }}</button>

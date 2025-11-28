@@ -173,7 +173,7 @@ function onInputKeydown(event: KeyboardEvent) {
 
     const handleKeypress = (event: KeyboardEvent) => {
         open();
-        if (!isEdit) event.preventDefault;
+        if (!isEdit) event.preventDefault();
     };
 
     handleKeyboardEvent(event, {
