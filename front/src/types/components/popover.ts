@@ -1,5 +1,5 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
 import type { EAttachedBoxPosition } from '../composables/attach';
 
@@ -73,7 +73,7 @@ export interface IPotPopoverExpose {
     dialogId: Symbol;
 
     /** Popover visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    isOpen: ComputedRef<boolean>;
 
     /** Popover left-top corner coordinates */
     coordinates?: [x: number, y: number];

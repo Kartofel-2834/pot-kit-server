@@ -5,16 +5,16 @@ import type { ComputedRef, MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
 
 export function useClassList(
-    properties: MaybeRef<Record<string, unknown>>,
+    properties: Record<string, MaybeRef<unknown>>,
     prefix: MaybeRef<string> = '',
 ): ComputedRef<Record<string, boolean>> {
     return computed(() => {
-        const data = unref(properties);
+        if (!properties && typeof properties !== 'object') return [];
+
         const prefixValue = unref(prefix);
 
-        if (!data && typeof data !== 'object') return {};
-
-        return Object.entries(data).reduce((res, [property, value]) => {
+        return Object.entries(properties).reduce((res, [property, initialValue]) => {
+            const value = unref(initialValue);
             const key = [prefixValue, property, typeof value !== 'boolean' ? value : '']
                 .filter(Boolean)
                 .join('-');
@@ -27,16 +27,16 @@ export function useClassList(
 }
 
 export function useClassListArray(
-    properties: MaybeRef<Record<string, unknown>>,
+    properties: Record<string, MaybeRef<unknown>>,
     prefix: MaybeRef<string> = '',
 ): ComputedRef<string[]> {
     return computed(() => {
-        const data = unref(properties);
+        if (!properties && typeof properties !== 'object') return [];
+
         const prefixValue = unref(prefix);
 
-        if (!data && typeof data !== 'object') return [];
-
-        const classList = Object.entries(data).reduce((res, [property, value]) => {
+        const classList = Object.entries(properties).reduce((res, [property, initialValue]) => {
+            const value = unref(initialValue);
             const key = [prefixValue, property, typeof value !== 'boolean' ? value : '']
                 .filter(Boolean)
                 .join('-');

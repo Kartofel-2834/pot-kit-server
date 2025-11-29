@@ -13,7 +13,7 @@ import { ALL_DEVICES, ALL_DEVICES_REVERSED, POT_BREAKPOINT } from '@/types';
 import { useSubscriptions } from '@/composables/subscriptions';
 
 // Vue
-import { computed, ref, unref, type ComputedRef, type MaybeRef } from 'vue';
+import { computed, readonly, ref, unref, type ComputedRef, type MaybeRef } from 'vue';
 
 const $subscriptions = useSubscriptions();
 
@@ -141,24 +141,28 @@ export function setup() {
 
 /** Composable for get current screen breakpoint */
 export function useDeviceIs(): TDeviceIs<EPotDevice> {
-    return { state, device };
+    return {
+        state: readonly(state),
+        device: readonly(device),
+    };
 }
 
 /** Composable for getting values depending on screen breakpoints */
 export function useDeviceProperties<T extends object>(
-    properties: MaybeRef<T>,
+    properties: T,
     devices?: MaybeRef<EPotDevice[]>,
-): ComputedRef<TDeviceProperties<T>> {
-    return computed(() => {
-        const devicesList = unref(devices) ?? ALL_DEVICES_REVERSED;
-        const data = unref(properties);
+): TDeviceProperties<T> {
+    return Object.keys(properties).reduce((res, property) => {
+        const computedValue = computed(() => {
+            const values = unref(properties[property as keyof T]);
+            const devicesList = unref(devices) ?? ALL_DEVICES_REVERSED;
 
-        return Object.keys(data).reduce((res, property) => {
-            const values = data[property as keyof T];
-            return {
-                ...res,
-                [property]: getCurrentValue(values, device.value, devicesList),
-            };
-        }, {}) as TDeviceProperties<T>;
-    });
+            return getCurrentValue(values, device.value, devicesList);
+        });
+
+        return {
+            ...res,
+            [property]: computedValue,
+        };
+    }, {}) as TDeviceProperties<T>;
 }

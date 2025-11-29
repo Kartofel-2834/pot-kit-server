@@ -81,13 +81,13 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             </template>
         </PotSelect>
 
-        <PotTooltip text="Kamal">
+        <!-- <PotTooltip text="Kamal">
             <button>Kamal</button>
         </PotTooltip>
 
         <PotButton :square="isOpen"> Test {{ isOpen }}</PotButton>
 
-        <PotButton @click="isOpen = !isOpen">Kamal</PotButton>
+        <PotButton @click="isOpen = !isOpen">Kamal</PotButton> -->
     </main>
 </template>
 

@@ -2,9 +2,8 @@
 import type {
     EDialogLayers,
     IDialog,
-    IDialogManager,
     IDialogOptions,
-    IDialogsSetupOptions,
+    TDialogTriggersDelays,
 } from '@/types/composables/dialog';
 import type { ComputedRef, MaybeRef } from 'vue';
 
@@ -12,29 +11,34 @@ import type { ComputedRef, MaybeRef } from 'vue';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, onUnmounted, ref, unref, watch } from 'vue';
+import { computed, inject, provide, ref, unref, watch } from 'vue';
 
 // Composables
-import { useSubscriptions } from '@/composables/subscriptions';
+import { useComponentSubscriptions, useSubscriptions } from '@/composables/subscriptions';
 import { useKeyboard } from '@/composables/keyboard';
 
 const $subscriptions = useSubscriptions();
 
-const defaultConfig: IDialogsSetupOptions = {
-    triggersStartDelays: {
-        clickoutside: 100,
-        escape: 0,
-    },
+const layers = Object.values(DIALOG_LAYERS).sort((a, b) => a - b);
+const defaultConfig: TDialogTriggersDelays = {
+    clickoutside: 100,
+    escape: 0,
 };
 
-const config = ref<IDialogsSetupOptions>({ ...defaultConfig });
-const layers = Object.values(DIALOG_LAYERS).sort((a, b) => a - b);
+const config = ref<TDialogTriggersDelays>({ ...defaultConfig });
+const queue = ref<symbol[]>([]);
 
-const dialogsQueue = ref<IDialogManager[]>([]);
+const dialogs: Map<symbol, IDialog> = new Map<symbol, IDialog>();
+
+const queueDialogs = computed<IDialog[]>(() => {
+    return queue.value.map(v => dialogs.get(v)).filter(Boolean) as IDialog[];
+});
 
 /** Setup dialogs trigger listeners */
-export function setup(options: Partial<IDialogsSetupOptions> = {}) {
-    dialogsQueue.value = [];
+export function setup(options: Partial<TDialogTriggersDelays> = {}) {
+    queue.value = [];
+    dialogs.clear();
+    config.value = { ...defaultConfig, ...options };
 
     $subscriptions.add(
         () => useKeyboard(window, { escape: handleEscape }, { capture: true }),
@@ -47,36 +51,76 @@ export function setup(options: Partial<IDialogsSetupOptions> = {}) {
         listener: handleClick,
         options: { capture: true },
     });
-
-    config.value = {
-        ...defaultConfig,
-        ...options,
-        triggersStartDelays: {
-            ...defaultConfig.triggersStartDelays,
-            ...(options.triggersStartDelays ?? {}),
-        },
-    };
 }
 
 /** Terminate dialogs trigger listeners */
 export function terminate() {
     $subscriptions.clear();
+    queue.value = [];
+    dialogs.clear();
     config.value = { ...defaultConfig };
 }
 
-/** Composable for getting dialog's current z-index */
-export function useDialogZIndex(dialog: IDialog): ComputedRef<number> {
-    return computed(() => {
-        const currentLayer = dialog.layer.value;
-        const nextLayer = layers[layers.indexOf(currentLayer) + 1] ?? Infinity;
+export function useDialog(options: IDialogOptions): IDialog {
+    const $subscriptions = useComponentSubscriptions();
+    const $parentLayer = inject<MaybeRef<EDialogLayers>>('pot-dialog-layer', DIALOG_LAYERS.NONE);
 
-        const layerQueue = dialogsQueue.value.filter(v => v.layer === currentLayer);
-        const index = layerQueue.findIndex(v => v.id === dialog.id);
+    const marker = Math.random().toString(36).slice(2, 9);
+    const id = Symbol(marker);
+    const layer = useDialogLayer(options.layer, $parentLayer);
+    const triggers = computed(() => unref(options.triggers));
+    const isOpen = computed(() => unref(options.isOpen));
+    const createdAt = ref(Date.now());
+    const updatedAt = ref(Date.now());
 
-        const zIndex = currentLayer + Math.max(0, index);
+    const newDialog: IDialog = {
+        id,
+        triggers,
+        isOpen,
+        layer,
+        createdAt,
+        updatedAt,
+        zIndex: useDialogZIndex(id, layer),
+        open: () => options.open(),
+        close: () => options.close(),
+        controller: $subscriptions.add(
+            () => provide('pot-dialog-layer', layer),
+            () => {
+                unwatch();
+                queue.value = queue.value.filter(dialogId => dialogId !== id);
+                dialogs.delete(id);
+            },
+        ),
+        marker: { 'data-pot-dialog-id': marker },
+    };
 
-        return zIndex < nextLayer ? zIndex : nextLayer - 1;
-    });
+    dialogs.set(id, newDialog);
+
+    const unwatch = watch(
+        () => isOpen.value,
+        (newValue, oldValue) => {
+            if (newValue === oldValue) return;
+
+            updatedAt.value = Date.now();
+
+            const updatedQueue = queue.value.filter(dialogId => dialogId !== id);
+
+            if (newValue) updatedQueue.push(id);
+
+            const currentQueueDialogs = updatedQueue
+                .map(v => dialogs.get(v))
+                .filter(Boolean) as IDialog[];
+
+            queue.value = currentQueueDialogs
+                .sort((a, b) => {
+                    return a.layer.value - b.layer.value || a.createdAt.value - b.createdAt.value;
+                })
+                .map(dialog => dialog.id);
+        },
+        { immediate: true },
+    );
+
+    return newDialog;
 }
 
 export function useDialogLayer(
@@ -88,93 +132,68 @@ export function useDialogLayer(
     });
 }
 
-/** Composable for adding dialogs to global queue with triggers */
-export function useDialog(options: IDialogOptions): IDialog {
-    const id = generateDialogId();
-    const createdAt = Date.now();
+/** Composable for getting dialog's current z-index */
+export function useDialogZIndex(
+    dialogId: MaybeRef<symbol>,
+    layer: MaybeRef<EDialogLayers>,
+): ComputedRef<number> {
+    return computed(() => {
+        const currentLayer = unref(layer);
+        const nextLayer = layers[layers.indexOf(currentLayer) + 1] ?? Infinity;
 
-    const dialogManager = computed<IDialogManager>(() => ({
-        id,
-        createdAt,
-        isOpen: unref(options.isOpen),
-        layer: unref(options.layer),
-        triggers: unref(options.triggers) ?? ['escape'],
-        updatedAt: Date.now(),
-        open: () => options.open(),
-        close: () => options.close(),
-    }));
+        const layerQueue = queue.value
+            .map(someDialogId => dialogs.get(someDialogId))
+            .filter(dialog => dialog && dialog.layer.value === currentLayer);
 
-    const unwatch = watch(
-        () => dialogManager.value,
-        (newManager, oldManager) => {
-            if (oldManager && newManager.isOpen === oldManager.isOpen) return;
+        const index = layerQueue.findIndex(dialog => dialog && dialog.id === unref(dialogId));
 
-            const updatedQueue = dialogsQueue.value.filter(v => v.id !== id);
+        const zIndex = currentLayer + Math.max(0, index);
 
-            if (newManager.isOpen) updatedQueue.push(newManager);
-
-            dialogsQueue.value = updatedQueue.sort(
-                (a, b) => a.layer - b.layer || a.createdAt - b.createdAt,
-            );
-        },
-        { immediate: true },
-    );
-
-    onUnmounted(() => {
-        unwatch();
-        dialogsQueue.value = dialogsQueue.value.filter(v => v.id !== id);
+        return zIndex < nextLayer ? zIndex : nextLayer - 1;
     });
-
-    return {
-        id,
-        isOpen: computed(() => dialogManager.value.isOpen),
-        triggers: computed(() => dialogManager.value.triggers),
-        layer: computed(() => dialogManager.value.layer),
-        close: () => options.close(),
-        open: () => options.open(),
-    };
-}
-
-/** Generate unique id for dialog */
-function generateDialogId(): Symbol {
-    return Symbol(Math.random().toString(36).slice(2, 9));
 }
 
 /** Handle clickoutside event */
 function handleClick(event: MouseEvent) {
-    if (!dialogsQueue.value.length) return;
+    if (!queue.value.length) return;
 
-    const clickTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('clickoutside'));
-    const dialogManager = clickTriggerDialogs[clickTriggerDialogs.length - 1] ?? null;
+    const clickTriggerDialogs = queueDialogs.value.filter(dialog =>
+        dialog.triggers.value.includes('clickoutside'),
+    );
 
-    if (!dialogManager || !dialogManager.id.description) return;
+    const dialog = clickTriggerDialogs[clickTriggerDialogs.length - 1] ?? null;
+
+    if (!dialog || !dialog.id.description) return;
 
     const path = event.composedPath();
     const dialogIdAttributes = path
         .map(v => (v instanceof HTMLElement ? v.dataset.potDialogId : null))
         .filter(Boolean) as string[];
 
-    if (dialogIdAttributes.includes(dialogManager.id.description)) return;
+    if (dialogIdAttributes.includes(dialog.id.description)) return;
 
-    const delay = Date.now() - dialogManager.updatedAt;
-    const configDelay = config.value.triggersStartDelays.clickoutside;
+    const delay = Date.now() - dialog.updatedAt.value;
+    const configDelay = config.value.clickoutside;
 
     if (configDelay && delay < configDelay) return;
 
-    dialogManager.close();
+    dialog.close();
 }
 
 /** Handle escape keydown event */
 function handleEscape() {
-    const escapeTriggerDialogs = dialogsQueue.value.filter(v => v.triggers.includes('escape'));
-    const dialogManager = escapeTriggerDialogs[escapeTriggerDialogs.length - 1] ?? null;
+    const escapeTriggerDialogs = queueDialogs.value.filter(v =>
+        v.triggers.value.includes('escape'),
+    );
 
-    if (!dialogManager) return;
+    const dialog = escapeTriggerDialogs[escapeTriggerDialogs.length - 1] ?? null;
 
-    const delay = Date.now() - dialogManager.updatedAt;
-    const configDelay = config.value.triggersStartDelays.escape;
+    if (!dialog) return;
+
+    const delay = Date.now() - dialog.updatedAt.value;
+    const configDelay = config.value.escape;
 
     if (configDelay && delay < configDelay) return;
 
-    dialogManager.close();
+    dialog.close();
 }

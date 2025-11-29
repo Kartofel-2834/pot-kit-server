@@ -14,12 +14,9 @@ import { computed, inject, provide, readonly, ref } from 'vue';
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+import { useDialog, useDialogZIndex } from '@/composables/dialog';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
-
-const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(defineProps<IPotDialogProps>(), {
     visible: undefined,
@@ -39,9 +36,9 @@ const $emit = defineEmits<{
 }>();
 
 const $dialog = useDialog({
-    triggers: ['escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: useDialogLayer($layer, $parentLayer),
+    triggers: ['escape'],
+    layer: DIALOG_LAYERS.DIALOG,
     close,
     open,
 });
@@ -96,8 +93,6 @@ function close() {
 }
 
 // Exports
-provide('pot-dialog-layer', $dialog.layer);
-
 defineExpose<IPotDialogExpose>({
     isOpen: readonly($dialog.isOpen),
     open,

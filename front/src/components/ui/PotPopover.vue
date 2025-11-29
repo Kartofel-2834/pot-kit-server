@@ -15,16 +15,13 @@ import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 // Composables
 import { useDeviceProperties } from '@/composables/device-is';
 import { useAttach } from '@/composables/attach';
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
-import { useClassListArray } from '@/composables/class-list';
+import { useDialog } from '@/composables/dialog';
+import { useClassList, useClassListArray } from '@/composables/class-list';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
-
-const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     visible: undefined,
@@ -43,9 +40,9 @@ const $emit = defineEmits<{
 }>();
 
 const $dialog = useDialog({
-    triggers: ['clickoutside', 'escape'],
     isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: useDialogLayer($layer, $parentLayer),
+    triggers: ['clickoutside', 'escape'],
+    layer: DIALOG_LAYERS.POPOVER,
     close,
     open,
 });
@@ -61,29 +58,27 @@ const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const zIndex = useDialogZIndex($dialog);
-
-const properties = useDeviceProperties(
-    computed(() => ({
+const $properties = useDeviceProperties(
+    {
         position: $props.position,
         nudge: $props.nudge,
         edgeMargin: $props.edgeMargin,
         color: $props.color,
         size: $props.size,
         radius: $props.radius,
-    })),
+    },
     $props.devices,
 );
 
-const classList = useClassListArray(
-    computed(() => ({
-        position: properties.value.position,
-        color: properties.value.color,
-        size: properties.value.size,
-        radius: properties.value.radius,
-        opened: $dialog.isOpen.value,
-        closed: !$dialog.isOpen.value,
-    })),
+const classList = useClassList(
+    {
+        position: $properties.position,
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
+        opened: $dialog.isOpen,
+        closed: computed(() => !$dialog.isOpen.value),
+    },
     'popover',
 );
 
@@ -92,7 +87,7 @@ const currentStyles = computed(() => {
     const y = $attach.y.value;
 
     return {
-        zIndex: zIndex.value,
+        zIndex: $dialog.zIndex.value,
         transform: `translate(${x}px, ${y}px)`,
     };
 });
@@ -101,9 +96,9 @@ const currentStyles = computed(() => {
 const $attach = useAttach({
     target: currentTarget,
     box: box,
-    position: computed(() => properties.value.position),
-    nudge: computed(() => properties.value.nudge),
-    edgeMargin: computed(() => properties.value.edgeMargin),
+    position: $properties.position,
+    nudge: $properties.nudge,
+    edgeMargin: $properties.edgeMargin,
     persistent: $props.persistent,
     sticky: !$props.noSticky,
     onChange: () => {
@@ -157,11 +152,9 @@ function findTarget(vnode: VNode): VNode | null {
 }
 
 // Exports
-provide('pot-dialog-layer', $dialog.layer);
-
 defineExpose<IPotPopoverExpose>({
     dialogId: $dialog.id,
-    isOpen: readonly($dialog.isOpen),
+    isOpen: $dialog.isOpen,
     coordinates: [$attach.x.value, $attach.y.value],
     target: currentTarget,
     popover: box,
@@ -179,11 +172,10 @@ defineExpose<IPotPopoverExpose>({
             <div
                 v-if="$dialog.isOpen.value"
                 ref="box"
-                v-bind="$attrs"
+                v-bind="$dialog.marker"
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
                 :class="['pot-popover', classList]"
                 :style="currentStyles"
-                :data-pot-dialog-id="$dialog.id.description"
             >
                 <slot :dialog-id="$dialog.id" />
             </div>
@@ -193,7 +185,7 @@ defineExpose<IPotPopoverExpose>({
     <PotSlotCatcher :map-v-node="findTarget">
         <slot
             name="target"
-            :dialog-id="$dialog.id"
+            :marker="$dialog.marker"
         />
     </PotSlotCatcher>
 </template>

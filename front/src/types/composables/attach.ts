@@ -63,8 +63,8 @@ export interface IAttachOptions {
 }
 
 export interface IAttach {
-    x: ComputedRef<number>;
-    y: ComputedRef<number>;
-    targetRect: Readonly<Ref<DOMRect | null>>;
-    boxRect: Readonly<Ref<DOMRect | null>>;
+    readonly x: ComputedRef<number>;
+    readonly y: ComputedRef<number>;
+    readonly targetRect: Readonly<Ref<DOMRect | null>>;
+    readonly boxRect: Readonly<Ref<DOMRect | null>>;
 }

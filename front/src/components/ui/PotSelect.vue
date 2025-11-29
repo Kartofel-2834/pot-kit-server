@@ -80,15 +80,15 @@ const resizeObserver = new ResizeObserver(
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue ?? null);
 
-const properties = useDeviceProperties(
-    computed(() => ({
+const $properties = useDeviceProperties(
+    {
         position: $props.position,
         nudge: $props.nudge,
         edgeMargin: $props.edgeMargin,
         color: $props.color,
         size: $props.size,
         radius: $props.radius,
-    })),
+    },
     $props.devices,
 );
 
@@ -101,18 +101,18 @@ const dropdownStyles = computed(() => {
 });
 
 const classList = useClassListArray(
-    computed(() => ({
-        position: properties.value.position,
-        color: properties.value.color,
-        size: properties.value.size,
-        radius: properties.value.radius,
+    {
+        position: $properties.position,
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
         editable: $props.editable,
-        opened: isOpen.value,
-        closed: !isOpen.value,
-        focused: isFocused.value,
+        opened: isOpen,
+        closed: computed(() => !isOpen.value),
+        focused: isFocused,
         fluid: $props.fluid,
         'fixed-width': $props.fixedDropdownWidth,
-    })),
+    },
     'select',
 );
 

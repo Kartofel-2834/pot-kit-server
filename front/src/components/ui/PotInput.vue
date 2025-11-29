@@ -34,25 +34,25 @@ const isFocused = ref<boolean>(false);
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue);
 
-const properties = useDeviceProperties(
-    computed(() => ({
+const $properties = useDeviceProperties(
+    {
         size: $props.size,
         color: $props.color,
         radius: $props.radius,
-    })),
+    },
     $props.devices,
 );
 
 /** Классы модификаторы */
-const classList = useClassList(
-    computed(() => ({
-        ...properties.value,
-        focused: isFocused.value,
-        disabled: $props.disabled,
-        invalid: $props.invalid,
-        fluid: $props.fluid,
-    })),
-);
+const classList = useClassList({
+    size: $properties.size,
+    color: $properties.color,
+    radius: $properties.radius,
+    focused: isFocused,
+    disabled: $props.disabled,
+    invalid: $props.invalid,
+    fluid: $props.fluid,
+});
 
 // Methods
 function onInput(event: Event): void {

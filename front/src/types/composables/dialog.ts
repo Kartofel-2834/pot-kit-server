@@ -12,14 +12,13 @@ export const DIALOG_LAYERS = {
 
 export type EDialogLayers = (typeof DIALOG_LAYERS)[keyof typeof DIALOG_LAYERS];
 
-export interface IDialogsSetupOptions {
-    /** Time after the dialog is created, after which triggers will start working */
-    triggersStartDelays: Partial<Record<TDialogTrigger, number>>;
-}
+export type TDialogTriggersDelays = {
+    [key in TDialogTrigger]: number;
+};
 
 export interface IDialogOptions {
     /** Flag that indicates whether dialog is open */
-    isOpen: MaybeRef<boolean>;
+    isOpen: Ref<boolean>;
 
     /** Dialog layer z-index value */
     layer: MaybeRef<EDialogLayers>;
@@ -36,7 +35,7 @@ export interface IDialogOptions {
 
 export interface IDialog {
     /** Dialog unique id */
-    readonly id: Symbol;
+    readonly id: symbol;
 
     /** Triggers that will close dialog */
     readonly triggers: ComputedRef<TDialogTrigger[]>;
@@ -44,8 +43,25 @@ export interface IDialog {
     /** Flag that indicates whether dialog is open */
     readonly isOpen: ComputedRef<boolean>;
 
-    /** Dialog layer z-index value */
+    /** Dialog layer */
     readonly layer: ComputedRef<EDialogLayers>;
+
+    /** Dialog layer z-index value */
+    readonly zIndex: ComputedRef<number>;
+
+    /** The time in ms when the dialog was created changed */
+    readonly createdAt: Ref<number>;
+
+    /** The time in ms when the dialog open state changed */
+    readonly updatedAt: Ref<number>;
+
+    /** Abort controller, that removes dialog on abort */
+    readonly controller: AbortController;
+
+    /** Bindable marker for dialog component elements */
+    readonly marker: {
+        'data-pot-dialog-id': string;
+    };
 
     /** Close dialog */
     close: () => void;
@@ -56,7 +72,7 @@ export interface IDialog {
 
 export interface IDialogManager {
     /** Dialog unique id */
-    id: Symbol;
+    id: symbol;
 
     /** Flag that indicates whether dialog is open */
     isOpen: boolean;
