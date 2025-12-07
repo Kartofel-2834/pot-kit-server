@@ -15,7 +15,7 @@ import { computed, inject, provide, ref, unref, watch } from 'vue';
 
 // Composables
 import { useComponentSubscriptions, useSubscriptions } from '@/composables/subscriptions';
-import { useKeyboard } from '@/composables/keyboard';
+import { useKeyboardOutsideComponent } from '@/composables/keyboard';
 
 const $subscriptions = useSubscriptions();
 
@@ -36,29 +36,58 @@ const queueDialogs = computed<IDialog[]>(() => {
 
 /** Setup dialogs trigger listeners */
 export function setup(options: Partial<TDialogTriggersDelays> = {}) {
-    queue.value = [];
-    dialogs.clear();
-    config.value = { ...defaultConfig, ...options };
+    const unwatch = watch(
+        () => queue.value,
+        currentQueue => {
+            if (!currentQueue.length) {
+                $subscriptions.remove('escape');
+                $subscriptions.remove('clickoutside');
+                return;
+            }
 
-    $subscriptions.add(
-        () => useKeyboard(window, { escape: handleEscape }, { capture: true }),
-        controller => controller.abort(),
+            $subscriptions.add(
+                () => {
+                    return useKeyboardOutsideComponent({
+                        target: window,
+                        handlers: { escape: handleEscape },
+                        options: { capture: true },
+                    });
+                },
+                controller => controller.abort(),
+                'escape',
+            );
+
+            $subscriptions.addEventListener({
+                key: 'clickoutside',
+                target: window,
+                eventName: 'click',
+                listener: handleClick,
+                options: { capture: true },
+            });
+        },
+        {
+            immediate: true,
+        },
     );
 
-    $subscriptions.addEventListener({
-        target: window,
-        eventName: 'click',
-        listener: handleClick,
-        options: { capture: true },
-    });
+    $subscriptions.add(
+        () => {
+            queue.value = [];
+            dialogs.clear();
+            config.value = { ...defaultConfig, ...options };
+        },
+        () => {
+            unwatch();
+            queue.value = [];
+            dialogs.clear();
+            config.value = { ...defaultConfig };
+        },
+    );
 }
 
 /** Terminate dialogs trigger listeners */
 export function terminate() {
     $subscriptions.clear();
-    queue.value = [];
-    dialogs.clear();
-    config.value = { ...defaultConfig };
 }
 
 export function useDialog(options: IDialogOptions): IDialog {

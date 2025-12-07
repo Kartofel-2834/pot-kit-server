@@ -9,7 +9,7 @@ const toastsList = ref<IToastDialog<unknown>[]>([]);
 
 export function useToast<T = unknown>(): IToast<T> {
     function add(toast: IToastDialogData<T>) {
-        const id = generateToastId();
+        const id = Symbol(Math.random().toString(36).slice(2, 9));
         const data = { ...toast, id };
 
         toastsList.value = [...toastsList.value, data];
@@ -28,8 +28,4 @@ export function useToast<T = unknown>(): IToast<T> {
         add,
         remove,
     };
-}
-
-function generateToastId(): Symbol {
-    return Symbol(Math.random().toString(36).slice(2, 9));
 }

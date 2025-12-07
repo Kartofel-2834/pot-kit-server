@@ -73,13 +73,15 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             style="width: 20rem"
         >
             <template #header>
-                <button>KAMAL: {{ text }}</button>
+                <button :id="String(Math.random())">KAMAL: {{ text }}</button>
             </template>
 
             <template #footer>
-                <button>Filter</button>
+                <button :id="String(Math.random())">Filter</button>
             </template>
         </PotSelect>
+
+        <button>Test</button>
 
         <!-- <PotTooltip text="Kamal">
             <button>Kamal</button>

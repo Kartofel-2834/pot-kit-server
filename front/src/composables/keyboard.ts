@@ -1,16 +1,35 @@
+// Types
+import { onUnmounted, type MaybeRef } from 'vue';
+
 // Composables
-import { useSubscriptions } from '@/composables/subscriptions';
+import { createAbortController, useSubscriptions } from '@/composables/subscriptions';
 
-export function useKeyboard(
-    target: Window | Document | Element | null,
-    handlers: Record<string, (event: KeyboardEvent) => void>,
-    options?: boolean | AddEventListenerOptions,
-): AbortController {
-    const controller = new AbortController();
+export function useKeyboard(options: {
+    target: MaybeRef<Window | Document | Element | null>;
+    keydown?: (event: KeyboardEvent) => void;
+    keyup?: (event: KeyboardEvent) => void;
+    handlers?: Record<string, (event: KeyboardEvent) => void>;
+    options?: MaybeRef<boolean | AddEventListenerOptions>;
+}): AbortController {
+    const controller = useKeyboardOutsideComponent(options);
 
-    if (!target) return controller;
+    onUnmounted(() => controller.abort());
 
+    return controller;
+}
+
+export function useKeyboardOutsideComponent(options: {
+    target: MaybeRef<Window | Document | Element | null>;
+    keydown?: (event: KeyboardEvent) => void;
+    keyup?: (event: KeyboardEvent) => void;
+    handlers?: Record<string, (event: KeyboardEvent) => void>;
+    options?: MaybeRef<boolean | AddEventListenerOptions>;
+}): AbortController {
     const $subscriptions = useSubscriptions();
+
+    const handlers = options.handlers ?? {};
+    const keydown = options.keydown ?? (() => {});
+    const keyup = options.keyup ?? (() => {});
 
     const pressedKeys = new Set();
     const data = Object.keys(handlers)
@@ -23,51 +42,33 @@ export function useKeyboard(
 
     $subscriptions.addEventListener<KeyboardEvent>({
         eventName: 'keydown',
-        target,
-        options,
+        target: options.target,
+        options: options.options,
         listener: event => {
+            keydown(event);
+
             const key = event.key === ' ' ? 'space' : event.key;
             pressedKeys.add(key);
             const pressedCombo = [...pressedKeys].join('+');
             const matchedPattern = data.find(pattern => pattern.regex.test(pressedCombo));
 
-            if (matchedPattern) {
-                matchedPattern.action(event);
-            }
+            if (matchedPattern) matchedPattern.action(event);
         },
     });
 
     $subscriptions.addEventListener<KeyboardEvent>({
         eventName: 'keyup',
-        target,
-        options,
+        target: options.target,
+        options: options.options,
         listener: event => {
+            keyup(event);
+
             const key = event.key === ' ' ? 'space' : event.key;
             pressedKeys.delete(key);
         },
     });
 
-    controller.signal.addEventListener('abort', () => $subscriptions.clear());
-
-    return controller;
-}
-
-export function handleKeyboardEvent(
-    event: KeyboardEvent,
-    handlers: Record<string, (event: KeyboardEvent) => void>,
-): boolean {
-    const key = event.key === ' ' ? 'space' : event.key;
-
-    for (const [pattern, handler] of Object.entries(handlers)) {
-        const regex = mapPatternToRegex(pattern);
-
-        if (regex.test(key)) {
-            handler(event);
-            return true;
-        }
-    }
-
-    return false;
+    return createAbortController(() => $subscriptions.clear());
 }
 
 function mapPatternToRegex(pattern: string): RegExp {

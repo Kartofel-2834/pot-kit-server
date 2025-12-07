@@ -1,168 +1,178 @@
 // Types
-import type {
-    IFocusTrapControl,
-    IFocusTrapInstance,
-    TFocusTrapAction,
-} from '@/types/composables/focus';
+import type { MaybeRef, Ref } from 'vue';
+import type { IFocusControlInstance, TFocusAction } from '@/types/composables/focus';
 
 // Vue
-import { shallowRef, watch } from 'vue';
+import { readonly, ref, unref, watch } from 'vue';
 
 // Composables
-import { useSubscriptions } from '@/composables/subscriptions';
+import {
+    createAbortController,
+    useComponentSubscriptions,
+    useSubscriptions,
+} from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
-import { useKeyboard } from '@/composables/keyboard';
+import { useKeyboardOutsideComponent } from '@/composables/keyboard';
 
-const $subscriptions = useSubscriptions();
+const FOCUSABLE_ELEMENTS_SELECTOR = [
+    '[tabindex]:not([disabled], [tabindex="-1"])',
+    'a[href]:not([disabled], [tabindex="-1"])',
+    'button:not([disabled], [tabindex="-1"])',
+    'textarea:not([disabled], [tabindex="-1"])',
+    'input:not([disabled], [tabindex="-1"])',
+    'select:not([disabled], [tabindex="-1"])',
+].join(', ');
 
-const controlsList = shallowRef<IFocusTrapControl[]>([]);
+const $focusSubscriptions = useSubscriptions();
 
-watch(
-    () => controlsList.value,
-    () => {
-        if (!controlsList.value.length) {
-            $subscriptions.remove('focus-trap-keydown');
-            return;
-        }
+const currentFocusControls = ref<symbol[]>([]);
 
-        const keyboardController = useKeyboard(window, {
-            tab: event => {
-                const lastInstance = controlsList.value[controlsList.value.length - 1];
-                if (!lastInstance?.next) return;
-                lastInstance.next(lastInstance.trapInstance, event);
-            },
-            'shift + tab': event => {
-                const lastInstance = controlsList.value[controlsList.value.length - 1];
-                if (!lastInstance?.previous) return;
-                lastInstance.previous(lastInstance.trapInstance, event);
-            },
-        });
+const focusControlsInstances = new Map<symbol, IFocusControlInstance>();
 
-        $subscriptions.add(
-            () => keyboardController,
-            controller => controller.abort(),
-            'focus-trap-keydown',
-        );
-    },
-);
+/** Setup dialogs trigger listeners */
+export function setup() {
+    currentFocusControls.value = [];
+    focusControlsInstances.clear();
 
-export function useFocusControl(
-    element: Element,
-    options: {
-        next?: TFocusTrapAction;
-        previous?: TFocusTrapAction;
-    },
-): AbortController {
-    const instance: IFocusTrapInstance = {
-        id: Symbol(),
-        target: element,
-        focusableChildren: useFocusableChildren(element),
-    };
+    const unwatch = watch(
+        () => currentFocusControls.value,
+        controlsIds => {
+            if (!controlsIds.length) {
+                $focusSubscriptions.remove('focus');
+                return;
+            }
 
-    const mutationObserver = new MutationObserver(
-        useDebounce({
-            action: () => (instance.focusableChildren = useFocusableChildren(element)),
-            delay: 100,
-        }),
+            const keyboardController = useKeyboardOutsideComponent({
+                target: window,
+                handlers: {
+                    tab: event => {
+                        console.log('tab');
+                        const lastId =
+                            currentFocusControls.value[currentFocusControls.value.length - 1];
+                        const lastInstance = focusControlsInstances.get(lastId);
+
+                        if (!lastInstance?.next) return;
+
+                        lastInstance.next(
+                            event,
+                            lastInstance.target,
+                            lastInstance.focusableChildren.value,
+                        );
+                    },
+                    'shift + tab': event => {
+                        const lastId =
+                            currentFocusControls.value[currentFocusControls.value.length - 1];
+                        const lastInstance = focusControlsInstances.get(lastId);
+
+                        if (!lastInstance?.previous) return;
+
+                        lastInstance.previous(
+                            event,
+                            lastInstance.target,
+                            lastInstance.focusableChildren.value,
+                        );
+                    },
+                },
+            });
+
+            $focusSubscriptions.add(
+                () => keyboardController,
+                controller => controller.abort(),
+                'focus',
+            );
+        },
+        {
+            immediate: true,
+        },
     );
 
-    return $subscriptions.add(
+    $focusSubscriptions.add(
         () => {
-            const controlInstance: IFocusTrapControl = {
-                trapInstance: instance,
+            currentFocusControls.value = [];
+            focusControlsInstances.clear();
+        },
+        () => {
+            unwatch();
+            currentFocusControls.value = [];
+            focusControlsInstances.clear();
+        },
+    );
+}
+
+/** Terminate dialogs trigger listeners */
+export function terminate() {
+    $focusSubscriptions.clear();
+}
+
+export function useFocusControl(options: {
+    element: MaybeRef<Element | null>;
+    next?: TFocusAction;
+    previous?: TFocusAction;
+}): AbortController {
+    const $subscriptions = useComponentSubscriptions();
+    const { focusableChildren, controller: childrenController } = useFocusableChildren(
+        options.element,
+    );
+
+    const boxController = $subscriptions.bind(
+        options.element,
+        target => {
+            const instance: IFocusControlInstance = {
+                id: Symbol(),
+                target,
+                focusableChildren,
                 next: options.next,
                 previous: options.previous,
             };
 
-            mutationObserver.observe(element, {
-                childList: true,
-                subtree: true,
-                attributeFilter: ['tabindex', 'disabled'],
-            });
+            currentFocusControls.value = [...currentFocusControls.value, instance.id];
+            focusControlsInstances.set(instance.id, instance);
 
-            controlsList.value = [
-                ...controlsList.value.filter(v => v.trapInstance.id !== instance.id),
-                controlInstance,
-            ];
+            return instance.id;
         },
-        () => {
-            mutationObserver.disconnect();
-            controlsList.value = controlsList.value.filter(v => v.trapInstance.id !== instance.id);
+        instanceId => {
+            focusControlsInstances.delete(instanceId);
+            currentFocusControls.value = currentFocusControls.value.filter(id => id !== instanceId);
         },
     );
-}
 
-export function useFocusBox(
-    element: Element,
-    options: {
-        next?: TFocusTrapAction;
-        previous?: TFocusTrapAction;
-        leave?: TFocusTrapAction;
-        leaveForward?: TFocusTrapAction;
-        leaveBack?: TFocusTrapAction;
-    },
-): AbortController {
-    return useFocusControl(element, {
-        next: (trapInstance, event) => {
-            const focusableElements = trapInstance.focusableChildren ?? [];
-            const lastFocusableElement = focusableElements[focusableElements.length - 1];
-            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
-
-            if (lastFocusableElement && document.activeElement === lastFocusableElement) {
-                options?.leave?.(trapInstance, event);
-                options?.leaveForward?.(trapInstance, event);
-            } else if (isInTrap) {
-                options?.next?.(trapInstance, event);
-            }
-        },
-        previous: (trapInstance, event) => {
-            const focusableElements = trapInstance.focusableChildren ?? [];
-            const firstFocusableElement = focusableElements[0];
-            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
-
-            if (firstFocusableElement && document.activeElement === firstFocusableElement) {
-                options?.leave?.(trapInstance, event);
-                options?.leaveBack?.(trapInstance, event);
-            } else if (isInTrap) {
-                options?.previous?.(trapInstance, event);
-            }
-        },
+    return createAbortController(() => {
+        boxController.abort();
+        childrenController.abort();
     });
 }
 
-export function useFocusTrap(element: Element): AbortController {
+export function useFocusTrap(element: MaybeRef<Element | null>): AbortController {
     (document.activeElement as HTMLElement)?.blur?.();
 
-    return useFocusControl(element, {
-        next: (trapInstance, event) => {
-            const focusableElements = trapInstance.focusableChildren ?? [];
-            const firstFocusableElement = focusableElements[0] ?? null;
-            const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
+    return useFocusControl({
+        element,
+        next: (event, target, focusableChildren) => {
+            const firstFocusableElement = focusableChildren[0] ?? null;
+            const lastFocusableElement = focusableChildren[focusableChildren.length - 1] ?? null;
 
             if (!firstFocusableElement || !lastFocusableElement) {
                 event.preventDefault();
                 return;
             }
 
-            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+            const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
 
             if (document.activeElement === lastFocusableElement || !isInTrap) {
                 event.preventDefault();
                 firstFocusableElement.focus();
             }
         },
-
-        previous: (trapInstance, event) => {
-            const focusableElements = trapInstance.focusableChildren ?? [];
-            const firstFocusableElement = focusableElements[0] ?? null;
-            const lastFocusableElement = focusableElements[focusableElements.length - 1] ?? null;
+        previous: (event, target, focusableChildren) => {
+            const firstFocusableElement = focusableChildren[0] ?? null;
+            const lastFocusableElement = focusableChildren[focusableChildren.length - 1] ?? null;
 
             if (!firstFocusableElement || !lastFocusableElement) {
                 event.preventDefault();
                 return;
             }
 
-            const isInTrap = focusableElements.includes(document.activeElement as HTMLElement);
+            const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
 
             if (document.activeElement === firstFocusableElement || !isInTrap) {
                 event.preventDefault();
@@ -172,34 +182,167 @@ export function useFocusTrap(element: Element): AbortController {
     });
 }
 
-export function useAutoFocus(
-    element: Element,
-    lastActiveElement?: Element | null,
-): AbortController {
-    return $subscriptions.add(
-        () => {
-            const currentActiveElement = document.activeElement;
-            useFirstFocusableChild(element)?.focus();
-            return lastActiveElement ?? currentActiveElement;
-        },
-        element => {
-            if (element instanceof HTMLElement) {
-                element.focus();
+export function useFocusBox(options: {
+    element: MaybeRef<Element | null>;
+    next?: TFocusAction;
+    previous?: TFocusAction;
+    enter?: TFocusAction;
+    enterFromStart?: TFocusAction;
+    enterFromEnd?: TFocusAction;
+    leave?: TFocusAction;
+    leaveFromStart?: TFocusAction;
+    leaveFromEnd?: TFocusAction;
+}): AbortController {
+    return useFocusControl({
+        element: options.element,
+        next: (event, target, focusableChildren) => {
+            const firstFocusableElement = focusableChildren[0];
+            const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
+            const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
+
+            if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+                options.enter?.(event, target, focusableChildren);
+                options.enterFromStart?.(event, target, focusableChildren);
+            } else if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+                options.leave?.(event, target, focusableChildren);
+                options.leaveFromEnd?.(event, target, focusableChildren);
+            } else if (isInTrap) {
+                options.next?.(event, target, focusableChildren);
             }
         },
+        previous: (event, target, focusableChildren) => {
+            const firstFocusableElement = focusableChildren[0];
+            const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
+            const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
+
+            if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+                options.enter?.(event, target, focusableChildren);
+                options.enterFromEnd?.(event, target, focusableChildren);
+            } else if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+                options.leave?.(event, target, focusableChildren);
+                options.leaveFromStart?.(event, target, focusableChildren);
+            } else if (isInTrap) {
+                options.previous?.(event, target, focusableChildren);
+            }
+        },
+    });
+}
+
+export function useAutoFocus(
+    element: MaybeRef<Element | null>,
+    lastActiveElement?: MaybeRef<Element | null>,
+): AbortController {
+    const $subscriptions = useComponentSubscriptions();
+    const { focusableChild, controller } = useFirstFocusableChild(element);
+
+    return $subscriptions.bind(
+        element,
+        () => {
+            focusableChild.value?.focus?.();
+            return unref(lastActiveElement) ?? document.activeElement;
+        },
+        disposeElement => {
+            if (disposeElement instanceof HTMLElement) disposeElement.focus();
+            controller.abort();
+        },
     );
 }
 
-export function useFirstFocusableChild(element: Element): HTMLElement | null {
-    return element.querySelector(
-        '[tabindex]:not([disabled], [tabindex="-1"]), a[href]:not([disabled]), button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled])',
+export function useFirstFocusableChild(element: MaybeRef<Element | null>): {
+    controller: AbortController;
+    focusableChild: Readonly<Ref<HTMLElement | null>>;
+} {
+    const $subscriptions = useComponentSubscriptions();
+    const mutationObserver = new MutationObserver(
+        useDebounce({
+            action: updateFocusableChild,
+            delay: 100,
+        }),
     );
+
+    const focusableChild = ref<HTMLElement | null>(null);
+
+    const unwatch = watch(() => unref(element), updateFocusableChild, { immediate: true });
+
+    $subscriptions.observe({
+        target: element,
+        observer: mutationObserver,
+        arguments: [
+            {
+                childList: true,
+                subtree: true,
+                attributeFilter: ['tabindex', 'disabled'],
+            },
+        ],
+    });
+
+    function updateFocusableChild() {
+        const currentElement = unref(element);
+
+        if (!currentElement) {
+            return;
+        }
+
+        focusableChild.value = currentElement
+            ? currentElement.querySelector(FOCUSABLE_ELEMENTS_SELECTOR)
+            : null;
+    }
+
+    return {
+        focusableChild: readonly(focusableChild) as Readonly<Ref<HTMLElement | null>>,
+        controller: createAbortController(() => {
+            unwatch();
+            $subscriptions.clear();
+        }),
+    };
 }
 
-export function useFocusableChildren(element: Element): HTMLElement[] {
-    const result = element.querySelectorAll(
-        '[tabindex]:not([disabled], [tabindex="-1"]), a[href]:not([disabled]), button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled])',
+export function useFocusableChildren(element: MaybeRef<Element | null>): {
+    controller: AbortController;
+    focusableChildren: Readonly<Ref<HTMLElement[]>>;
+} {
+    const $subscriptions = useComponentSubscriptions();
+    const mutationObserver = new MutationObserver(
+        useDebounce({
+            action: updateFocusableChildren,
+            delay: 100,
+        }),
     );
 
-    return Array.from(result) as HTMLElement[];
+    const focusableChildren = ref<HTMLElement[]>([]);
+
+    const unwatch = watch(() => unref(element), updateFocusableChildren, { immediate: true });
+
+    $subscriptions.observe({
+        target: element,
+        observer: mutationObserver,
+        arguments: [
+            {
+                childList: true,
+                subtree: true,
+                attributeFilter: ['tabindex', 'disabled'],
+            },
+        ],
+    });
+
+    function updateFocusableChildren() {
+        const currentElement = unref(element);
+
+        if (!currentElement) {
+            focusableChildren.value = [];
+            return;
+        }
+
+        const nodesList = currentElement.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR);
+
+        focusableChildren.value = Array.from(nodesList) as HTMLElement[];
+    }
+
+    return {
+        focusableChildren: readonly(focusableChildren) as Readonly<Ref<HTMLElement[]>>,
+        controller: createAbortController(() => {
+            unwatch();
+            $subscriptions.clear();
+        }),
+    };
 }

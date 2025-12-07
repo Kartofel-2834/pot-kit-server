@@ -15,8 +15,8 @@ import { useDebounce } from '@/composables/timer';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
 import { useClassListArray } from '@/composables/class-list';
-import { useFirstFocusableChild, useFocusableChildren, useFocusBox } from '@/composables/focus';
-import { handleKeyboardEvent } from '@/composables/keyboard';
+import { useFocusableChildren, useFocusBox } from '@/composables/focus';
+import { useKeyboard } from '@/composables/keyboard';
 
 // Components
 import PotInput from '@/components/ui/PotInput.vue';
@@ -125,6 +125,8 @@ const label = computed(() => {
     return $props.editable && isFocused.value ? $props.text : selectedLabel;
 });
 
+const isEditing = computed<boolean>(() => isFocused.value && $props.editable);
+
 // Subscriptions
 $subscriptions.observe({
     key: 'resize',
@@ -132,23 +134,82 @@ $subscriptions.observe({
     observer: resizeObserver,
 });
 
-$subscriptions.bind(
-    computed(() => {
-        const dropdownElement = dropdown.value?.popover;
-
-        if (!dropdownElement || !useFirstFocusableChild(dropdownElement)) return null;
-
-        return dropdownElement;
-    }),
-    dropdownElement => {
-        return useFocusBox(dropdownElement, {
-            leave: () => container.value?.input?.focus?.(),
-            leaveForward: () => close(),
-            leaveBack: (trapInstance, event) => event.preventDefault(),
-        });
-    },
-    controller => controller.abort(),
+const { focusableChildren: $focusableChildren } = useFocusableChildren(
+    computed(() => dropdown.value?.popover ?? null),
 );
+
+useFocusBox({
+    element: computed(() => dropdown.value?.popover ?? null),
+    leave: () => container.value?.input?.focus?.(),
+    leaveFromEnd: () => close(),
+    leaveFromStart: event => event.preventDefault(),
+});
+
+useKeyboard({
+    target: computed(() => container.value?.input ?? null),
+    keydown: event => {
+        if (event.key.length !== 1 || !event.key.trim()) return;
+
+        handleKeypress(event);
+        if (!isEditing.value) focusSameLabeled(event.key);
+    },
+    handlers: {
+        space: event => {
+            const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
+
+            handleKeypress(event);
+            if (!isEditing.value && spec) {
+                change(spec);
+                close();
+            } else if (!isEditing.value && !spec) {
+                focusSelected();
+            }
+        },
+        enter: event => {
+            const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
+
+            handleKeypress(event);
+            if (!isEditing.value && spec) {
+                change(spec);
+                close();
+            } else if (!isEditing.value && !spec) {
+                focusSelected();
+            }
+        },
+        arrowDown: event => {
+            handleKeypress(event);
+            if (!isEditing.value) focusNext();
+        },
+        arrowUp: event => {
+            handleKeypress(event);
+            if (!isEditing.value) focusPrev();
+        },
+        home: event => {
+            handleKeypress(event);
+            if (!isEditing.value) focusFirst();
+        },
+        end: event => {
+            handleKeypress(event);
+            if (!isEditing.value) focusLast();
+        },
+        tab: event => {
+            if (!dropdown.value?.popover) return;
+
+            const firstFocusableElement = $focusableChildren.value[0];
+            const lastFocusableElement =
+                $focusableChildren.value[$focusableChildren.value.length - 1];
+
+            if (!firstFocusableElement && !lastFocusableElement) {
+                close();
+            } else if (!event.shiftKey) {
+                event.preventDefault();
+                firstFocusableElement.focus();
+            } else {
+                close();
+            }
+        },
+    },
+});
 
 // Listeners
 function onClick() {
@@ -167,79 +228,16 @@ function onInputText(text: string) {
     changeText(text);
 }
 
-function onInputKeydown(event: KeyboardEvent) {
-    const isEdit = isFocused.value && $props.editable;
-    const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
-
-    const handleKeypress = (event: KeyboardEvent) => {
-        open();
-        if (!isEdit) event.preventDefault();
-    };
-
-    handleKeyboardEvent(event, {
-        space: event => {
-            handleKeypress(event);
-            if (!isEdit && spec) {
-                change(spec);
-                close();
-            } else if (!isEdit && !spec) {
-                focusSelected();
-            }
-        },
-        enter: event => {
-            handleKeypress(event);
-            if (!isEdit && spec) {
-                change(spec);
-                close();
-            } else if (!isEdit && !spec) {
-                focusSelected();
-            }
-        },
-        arrowDown: event => {
-            handleKeypress(event);
-            if (!isEdit) focusNext();
-        },
-        arrowUp: event => {
-            handleKeypress(event);
-            if (!isEdit) focusPrev();
-        },
-        home: event => {
-            handleKeypress(event);
-            if (!isEdit) focusFirst();
-        },
-        end: event => {
-            handleKeypress(event);
-            if (!isEdit) focusLast();
-        },
-        tab: event => {
-            if (!dropdown.value?.popover) return;
-
-            const focusableChildren = useFocusableChildren(dropdown.value.popover);
-            const firstFocusableElement = focusableChildren[0];
-            const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
-
-            if (!firstFocusableElement && !lastFocusableElement) {
-                close();
-            } else if (!event.shiftKey) {
-                event.preventDefault();
-                firstFocusableElement.focus();
-            } else {
-                close();
-            }
-        },
-    });
-
-    if (event.key.length === 1 && event.key.trim()) {
-        handleKeypress(event);
-        if (!isEdit) focusSameLabeled(event.key);
-    }
-}
-
 function onOptionClick(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     change(spec);
 }
 
 // Methods
+function handleKeypress(event: KeyboardEvent) {
+    open();
+    if (!isEditing.value) event.preventDefault();
+}
+
 function focusSameLabeled(text: string) {
     if (!isOpen.value) return;
     const spec = availableSpecs.value.find(spec => spec.label.startsWith(text));
@@ -345,15 +343,16 @@ function changeText(text: string) {
         @input="onInputText"
         @focus="onFocus"
         @blur="onBlur"
-        @keydown="onInputKeydown"
     >
         <template #preicon>
             <slot name="preicon" />
+            {{ $focusableChildren.length }}
         </template>
 
         <template #icon>
             <slot name="icon">
                 <svg
+                    class="pot-select-arrow-icon"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 -960 960 960"
                     width="24px"
@@ -494,7 +493,7 @@ function changeText(text: string) {
 }
 
 /* --- PotSelect - Opened --- */
-.pot-select._select-opened .pot-input-icon {
+.pot-select._select-opened .pot-select-arrow-icon {
     transform: scaleY(-1);
 }
 

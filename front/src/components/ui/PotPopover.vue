@@ -1,12 +1,10 @@
 <script setup lang="ts">
 // Types
-import type { Ref, VNode } from 'vue';
+import type { VNode } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
-import type { IAttachOptions } from '@/types/composables/attach';
-import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Vue
-import { cloneVNode, computed, inject, isVNode, provide, readonly, ref, watch } from 'vue';
+import { cloneVNode, computed, isVNode, ref } from 'vue';
 
 // Constants
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
@@ -16,12 +14,11 @@ import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useAttach } from '@/composables/attach';
 import { useDialog } from '@/composables/dialog';
-import { useClassList, useClassListArray } from '@/composables/class-list';
-import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
+import { useClassList } from '@/composables/class-list';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     visible: undefined,
@@ -46,8 +43,6 @@ const $dialog = useDialog({
     close,
     open,
 });
-
-const $subscriptions = useComponentSubscriptions();
 
 // Data
 const target = ref<Element | null>(null);
@@ -107,17 +102,9 @@ const $attach = useAttach({
 });
 
 // Subscriptions
-$subscriptions.bind(
-    computed(() => ($props.noFocusTrap ? null : box.value)),
-    boxElement => useFocusTrap(boxElement),
-    controller => controller.abort(),
-);
+useFocusTrap(computed(() => ($props.noFocusTrap ? null : box.value)));
 
-$subscriptions.bind(
-    computed(() => ($props.noAutoFocus ? null : box.value)),
-    boxElement => useAutoFocus(boxElement, document.activeElement),
-    controller => controller.abort(),
-);
+useAutoFocus(computed(() => ($props.noAutoFocus ? null : box.value)));
 
 // Methods
 function open() {

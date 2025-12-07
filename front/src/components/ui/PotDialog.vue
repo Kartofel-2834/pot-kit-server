@@ -16,7 +16,7 @@ import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogZIndex } from '@/composables/dialog';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus-old';
 
 const $props = withDefaults(defineProps<IPotDialogProps>(), {
     visible: undefined,

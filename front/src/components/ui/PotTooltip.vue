@@ -18,7 +18,7 @@ import { useClassListArray } from '@/composables/class-list';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useAttach } from '@/composables/attach';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus-old';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';

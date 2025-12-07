@@ -5,7 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 // Composables
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useDebounce } from '@/composables/timer';
-import { useFocusableChildren } from '@/composables/focus';
+import { useFocusableChildren } from '@/composables/focus-old';
 import { handleKeyboardEvent } from '@/composables/keyboard';
 
 const $props = withDefaults(

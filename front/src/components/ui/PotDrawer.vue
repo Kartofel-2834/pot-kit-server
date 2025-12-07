@@ -16,7 +16,7 @@ import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus-old';
 
 const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
 const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
