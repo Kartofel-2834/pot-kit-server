@@ -57,39 +57,15 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             justify-content: center;
             align-items: center;
             width: 100vw;
-            height: 300vh;
             overflow: visible;
         "
     >
-        <PotSelect
-            v-model="someValue"
-            v-model:text="text"
-            :options="optionsA"
-            :nudge="20"
-            :position="['bottom-center', 'left-center']"
-            color="pot"
-            size="medium"
-            radius="circle"
-            style="width: 20rem"
+        <PotButton
+            :square="isOpen"
+            @click="isOpen = !isOpen"
         >
-            <template #header>
-                <button :id="String(Math.random())">KAMAL: {{ text }}</button>
-            </template>
-
-            <template #footer>
-                <button :id="String(Math.random())">Filter</button>
-            </template>
-        </PotSelect>
-
-        <button>Test</button>
-
-        <!-- <PotTooltip text="Kamal">
-            <button>Kamal</button>
-        </PotTooltip>
-
-        <PotButton :square="isOpen"> Test {{ isOpen }}</PotButton>
-
-        <PotButton @click="isOpen = !isOpen">Kamal</PotButton> -->
+            Kamal
+        </PotButton>
     </main>
 </template>
 
