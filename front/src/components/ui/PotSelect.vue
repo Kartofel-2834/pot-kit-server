@@ -42,24 +42,6 @@ const $emit = defineEmits<{
     'update:text': [text: string];
 }>();
 
-const $subscriptions = useComponentSubscriptions();
-
-const $specs = useSpecs(
-    computed<ISpecsOptions<OPTION, VALUE_FIELD, IPotSelectSpecData>>(() => ({
-        values: currentValue.value ? [currentValue.value] : [],
-        options: $props.options,
-        optionLabel: $props.optionLabel,
-        optionDisabled: $props.optionDisabled,
-        optionValue: $props.optionValue,
-        optionData: (option: OPTION) => ({
-            focused: option,
-        }),
-        data: (option, value) => ({
-            focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
-        }),
-    })),
-);
-
 // Data
 const container = ref<InstanceType<typeof PotInput> | null>(null);
 const dropdown = ref<InstanceType<typeof PotPopover> | null>(null);
@@ -128,6 +110,19 @@ const label = computed(() => {
 const isEditing = computed<boolean>(() => isFocused.value && $props.editable);
 
 // Subscriptions
+const $subscriptions = useComponentSubscriptions();
+
+const $specs = useSpecs<OPTION, VALUE_FIELD, IPotSelectSpecData>({
+    values: computed(() => (currentValue.value ? [currentValue.value] : [])),
+    options: $props.options,
+    optionLabel: $props.optionLabel,
+    optionDisabled: $props.optionDisabled,
+    optionValue: $props.optionValue,
+    data: (option, value) => ({
+        focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
+    }),
+});
+
 $subscriptions.observe({
     key: 'resize',
     target: computed(() => container.value?.$el ?? null),

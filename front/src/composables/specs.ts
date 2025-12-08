@@ -3,37 +3,41 @@ import type { ComputedRef, Ref } from 'vue';
 import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
 
 // Vue
-import { computed } from 'vue';
+import { computed, unref } from 'vue';
 
 export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknown>(
-    specOptions: Ref<ISpecsOptions<OPTION, VALUE_FIELD, DATA>>,
+    specOptions: ISpecsOptions<OPTION, VALUE_FIELD, DATA>,
 ): ComputedRef<ISpec<OPTION, VALUE_FIELD, DATA>[]> {
     function getLabel(option: OPTION): string {
-        if (typeof specOptions.value.optionLabel === 'function') {
-            return specOptions.value.optionLabel(option);
+        const optionLabel = unref(specOptions.optionLabel);
+
+        if (typeof optionLabel === 'function') {
+            return optionLabel(option);
         }
 
-        if (specOptions.value.optionLabel === undefined) {
+        if (optionLabel === undefined) {
             return String(option);
         }
 
-        return String(option[specOptions.value.optionLabel]);
+        return String(option[optionLabel]);
     }
 
     function getValue(option: OPTION): TOptionValue<OPTION, VALUE_FIELD> | null {
-        if (typeof specOptions.value.optionValue === 'function') {
-            return specOptions.value.optionValue(option);
+        const optionValue = unref(specOptions.optionValue);
+
+        if (typeof optionValue === 'function') {
+            return optionValue(option);
         }
 
         if (['string', 'number', 'boolean'].includes(typeof option)) {
             return option as TOptionValue<OPTION, VALUE_FIELD>;
         }
 
-        if (specOptions.value.optionValue === undefined) {
+        if (optionValue === undefined) {
             return null;
         }
 
-        const value = option[specOptions.value.optionValue] as TOptionValue<OPTION, VALUE_FIELD>;
+        const value = option[optionValue] as TOptionValue<OPTION, VALUE_FIELD>;
 
         return value ?? null;
     }
@@ -43,35 +47,38 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknow
         value: TOptionValue<OPTION, VALUE_FIELD> | null,
         label: string,
     ): DATA | null {
-        if (!specOptions.value.data) {
-            return null;
-        }
-
-        return specOptions.value.data(option, value, label);
+        const data = unref(specOptions.data);
+        return data ? data(option, value, label) : null;
     }
 
     function checkIsDisabled(option: OPTION): boolean {
-        if (typeof specOptions.value.optionDisabled === 'function') {
-            return specOptions.value.optionDisabled(option);
+        const optionDisabled = unref(specOptions.optionDisabled);
+
+        if (typeof optionDisabled === 'function') {
+            return optionDisabled(option);
         }
 
-        if (specOptions.value.optionDisabled === undefined) {
+        if (optionDisabled === undefined) {
             return false;
         }
 
-        return Boolean(option[specOptions.value.optionDisabled]);
+        return Boolean(option[optionDisabled]);
     }
 
     function checkIsSelected(specValue: TOptionValue<OPTION, VALUE_FIELD> | null): boolean {
-        if (!Array.isArray(specOptions.value.values) || specValue === null) {
+        const values = unref(specOptions.values);
+
+        if (!Array.isArray(values) || specValue === null) {
             return false;
         }
 
-        return specOptions.value.values.includes(specValue);
+        return values.includes(specValue);
     }
 
     return computed<ISpec<OPTION, VALUE_FIELD, DATA>[]>(() => {
-        return specOptions.value.options.map(option => {
+        const options = unref(specOptions.options);
+
+        return options.map(option => {
             const value = getValue(option);
             const label = getLabel(option);
             const data = getData(option, value, label);

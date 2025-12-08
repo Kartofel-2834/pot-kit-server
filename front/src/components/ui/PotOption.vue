@@ -6,7 +6,7 @@ import type { IPotOptionProps } from '@/types/components/option';
 import { computed } from 'vue';
 
 // Composables
-import { useClassListArray } from '@/composables/class-list';
+import { useClassList, useClassListArray } from '@/composables/class-list';
 
 const $props = withDefaults(defineProps<IPotOptionProps<VALUE>>(), {
     tag: 'div',
@@ -17,13 +17,13 @@ const $props = withDefaults(defineProps<IPotOptionProps<VALUE>>(), {
     fluid: false,
 });
 
-const classList = useClassListArray(
-    computed(() => ({
+const classList = useClassList(
+    {
         selected: $props.selected,
         focused: $props.focused,
         disabled: $props.disabled,
         fluid: $props.fluid,
-    })),
+    },
     'option',
 );
 </script>
@@ -35,9 +35,7 @@ const classList = useClassListArray(
         :data-label="label"
         :data-value="value"
     >
-        <slot>
-            {{ label }}
-        </slot>
+        <slot> {{ label }} {{ focused }} </slot>
     </component>
 </template>
 
