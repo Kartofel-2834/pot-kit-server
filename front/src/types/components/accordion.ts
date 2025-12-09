@@ -15,3 +15,8 @@ export interface IPotAccordionProps {
     /** If true, the accordion will be disabled and inactive */
     disabled?: boolean;
 }
+
+export interface IPotAccordionGroupProps {
+    values?: unknown[];
+    modelValue?: unknown[];
+}

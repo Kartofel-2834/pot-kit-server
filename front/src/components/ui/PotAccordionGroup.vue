@@ -1,83 +1,84 @@
 <script setup lang="ts">
+// Types
+import type { IPotAccordionGroupProps } from '@/types/components/accordion';
+
 // Vue
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 // Composables
 import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useDebounce } from '@/composables/timer';
-import { useFocusableChildren } from '@/composables/focus-old';
-import { handleKeyboardEvent } from '@/composables/keyboard';
+import { useFocusableChildren } from '@/composables/focus';
+import { useKeyboard } from '@/composables/keyboard';
 
-const $props = withDefaults(
-    defineProps<{
-        values?: unknown[];
-        modelValue?: unknown[];
-    }>(),
-    {
-        values: undefined,
-        modelValue: undefined,
-    },
-);
+const $props = withDefaults(defineProps<IPotAccordionGroupProps>(), {
+    values: undefined,
+    modelValue: undefined,
+});
 
 const $emit = defineEmits<{
     change: [newValues: unknown[]];
     'update:modelValue': [newValues: unknown[]];
 }>();
 
-const $subscriptions = useComponentSubscriptions();
-const $accordionSubscriptions = useComponentSubscriptions();
-
 // Data
 const container = ref<Element | null>(null);
 const selectedHeader = ref<HTMLElement | null>(null);
-const accordionsHeaders = ref<HTMLElement[]>([]);
-
-const mutationObserver = new MutationObserver(
-    useDebounce({
-        action: () => (accordionsHeaders.value = getAccordionHeaders()),
-        delay: 100,
-    }),
-);
-
-$subscriptions.observe({
-    key: 'focusable-elements-change',
-    target: container,
-    observer: mutationObserver,
-    arguments: [
-        {
-            childList: true,
-            subtree: true,
-            attributeFilter: ['tabindex', 'disabled'],
-        },
-    ],
-});
-
-// Lifecycle
-onMounted(() => {
-    accordionsHeaders.value = getAccordionHeaders();
-});
 
 // Computed
 const currentValues = computed(() => $props.values ?? $props.modelValue ?? []);
 
-// Watchers
-watch(
-    () => accordionsHeaders.value,
+const accordionsHeaders = computed(() => {
+    return $focusableChildren.value.filter(element => {
+        return element instanceof HTMLElement && element.dataset.potAccordionHeader !== undefined;
+    });
+});
+
+const selectedHeaderIndex = computed(() => {
+    if (!selectedHeader.value) {
+        return -1;
+    }
+
+    return accordionsHeaders.value.indexOf(selectedHeader.value);
+});
+
+// Composables
+const $subscriptions = useComponentSubscriptions();
+const { focusableChildren: $focusableChildren } = useFocusableChildren(container);
+
+useKeyboard({
+    target: container,
+    handlers: {
+        arrowUp: event => {
+            event.preventDefault();
+            moveUp();
+        },
+        arrowDown: event => {
+            event.preventDefault();
+            moveDown();
+        },
+        home: event => {
+            event.preventDefault();
+            moveStart();
+        },
+        end: event => {
+            event.preventDefault();
+            moveEnd();
+        },
+    },
+});
+
+$subscriptions.bind(
+    computed(() => (accordionsHeaders.value.length ? accordionsHeaders.value : null)),
     headers => {
-        $accordionSubscriptions.clear();
-
-        if (!Array.isArray(headers)) return;
-
-        headers.forEach(header => {
-            if (!(header instanceof Element)) return;
-
-            $accordionSubscriptions.addEventListener({
+        return headers.map(header => {
+            return $subscriptions.addEventListener({
                 target: header,
                 eventName: 'focus',
-                listener: handleAccordionHeaderFocus,
+                listener: () => (selectedHeader.value = header),
             });
         });
     },
+    controllersList => controllersList.forEach(controller => controller.abort()),
 );
 
 // Methods
@@ -115,38 +116,28 @@ function closeAccordion(key: unknown) {
     $emit('update:modelValue', updatedKeys);
 }
 
-function handleKeydown(event: KeyboardEvent) {
+function moveUp() {
     const headers = accordionsHeaders.value;
-    const index = headers.indexOf(selectedHeader.value as HTMLElement);
+    const index = selectedHeaderIndex.value;
 
-    let nextIndex = 0;
-
-    const isMatched = handleKeyboardEvent(event, {
-        arrowDown: () => (nextIndex = index === -1 || index === headers.length - 1 ? 0 : index + 1),
-        arrowUp: () => (nextIndex = index === -1 || index === 0 ? headers.length - 1 : index - 1),
-        home: () => (nextIndex = 0),
-        end: () => (nextIndex = headers.length - 1),
-    });
-
-    if (!isMatched) return;
-
-    event.preventDefault();
+    const nextIndex = index === -1 || index === 0 ? headers.length - 1 : index - 1;
     headers[nextIndex]?.focus?.();
 }
 
-function handleAccordionHeaderFocus(event: Event) {
-    const header = event.target as HTMLElement;
-    selectedHeader.value = header;
+function moveDown() {
+    const headers = accordionsHeaders.value;
+    const index = selectedHeaderIndex.value;
+
+    const nextIndex = index === -1 || index === headers.length - 1 ? 0 : index + 1;
+    headers[nextIndex]?.focus?.();
 }
 
-function getAccordionHeaders(): HTMLElement[] {
-    if (!container.value) return [];
+function moveStart() {
+    accordionsHeaders.value[0]?.focus?.();
+}
 
-    const focusableChildren = useFocusableChildren(container.value);
-
-    return focusableChildren.filter(element => {
-        return element instanceof HTMLElement && element.dataset.potAccordionHeader !== undefined;
-    });
+function moveEnd() {
+    accordionsHeaders.value[accordionsHeaders.value.length - 1]?.focus?.();
 }
 </script>
 
@@ -154,7 +145,6 @@ function getAccordionHeaders(): HTMLElement[] {
     <div
         ref="container"
         class="pot-accordion-group"
-        @keydown="handleKeydown"
     >
         <slot
             :single-bind="singleBind"

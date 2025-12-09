@@ -60,12 +60,37 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             overflow: visible;
         "
     >
-        <PotButton
+        <!-- <PotButton
             :square="isOpen"
             @click="isOpen = !isOpen"
         >
             Kamal
-        </PotButton>
+        </PotButton> -->
+        <PotAccordionGroup
+            v-model="optionsA"
+            v-slot="{ multipleBind }"
+        >
+            <PotAccordion v-bind="multipleBind('a')">
+                <template #title>A</template>
+
+                Content
+            </PotAccordion>
+
+            <PotAccordion
+                v-bind="multipleBind('b')"
+                disabled
+            >
+                <template #title>B</template>
+
+                Content
+            </PotAccordion>
+
+            <PotAccordion v-bind="multipleBind('c')">
+                <template #title>C</template>
+
+                Content
+            </PotAccordion>
+        </PotAccordionGroup>
     </main>
 </template>
 

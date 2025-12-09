@@ -53,13 +53,6 @@ const $classList = useClassList(
     cursor: pointer;
     user-select: none;
     border-style: solid;
-    font-weight: 500;
-    line-height: 1;
-    transition:
-        color 0.2s ease,
-        border-color 0.2s ease,
-        outline-color 0.2s ease,
-        background-color 0.2s ease;
 
     /* --- PotButton - Color --- */
     border-color: var(--pot-button-color-border, transparent);
@@ -73,11 +66,24 @@ const $classList = useClassList(
     padding: 0 var(--pot-button-size-padding, 0);
     border-width: var(--pot-button-size-border, 0);
     font-size: var(--pot-button-size-text, inherit);
+    font-weight: var(--pot-button-size-text-weight, 500);
+    line-height: var(--pot-button-size-text-height, 1);
     outline-width: var(--pot-button-size-outline, initial);
     outline-offset: var(--pot-button-size-outline-offset, initial);
 
     /* --- PotButton - Radius --- */
     border-radius: var(--pot-button-radius-value, 0);
+
+    /* --- PotButton - Transition --- */
+    transition:
+        color var(--pot-button-transition-duration, 0.2s)
+            var(--pot-button-transition-function, ease),
+        border-color var(--pot-button-transition-duration, 0.2s)
+            var(--pot-button-transition-function, ease),
+        outline-color var(--pot-button-transition-duration, 0.2s)
+            var(--pot-button-transition-function, ease),
+        background-color var(--pot-button-transition-duration, 0.2s)
+            var(--pot-button-transition-function, ease);
 }
 
 /* --- PotButton - Disabled --- */
