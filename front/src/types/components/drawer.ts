@@ -1,5 +1,5 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
 
 export const POT_DRAWER_POSITION = {
@@ -69,7 +69,7 @@ export interface IPotDrawerProps {
 
 export interface IPotDrawerExpose {
     /** Drawer visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    readonly isOpen: ComputedRef<boolean>;
 
     /** Open drawer */
     open: () => void;

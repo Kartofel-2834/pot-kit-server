@@ -46,7 +46,6 @@ export function setup() {
                 target: window,
                 handlers: {
                     tab: event => {
-                        console.log('tab');
                         const lastId =
                             currentFocusControls.value[currentFocusControls.value.length - 1];
                         const lastInstance = focusControlsInstances.get(lastId);
@@ -125,14 +124,14 @@ export function useFocusControl(options: {
                 previous: options.previous,
             };
 
-            currentFocusControls.value = [...currentFocusControls.value, instance.id];
             focusControlsInstances.set(instance.id, instance);
+            currentFocusControls.value = Array.from(focusControlsInstances.keys());
 
             return instance.id;
         },
         instanceId => {
             focusControlsInstances.delete(instanceId);
-            currentFocusControls.value = currentFocusControls.value.filter(id => id !== instanceId);
+            currentFocusControls.value = Array.from(focusControlsInstances.keys());
         },
     );
 
@@ -233,19 +232,24 @@ export function useAutoFocus(
     lastActiveElement?: MaybeRef<Element | null>,
 ): AbortController {
     const $subscriptions = useComponentSubscriptions();
-    const { focusableChild, controller } = useFirstFocusableChild(element);
+    const { focusableChild, controller: childController } = useFirstFocusableChild(element);
 
-    return $subscriptions.bind(
+    const autoFocusController = $subscriptions.bind(
         element,
-        () => {
+        target => {
+            const disposeElement = unref(lastActiveElement) ?? document.activeElement;
             focusableChild.value?.focus?.();
-            return unref(lastActiveElement) ?? document.activeElement;
+            return disposeElement;
         },
         disposeElement => {
             if (disposeElement instanceof HTMLElement) disposeElement.focus();
-            controller.abort();
         },
     );
+
+    return createAbortController(() => {
+        autoFocusController.abort();
+        childController.abort();
+    });
 }
 
 export function useFirstFocusableChild(element: MaybeRef<Element | null>): {

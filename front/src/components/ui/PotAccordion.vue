@@ -190,7 +190,8 @@ function updateContentHeight() {
 
 .pot-accordion__header__icon {
     display: flex;
-    transition: transform 0.2s ease;
+    transition: transform var(--pot-accordion-transition-duration, 0.2s)
+        var(--pot-accordion-transition-function, ease);
 
     /* --- PotAccordion - Color --- */
     color: var(--pot-accordion-color-icon, inherit);
@@ -212,7 +213,8 @@ function updateContentHeight() {
 .pot-accordion-transition-enter-active,
 .pot-accordion-transition-leave-active {
     max-height: var(--pot-accordion-content-height);
-    transition: 0.4s ease;
+    transition: var(--pot-accordion-transition-duration, 0.2s)
+        var(--pot-accordion-transition-function, ease);
 }
 
 .pot-accordion-transition-enter-from,

@@ -1,25 +1,19 @@
 <script lang="ts" setup>
 // Types
-import type { Ref } from 'vue';
 import type { IPotDrawerExpose, IPotDrawerProps } from '@/types/components/drawer';
-import type { EDialogLayers } from '@/types/composables/dialog';
 
 // Constants
 import { POT_DRAWER_POSITION } from '@/types/components/drawer';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, inject, provide, readonly, ref } from 'vue';
+import { computed, ref, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
-import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus-old';
-
-const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
+import { useDialog } from '@/composables/dialog';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 const $props = withDefaults(defineProps<IPotDrawerProps>(), {
     visible: undefined,
@@ -38,51 +32,46 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
-const $dialog = useDialog({
-    triggers: ['escape'],
-    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: useDialogLayer($layer, $parentLayer),
-    close,
-    open,
-});
-
-const $subscriptions = useComponentSubscriptions();
-
-// Focus Trap
-$subscriptions.bind(
-    computed(() => ($props.noFocusTrap ? null : container.value)),
-    element => useFocusTrap(element),
-    controller => controller.abort(),
-);
-
-// Auto Focus
-$subscriptions.bind(
-    computed(() => ($props.noAutoFocus ? null : container.value)),
-    element => useAutoFocus(element, document.activeElement),
-    controller => controller.abort(),
-);
-
 // Data
 const container = ref<Element | null>(null);
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const zIndex = useDialogZIndex($dialog);
+const currentStyles = computed(() => ({ zIndex: $dialog.zIndex.value }));
 
-const properties = useDeviceProperties(
-    computed(() => ({
-        position: $props.position,
-        size: $props.size,
-        color: $props.color,
-        radius: $props.radius,
-    })),
+// Composables
+const $dialog = useDialog({
+    triggers: ['escape'],
+    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    layer: DIALOG_LAYERS.DIALOG,
+    close,
+    open,
+});
+
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => $props.position),
+        size: toRef(() => $props.size),
+        color: toRef(() => $props.color),
+        radius: toRef(() => $props.radius),
+    },
     $props.devices,
 );
 
-const classList = computed(() => useClassList({ ...properties.value }));
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+    },
+    'pot-drawer',
+);
 
-const currentStyles = computed(() => ({ zIndex: zIndex.value }));
+useFocusTrap(computed(() => ($props.noFocusTrap ? null : container.value)));
+
+useAutoFocus(computed(() => ($props.noAutoFocus ? null : container.value)));
 
 // Methods
 function open() {
@@ -96,10 +85,8 @@ function close() {
 }
 
 // Exports
-provide('pot-dialog-layer', $dialog.layer);
-
-defineExpose<IPotDrawerExpose>({
-    isOpen: readonly($dialog.isOpen),
+defineExpose<Readonly<IPotDrawerExpose>>({
+    isOpen: $dialog.isOpen,
     open,
     close,
 });
@@ -113,8 +100,8 @@ defineExpose<IPotDrawerExpose>({
         <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
-                :data-pot-dialog-id="$dialog.id.description"
-                :class="['pot-drawer', classList]"
+                v-bind="$dialog.marker"
+                :class="$classList"
                 :style="currentStyles"
             >
                 <div
@@ -140,20 +127,6 @@ defineExpose<IPotDrawerExpose>({
 
 <style>
 .pot-drawer {
-    /* --- Color - Configuration --- */
-    --pot-drawer-color-background: transparent;
-    --pot-drawer-color-border: transparent;
-    --pot-drawer-color-overlay: rgba(0, 0, 0, 0.3);
-
-    /* --- Size - Configuration --- */
-    --pot-drawer-size-text: inherit;
-    --pot-drawer-size-padding: 0;
-    --pot-drawer-size-border: 0;
-    --pot-drawer-size-shadow: none;
-
-    /* --- Radius - Configuration --- */
-    --pot-drawer-radius-value: 0;
-
     position: fixed;
 }
 
@@ -163,17 +136,17 @@ defineExpose<IPotDrawerExpose>({
     border-style: solid;
 
     /* --- PotDrawer - Color --- */
-    border-color: var(--pot-drawer-color-border);
-    background-color: var(--pot-drawer-color-background);
+    border-color: var(--pot-drawer-color-border, transparent);
+    background-color: var(--pot-drawer-color-background, transparent);
 
     /* --- PotDrawer - Size --- */
-    padding: var(--pot-drawer-size-padding);
-    border-width: var(--pot-drawer-size-border);
-    font-size: var(--pot-drawer-size-text);
-    box-shadow: var(--pot-drawer-size-shadow);
+    padding: var(--pot-drawer-size-padding, 0);
+    border-width: var(--pot-drawer-size-border, 0);
+    font-size: var(--pot-drawer-size-text, inherit);
+    box-shadow: var(--pot-drawer-size-shadow, none);
 
     /* --- PotDrawer - Radius --- */
-    border-radius: var(--pot-drawer-radius-value);
+    border-radius: var(--pot-drawer-radius-value, 0);
 }
 
 .pot-drawer__overlay {
@@ -184,11 +157,11 @@ defineExpose<IPotDrawerExpose>({
     height: 100%;
 
     /* --- PotDrawer - Color --- */
-    background-color: var(--pot-drawer-color-overlay);
+    background-color: var(--pot-drawer-color-overlay, rgba(0, 0, 0, 0.3));
 }
 
 /* --- Position - Left --- */
-.pot-drawer._position-left {
+.pot-drawer.pot-drawer_position-left {
     --pot-drawer-position-transform: translateX(-100%);
 
     top: 0;
@@ -196,12 +169,12 @@ defineExpose<IPotDrawerExpose>({
     height: 100%;
 }
 
-.pot-drawer._position-left .pot-drawer__container {
+.pot-drawer.pot-drawer_position-left .pot-drawer__container {
     height: 100%;
 }
 
 /* --- Position - Right --- */
-.pot-drawer._position-right {
+.pot-drawer.pot-drawer_position-right {
     --pot-drawer-position-transform: translateX(100%);
 
     top: 0;
@@ -209,12 +182,12 @@ defineExpose<IPotDrawerExpose>({
     height: 100%;
 }
 
-.pot-drawer._position-right .pot-drawer__container {
+.pot-drawer.pot-drawer_position-right .pot-drawer__container {
     height: 100%;
 }
 
 /* --- Position - Top --- */
-.pot-drawer._position-top {
+.pot-drawer.pot-drawer_position-top {
     --pot-drawer-position-transform: translateY(-100%);
 
     top: 0;
@@ -222,12 +195,12 @@ defineExpose<IPotDrawerExpose>({
     width: 100%;
 }
 
-.pot-drawer._position-top .pot-drawer__container {
+.pot-drawer.pot-drawer_position-top .pot-drawer__container {
     width: 100%;
 }
 
 /* --- Position - Bottom --- */
-.pot-drawer._position-bottom {
+.pot-drawer.pot-drawer_position-bottom {
     --pot-drawer-position-transform: translateY(100%);
 
     bottom: 0;
@@ -235,19 +208,21 @@ defineExpose<IPotDrawerExpose>({
     width: 100%;
 }
 
-.pot-drawer._position-bottom .pot-drawer__container {
+.pot-drawer.pot-drawer_position-bottom .pot-drawer__container {
     width: 100%;
 }
 
 /* --- Overlay - Transition --- */
 .pot-drawer-transition-enter-active,
 .pot-drawer-transition-leave-active {
-    transition: 0.2s ease;
+    transition: var(--pot-drawer-transition-duration, 0.2s)
+        var(--pot-drawer-transition-function, ease);
 }
 
 .pot-drawer-transition-enter-active .pot-drawer__overlay,
 .pot-drawer-transition-leave-active .pot-drawer__overlay {
-    transition: opacity 0.2s ease;
+    transition: opacity var(--pot-drawer-transition-duration, 0.2s)
+        var(--pot-drawer-transition-function, ease);
 }
 
 .pot-drawer-transition-enter-from .pot-drawer__overlay,
@@ -258,7 +233,8 @@ defineExpose<IPotDrawerExpose>({
 /* --- Container - Transition --- */
 .pot-drawer-transition-enter-active .pot-drawer__container,
 .pot-drawer-transition-leave-active .pot-drawer__container {
-    transition: transform 0.2s ease;
+    transition: transform var(--pot-drawer-transition-duration, 0.2s)
+        var(--pot-drawer-transition-function, ease);
 }
 
 .pot-drawer-transition-enter-from .pot-drawer__container,
