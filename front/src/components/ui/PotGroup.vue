@@ -1,59 +1,65 @@
 <script lang="ts" setup>
 // Types
 import type { IPotGroupProps } from '@/types/components/group';
+import type { EPotGridGap } from '@/types/components/grid';
 
 // Vue
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotGroupProps>(), {
     tag: 'div',
 });
 
-const $deviceIs = useDeviceIs();
-
 // Computed
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            gap: $props.gap,
-            direction: $props.direction,
-            align: $props.align,
-            alignContent: $props.alignContent,
-            justify: $props.justify,
-            justifyItems: $props.justifyItems,
-            wrap: $props.wrap,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
-
-const classList = computed(() =>
-    useClassList({
-        gap: properties.value.gap,
-    }),
-);
-
 const currentStyles = computed(() => {
     return {
-        'flex-direction': properties.value.direction,
-        'align-items': properties.value.align,
-        'align-content': properties.value.alignContent,
-        'justify-content': properties.value.justify,
-        'justify-items': properties.value.justifyItems,
-        'flex-wrap': properties.value.wrap,
+        gap: formatGap($properties.gap.value),
+        'flex-direction': $properties.direction.value,
+        'align-items': $properties.align.value,
+        'align-content': $properties.alignContent.value,
+        'justify-content': $properties.justify.value,
+        'justify-items': $properties.justifyItems.value,
+        'flex-wrap': $properties.wrap.value,
     };
 });
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        gap: toRef(() => $props.gap),
+        direction: toRef(() => $props.direction),
+        align: toRef(() => $props.align),
+        alignContent: toRef(() => $props.alignContent),
+        justify: toRef(() => $props.justify),
+        justifyItems: toRef(() => $props.justifyItems),
+        wrap: toRef(() => $props.wrap),
+    },
+    toRef(() => $props.devices),
+);
+
+const $classList = useClassList(
+    {
+        gap: computed(() =>
+            typeof $properties.gap.value !== 'number' ? $properties.gap.value : null,
+        ),
+    },
+    'pot-group',
+);
+
+// Methods
+function formatGap(gap: EPotGridGap | number | null | undefined): string {
+    return typeof gap === 'number' && !isNaN(gap) && isFinite(gap) ? `${gap}px` : '';
+}
 </script>
 
 <template>
     <component
         :is="tag"
-        :class="['pot-group', classList]"
+        :class="$classList"
         :style="currentStyles"
     >
         <slot />
@@ -62,12 +68,9 @@ const currentStyles = computed(() => {
 
 <style>
 .pot-group {
-    /* --- Gap - Configuration --- */
-    --pot-group-gap-value: auto;
-
     display: flex;
 
     /* --- PotGroup - Gap --- */
-    gap: var(--pot-group-gap-value);
+    gap: var(--pot-group-gap-value, 0);
 }
 </style>

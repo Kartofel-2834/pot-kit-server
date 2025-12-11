@@ -56,7 +56,7 @@ const $properties = useDeviceProperties(
         color: toRef(() => $props.color),
         radius: toRef(() => $props.radius),
     },
-    $props.devices,
+    toRef(() => $props.devices),
 );
 
 const $classList = useClassList(

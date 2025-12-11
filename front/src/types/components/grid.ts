@@ -57,23 +57,15 @@ export const POT_GRID_GAP = {} as const;
 
 export type EPotGridGap = (typeof POT_GRID_GAP)[keyof typeof POT_GRID_GAP];
 
-export const POT_GRID_ROW_GAP = {} as const;
-
-export type EPotGridRowGap = (typeof POT_GRID_ROW_GAP)[keyof typeof POT_GRID_ROW_GAP];
-
-export const POT_GRID_COLUMN_GAP = {} as const;
-
-export type EPotGridColumnGap = (typeof POT_GRID_COLUMN_GAP)[keyof typeof POT_GRID_COLUMN_GAP];
-
 export interface IPotGridProps {
     /** Tag of the element defining the grid */
     tag?: string;
 
     /** Number of columns in the grid */
-    cols?: number | number[] | string | string[];
+    cols?: number | string | Array<number | string>;
 
     /** Number of rows in the grid */
-    rows?: number | number[] | string | string[];
+    rows?: number | string | Array<number | string>;
 
     /** Grid direction */
     flow?: string | string[];
@@ -97,13 +89,13 @@ export interface IPotGridProps {
     justifyItems?: TPotGridJustifyItems | TPotGridJustifyItems[] | null;
 
     /** Grid margin size */
-    gap?: EPotGridGap | EPotGridGap[] | null;
+    gap?: number | EPotGridGap | Array<EPotGridGap | number> | null;
 
     /** Grid row indent size */
-    rowGap?: EPotGridGap | EPotGridGap[] | null;
+    rowGap?: number | EPotGridGap | Array<EPotGridGap | number> | null;
 
     /** Grid column indent size */
-    columnGap?: EPotGridGap | EPotGridGap[] | null;
+    columnGap?: number | EPotGridGap | Array<EPotGridGap | number> | null;
 
     /** Breakpoints for responsive design */
     devices?: EPotDevice[];

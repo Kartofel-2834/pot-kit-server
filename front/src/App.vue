@@ -18,6 +18,8 @@ import PotDrawer from './components/ui/PotDrawer.vue';
 import PotAccordion from './components/ui/PotAccordion.vue';
 import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
 import PotSelect from './components/ui/PotSelect.vue';
+import PotGrid from './components/ui/PotGrid.vue';
+import PotGroup from './components/ui/PotGroup.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -62,15 +64,12 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
     >
         <PotButton @click="isOpen = !isOpen">Test</PotButton>
 
-        <PotDrawer
-            v-model="isOpen"
-            :position="['right', 'left', 'top']"
-        >
-            <div style="padding: 10rem; background-color: white">
-                <button>A</button>
-                <button>B</button>
-            </div>
-        </PotDrawer>
+        <PotGroup :gap="10">
+            <div style="padding: 20px; background-color: brown">1</div>
+            <div style="padding: 20px; background-color: brown">2</div>
+            <div style="padding: 20px; background-color: brown">3</div>
+            <div style="padding: 20px; background-color: brown">4</div>
+        </PotGroup>
     </main>
 </template>
 

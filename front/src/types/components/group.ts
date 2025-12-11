@@ -84,7 +84,7 @@ export interface IPotGroupProps {
     wrap?: TPotGroupWrap | TPotGroupWrap[] | null;
 
     /** Gap size */
-    gap?: EPotGroupGap | EPotGroupGap[] | null;
+    gap?: number | EPotGroupGap | Array<EPotGroupGap | number> | null;
 
     /** Breakpoints for responsive design */
     devices?: EPotDevice[];

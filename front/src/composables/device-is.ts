@@ -150,7 +150,7 @@ export function useDeviceIs(): TDeviceIs<EPotDevice> {
 /** Composable for getting values depending on screen breakpoints */
 export function useDeviceProperties<T extends object>(
     properties: T,
-    devices?: MaybeRef<EPotDevice[]>,
+    devices?: MaybeRef<EPotDevice[] | undefined | null>,
 ): TDeviceProperties<T> {
     return Object.keys(properties).reduce((res, property) => {
         const computedValue = computed(() => {

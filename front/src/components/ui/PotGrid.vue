@@ -1,64 +1,80 @@
 <script lang="ts" setup>
 // Types
-import type { IPotGridProps } from '@/types/components/grid';
+import type { EPotGridGap, IPotGridProps } from '@/types/components/grid';
 
 // Vue
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
-import { useDeviceIs, useDeviceProperties } from '@/composables/device-is';
+import { useDeviceProperties } from '@/composables/device-is';
 
 const $props = withDefaults(defineProps<IPotGridProps>(), {
     tag: 'div',
 });
 
-const $deviceIs = useDeviceIs();
-
 // Computed
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            cols: $props.cols,
-            rows: $props.rows,
-            flow: $props.flow,
-            autoCols: $props.autoCols,
-            autoRows: $props.autoRows,
-            align: $props.align,
-            alignContent: $props.alignContent,
-            justify: $props.justify,
-            justifyItems: $props.justifyItems,
-            gap: $props.gap,
-            rowGap: $props.rowGap,
-            columnGap: $props.columnGap,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
-
-const classList = computed(() =>
-    useClassList({
-        gap: properties.value.gap,
-        'row-gap': properties.value.rowGap,
-        'column-gap': properties.value.columnGap,
-        'divided-gap': Boolean(properties.value.rowGap || properties.value.columnGap),
-    }),
-);
-
 const currentStyles = computed(() => {
+    const rowGap = formatGap($properties.rowGap.value);
+    const columnGap = formatGap($properties.columnGap.value);
+    const gap = formatGap($properties.gap.value);
+
+    const data = rowGap || columnGap ? { 'row-gap': rowGap, 'column-gap': columnGap } : { gap };
+
     return {
-        'grid-template-columns': formatNumberToFr(properties.value.cols),
-        'grid-template-rows': formatNumberToFr(properties.value.rows),
-        'grid-auto-flow': properties.value.flow,
-        'grid-auto-rows': properties.value.autoRows,
-        'grid-auto-columns': properties.value.autoCols,
-        'align-items': properties.value.align,
-        'align-content': properties.value.alignContent,
-        'justify-content': properties.value.justify,
-        'justify-items': properties.value.justifyItems,
+        ...data,
+        'grid-template-columns': formatNumberToFr($properties.cols.value),
+        'grid-template-rows': formatNumberToFr($properties.rows.value),
+        'grid-auto-flow': $properties.flow.value,
+        'grid-auto-rows': $properties.autoRows.value,
+        'grid-auto-columns': $properties.autoCols.value,
+        'align-items': $properties.align.value,
+        'align-content': $properties.alignContent.value,
+        'justify-content': $properties.justify.value,
+        'justify-items': $properties.justifyItems.value,
     };
 });
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        cols: toRef(() => $props.cols),
+        rows: toRef(() => $props.rows),
+        flow: toRef(() => $props.flow),
+        autoCols: toRef(() => $props.autoCols),
+        autoRows: toRef(() => $props.autoRows),
+        align: toRef(() => $props.align),
+        alignContent: toRef(() => $props.alignContent),
+        justify: toRef(() => $props.justify),
+        justifyItems: toRef(() => $props.justifyItems),
+        gap: toRef(() => $props.gap),
+        rowGap: toRef(() => $props.rowGap),
+        columnGap: toRef(() => $props.columnGap),
+    },
+    toRef(() => $props.devices),
+);
+
+const $classList = useClassList(
+    {
+        'divided-gap': computed(() => {
+            const [rowGap, columnGap] = [$properties.rowGap.value, $properties.columnGap.value];
+            const hasRowGap = rowGap && typeof rowGap !== 'number';
+            const hasColumnGap = columnGap && typeof columnGap !== 'number';
+
+            return hasRowGap || hasColumnGap;
+        }),
+        gap: computed(() =>
+            typeof $properties.gap.value !== 'number' ? $properties.gap.value : null,
+        ),
+        'row-gap': computed(() =>
+            typeof $properties.rowGap.value !== 'number' ? $properties.rowGap.value : null,
+        ),
+        'column-gap': computed(() =>
+            typeof $properties.columnGap.value !== 'number' ? $properties.columnGap.value : null,
+        ),
+    },
+    'pot-grid',
+);
 
 // Methods
 function formatNumberToFr(v?: string | number): string | undefined {
@@ -68,12 +84,16 @@ function formatNumberToFr(v?: string | number): string | undefined {
 
     return v ? String(v) : undefined;
 }
+
+function formatGap(gap: EPotGridGap | number | null | undefined): string {
+    return typeof gap === 'number' && !isNaN(gap) && isFinite(gap) ? `${gap}px` : '';
+}
 </script>
 
 <template>
     <component
         :is="tag"
-        :class="['pot-grid', classList]"
+        :class="$classList"
         :style="currentStyles"
     >
         <slot />
@@ -82,20 +102,15 @@ function formatNumberToFr(v?: string | number): string | undefined {
 
 <style>
 .pot-grid {
-    /* --- Gap - Configuration --- */
-    --pot-grid-gap-value: 0;
-    --pot-grid-row-gap-value: 0;
-    --pot-grid-column-gap-value: 0;
-
     display: grid;
 
     /* --- PotGrid - Gap --- */
-    gap: var(--pot-grid-gap-value);
+    gap: var(--pot-grid-gap-value, 0);
 }
 
-.pot-grid._divided-gap {
+.pot-grid.pot-grid_divided-gap {
     /* Gap */
-    row-gap: var(--pot-grid-row-gap-value);
-    column-gap: var(--pot-grid-column-gap-value);
+    row-gap: var(--pot-grid-gap-row, 0);
+    column-gap: var(--pot-grid-gap-column, 0);
 }
 </style>
