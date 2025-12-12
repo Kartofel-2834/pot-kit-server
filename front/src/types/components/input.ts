@@ -50,14 +50,7 @@ export interface IPotInputProps {
     max?: number;
     maxlength?: number;
     tabindex?: string | number;
-    name?: string;
-}
-
-export interface IPotInputSlots {
-    prepend?: () => unknown;
-    preicon?: () => unknown;
-    icon?: () => unknown;
-    append?: () => unknown;
+    inputName?: string;
 }
 
 export interface IPotInputExpose {

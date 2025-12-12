@@ -143,6 +143,8 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     padding: var(--pot-drawer-size-padding, 0);
     border-width: var(--pot-drawer-size-border, 0);
     font-size: var(--pot-drawer-size-text, inherit);
+    font-weight: var(--pot-drawer-size-text-weight, 400);
+    line-height: var(--pot-drawer-size-text-height, 1);
     box-shadow: var(--pot-drawer-size-shadow, none);
 
     /* --- PotDrawer - Radius --- */

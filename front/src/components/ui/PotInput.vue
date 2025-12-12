@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 // Types
-import type { IPotInputExpose, IPotInputProps, IPotInputSlots } from '@/types/components/input';
+import type { IPotInputExpose, IPotInputProps } from '@/types/components/input';
 
 // Vue
-import { ref, computed } from 'vue';
+import { ref, computed, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -24,8 +24,6 @@ const $emit = defineEmits<{
     keyup: [value: KeyboardEvent];
 }>();
 
-const $slots = defineSlots<IPotInputSlots>();
-
 // Data
 const input = ref<HTMLInputElement | null>(null);
 
@@ -34,25 +32,28 @@ const isFocused = ref<boolean>(false);
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue);
 
+// Composables
 const $properties = useDeviceProperties(
     {
-        size: $props.size,
-        color: $props.color,
-        radius: $props.radius,
+        size: toRef(() => $props.size),
+        color: toRef(() => $props.color),
+        radius: toRef(() => $props.radius),
     },
-    $props.devices,
+    toRef(() => $props.devices),
 );
 
-/** Классы модификаторы */
-const classList = useClassList({
-    size: $properties.size,
-    color: $properties.color,
-    radius: $properties.radius,
-    focused: isFocused,
-    disabled: $props.disabled,
-    invalid: $props.invalid,
-    fluid: $props.fluid,
-});
+const $classList = useClassList(
+    {
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+        focused: isFocused,
+        disabled: toRef(() => $props.disabled),
+        invalid: toRef(() => $props.invalid),
+        fluid: toRef(() => $props.fluid),
+    },
+    'pot-input',
+);
 
 // Methods
 function onInput(event: Event): void {
@@ -87,36 +88,46 @@ defineExpose<IPotInputExpose>({
 </script>
 
 <template>
-    <label :class="['pot-input', classList]">
+    <label :class="$classList">
         <slot name="prepend"></slot>
 
-        <div class="pot-input-icon pot-input-left-icon">
+        <div
+            v-if="$slots.preicon"
+            class="pot-input__icon pot-input__icon_left"
+        >
             <slot name="preicon" />
         </div>
 
-        <input
-            ref="input"
-            class="pot-input-target"
-            :value="currentValue"
-            :type="type"
-            :name="name"
-            :placeholder="placeholder"
-            :readonly="readonly"
-            :step="step"
-            :min="min"
-            :max="max"
-            :maxlength="maxlength"
-            :tabindex="tabindex"
-            :disabled="disabled"
-            @input="onInput"
-            @change="onChange"
-            @focus="onFocus"
-            @blur="onBlur"
-            @keydown="$emit('keydown', $event)"
-            @keyup="$emit('keyup', $event)"
-        />
+        <div class="pot-input__wrapper">
+            <slot name="label" />
 
-        <div class="pot-input-icon pot-input-right-icon">
+            <input
+                ref="input"
+                class="pot-input__wrapper__target"
+                :value="currentValue"
+                :type="type"
+                :name="inputName"
+                :placeholder="placeholder"
+                :readonly="readonly"
+                :step="step"
+                :min="min"
+                :max="max"
+                :maxlength="maxlength"
+                :tabindex="tabindex"
+                :disabled="disabled"
+                @input="onInput"
+                @change="onChange"
+                @focus="onFocus"
+                @blur="onBlur"
+                @keydown="$emit('keydown', $event)"
+                @keyup="$emit('keyup', $event)"
+            />
+        </div>
+
+        <div
+            v-if="$slots.icon"
+            class="pot-input__icon pot-input__icon_right"
+        >
             <slot name="icon" />
         </div>
 
@@ -126,27 +137,6 @@ defineExpose<IPotInputExpose>({
 
 <style>
 .pot-input {
-    /* --- Color - Configuration --- */
-    --pot-input-color-border: transparent;
-    --pot-input-color-background: transparent;
-    --pot-input-color-text: inherit;
-    --pot-input-color-caret: currentColor;
-    --pot-input-color-placeholder: inherit;
-    --pot-input-color-icon: initial;
-
-    /* --- Size - Configuration --- */
-    --pot-input-size-height: auto;
-    --pot-input-size-padding: 0;
-    --pot-input-size-border: 0;
-    --pot-input-size-text: inherit;
-    --pot-input-size-gap: 1rem;
-    --pot-input-size-icon: auto;
-    --pot-input-size-outline: initial;
-    --pot-input-size-outline-offset: initial;
-
-    /* --- Radius - Configuration --- */
-    --pot-input-radius-value: 0;
-
     display: flex;
     align-items: center;
     width: 100%;
@@ -156,26 +146,32 @@ defineExpose<IPotInputExpose>({
     line-height: 1;
     cursor: text;
     transition:
-        color 0.2s,
-        background-color 0.2s,
-        border-color 0.2s;
+        color var(--pot-input-transition-duration, 0.2s) var(--pot-input-transition-function, ease),
+        background-color var(--pot-input-transition-duration, 0.2s)
+            var(--pot-input-transition-function, ease),
+        border-color var(--pot-input-transition-duration, 0.2s)
+            var(--pot-input-transition-function, ease);
 
     /* --- PotInput - Color --- */
-    color: var(--pot-input-color-text);
-    background-color: var(--pot-input-color-background);
-    border-color: var(--pot-input-color-border);
+    color: var(--pot-input-color-text, inherit);
+    background-color: var(--pot-input-color-background, transparent);
+    border-color: var(--pot-input-color-border, transparent);
 
     /* --- PotInput - Size --- */
-    padding: var(--pot-input-size-padding);
-    gap: var(--pot-input-size-gap);
-    font-size: var(--pot-input-size-text);
-    border-width: var(--pot-input-size-border);
+    padding: var(--pot-input-size-padding, 0);
+    gap: var(--pot-input-size-gap, 0.8em);
+    font-size: var(--pot-input-size-text, inherit);
+    font-weight: var(--pot-input-size-text-weight, 400);
+    line-height: var(--pot-input-size-text-height, 1);
+    border-width: var(--pot-input-size-border, 0);
+    outline-width: var(--pot-input-size-outline, initial);
+    outline-offset: var(--pot-input-size-outline-offset, initial);
 
     /* --- PotInput - Radius --- */
-    border-radius: var(--pot-input-radius-value);
+    border-radius: var(--pot-input-radius-value, 0);
 }
 
-.pot-input._disabled .pot-input-target {
+.pot-input._disabled .pot-input__wrapper__target {
     cursor: not-allowed;
 }
 
@@ -183,7 +179,12 @@ defineExpose<IPotInputExpose>({
     width: 100%;
 }
 
-.pot-input-target {
+.pot-input__wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.pot-input__wrapper__target {
     outline: none;
     padding: 0;
     border: none;
@@ -199,23 +200,28 @@ defineExpose<IPotInputExpose>({
     /* Color */
     color: inherit;
     background-color: transparent;
-    caret-color: var(--pot-input-color-caret);
+    caret-color: var(--pot-input-color-caret, currentColor);
 
     /* Size */
-    height: var(--pot-input-size-height);
+    height: var(--pot-input-size-height, auto);
 }
 
-.pot-input-target[type='number']::-webkit-inner-spin-button,
-.pot-input-target[type='number']::-webkit-outer-spin-button {
+.pot-input__wrapper__target::placeholder {
+    font-weight: var(--pot-input-size-placeholder-weight, inherit);
+    color: var(--pot-input-color-placeholder, initial);
+}
+
+.pot-input__wrapper__target[type='number']::-webkit-inner-spin-button,
+.pot-input__wrapper__target[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.pot-input-target[disabled] {
+.pot-input__wrapper__target[disabled] {
     opacity: 1;
 }
 
-.pot-input-target::-ms-clear {
+.pot-input__wrapper__target::-ms-clear {
     display: none;
 }
 
@@ -225,10 +231,14 @@ defineExpose<IPotInputExpose>({
     font-size: inherit;
 
     /* --- PotInput - Color --- */
-    color: var(--pot-input-color-icon);
-    fill: var(--pot-input-color-icon);
+    color: var(--pot-input-color-icon, initial);
+    fill: var(--pot-input-color-icon, initial);
 
     /* --- PotInput - Size --- */
-    width: var(--pot-input-size-icon);
+    width: var(--pot-input-size-icon, auto);
 }
 </style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/input.css" />
+<!-- Styles - END -->

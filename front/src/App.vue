@@ -62,14 +62,9 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             overflow: visible;
         "
     >
-        <PotButton @click="isOpen = !isOpen">Test</PotButton>
-
-        <PotGroup :gap="10">
-            <div style="padding: 20px; background-color: brown">1</div>
-            <div style="padding: 20px; background-color: brown">2</div>
-            <div style="padding: 20px; background-color: brown">3</div>
-            <div style="padding: 20px; background-color: brown">4</div>
-        </PotGroup>
+        <PotInput>
+            <template #preicon>test</template>
+        </PotInput>
     </main>
 </template>
 

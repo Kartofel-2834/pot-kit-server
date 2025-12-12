@@ -143,6 +143,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     padding: var(--pot-dialog-size-padding, 0);
     border-width: var(--pot-dialog-size-border, 1px);
     font-size: var(--pot-dialog-size-text, inherit);
+    font-weight: var(--pot-dialog-size-text-weight, 400);
+    line-height: var(--pot-dialog-size-text-height, 1);
     box-shadow: var(--pot-dialog-size-shadow, none);
 
     /* --- PotDialog - Radius --- */
