@@ -11,11 +11,14 @@ export interface ISpecsOptions<OPTION, VALUE_FIELD extends keyof OPTION = never,
     values: MaybeRef<TOptionValue<OPTION, VALUE_FIELD>[]>;
     options: MaybeRef<OPTION[]>;
     data?: MaybeRef<
-        (option: OPTION, value: TOptionValue<OPTION, VALUE_FIELD> | null, label: string) => DATA
+        | ((option: OPTION, value: TOptionValue<OPTION, VALUE_FIELD> | null, label: string) => DATA)
+        | undefined
     >;
-    optionLabel?: MaybeRef<keyof OPTION | ((option: OPTION) => string)>;
-    optionDisabled?: MaybeRef<keyof OPTION | ((option: OPTION) => boolean)>;
-    optionValue?: MaybeRef<VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>)>;
+    optionLabel?: MaybeRef<keyof OPTION | ((option: OPTION) => string) | undefined>;
+    optionDisabled?: MaybeRef<keyof OPTION | ((option: OPTION) => boolean) | undefined>;
+    optionValue?: MaybeRef<
+        VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>) | undefined
+    >;
 }
 
 export interface ISpec<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknown> {

@@ -66,7 +66,7 @@ const $classList = useClassList(
         color: $properties.color,
         radius: $properties.radius,
     },
-    'pot-drawer',
+    'drawer',
 );
 
 useFocusTrap(computed(() => ($props.noFocusTrap ? null : container.value)));
@@ -87,6 +87,7 @@ function close() {
 // Exports
 defineExpose<Readonly<IPotDrawerExpose>>({
     isOpen: $dialog.isOpen,
+    container,
     open,
     close,
 });
@@ -101,24 +102,28 @@ defineExpose<Readonly<IPotDrawerExpose>>({
             <div
                 v-if="$dialog.isOpen.value"
                 v-bind="$dialog.marker"
-                :class="$classList"
+                :class="['pot-drawer', $classList]"
                 :style="currentStyles"
             >
                 <div
                     v-if="!noOverlay"
-                    class="pot-drawer__overlay"
+                    class="pot-drawer-overlay"
                     @click="close"
                 />
 
                 <div
                     ref="container"
-                    class="pot-drawer__container"
+                    class="pot-drawer-container"
                     role="dialog"
                     aria-modal="true"
                     :aria-labelledby="ariaLabelledby"
                     :aria-describedby="ariaDescribedby"
                 >
-                    <slot />
+                    <slot
+                        :marker="$dialog.marker"
+                        :close="close"
+                        :open="open"
+                    />
                 </div>
             </div>
         </Transition>
@@ -130,7 +135,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     position: fixed;
 }
 
-.pot-drawer__container {
+.pot-drawer-container {
     position: relative;
     overflow: auto;
     border-style: solid;
@@ -151,7 +156,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     border-radius: var(--pot-drawer-radius-value, 0);
 }
 
-.pot-drawer__overlay {
+.pot-drawer-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -163,7 +168,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
 }
 
 /* --- Position - Left --- */
-.pot-drawer.pot-drawer_position-left {
+.pot-drawer._drawer-position-left {
     --pot-drawer-position-transform: translateX(-100%);
 
     top: 0;
@@ -171,12 +176,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     height: 100%;
 }
 
-.pot-drawer.pot-drawer_position-left .pot-drawer__container {
+.pot-drawer._drawer-position-left .pot-drawer-container {
     height: 100%;
 }
 
 /* --- Position - Right --- */
-.pot-drawer.pot-drawer_position-right {
+.pot-drawer._drawer-position-right {
     --pot-drawer-position-transform: translateX(100%);
 
     top: 0;
@@ -184,12 +189,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     height: 100%;
 }
 
-.pot-drawer.pot-drawer_position-right .pot-drawer__container {
+.pot-drawer._drawer-position-right .pot-drawer-container {
     height: 100%;
 }
 
 /* --- Position - Top --- */
-.pot-drawer.pot-drawer_position-top {
+.pot-drawer._drawer-position-top {
     --pot-drawer-position-transform: translateY(-100%);
 
     top: 0;
@@ -197,12 +202,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     width: 100%;
 }
 
-.pot-drawer.pot-drawer_position-top .pot-drawer__container {
+.pot-drawer._drawer-position-top .pot-drawer-container {
     width: 100%;
 }
 
 /* --- Position - Bottom --- */
-.pot-drawer.pot-drawer_position-bottom {
+.pot-drawer._drawer-position-bottom {
     --pot-drawer-position-transform: translateY(100%);
 
     bottom: 0;
@@ -210,7 +215,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     width: 100%;
 }
 
-.pot-drawer.pot-drawer_position-bottom .pot-drawer__container {
+.pot-drawer._drawer-position-bottom .pot-drawer-container {
     width: 100%;
 }
 
@@ -221,26 +226,26 @@ defineExpose<Readonly<IPotDrawerExpose>>({
         var(--pot-drawer-transition-function, ease);
 }
 
-.pot-drawer-transition-enter-active .pot-drawer__overlay,
-.pot-drawer-transition-leave-active .pot-drawer__overlay {
+.pot-drawer-transition-enter-active .pot-drawer-overlay,
+.pot-drawer-transition-leave-active .pot-drawer-overlay {
     transition: opacity var(--pot-drawer-transition-duration, 0.2s)
         var(--pot-drawer-transition-function, ease);
 }
 
-.pot-drawer-transition-enter-from .pot-drawer__overlay,
-.pot-drawer-transition-leave-to .pot-drawer__overlay {
+.pot-drawer-transition-enter-from .pot-drawer-overlay,
+.pot-drawer-transition-leave-to .pot-drawer-overlay {
     opacity: 0;
 }
 
 /* --- Container - Transition --- */
-.pot-drawer-transition-enter-active .pot-drawer__container,
-.pot-drawer-transition-leave-active .pot-drawer__container {
+.pot-drawer-transition-enter-active .pot-drawer-container,
+.pot-drawer-transition-leave-active .pot-drawer-container {
     transition: transform var(--pot-drawer-transition-duration, 0.2s)
         var(--pot-drawer-transition-function, ease);
 }
 
-.pot-drawer-transition-enter-from .pot-drawer__container,
-.pot-drawer-transition-leave-to .pot-drawer__container {
+.pot-drawer-transition-enter-from .pot-drawer-container,
+.pot-drawer-transition-leave-to .pot-drawer-container {
     transform: var(--pot-drawer-position-transform);
 }
 </style>

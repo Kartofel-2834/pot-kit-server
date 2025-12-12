@@ -1,5 +1,5 @@
 // Types
-import type { ComputedRef, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
 
 export const POT_DIALOG_POSITION = {
@@ -77,6 +77,9 @@ export interface IPotDialogProps {
 export interface IPotDialogExpose {
     /** Dialog visibility flag */
     isOpen: ComputedRef<boolean>;
+
+    /** Dialog container element */
+    container: Readonly<Ref<Element | null>>;
 
     /** Open dialog */
     open: () => void;

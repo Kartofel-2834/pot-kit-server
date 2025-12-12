@@ -52,7 +52,7 @@ const $classList = useClassList(
         invalid: toRef(() => $props.invalid),
         fluid: toRef(() => $props.fluid),
     },
-    'pot-input',
+    'input',
 );
 
 // Methods
@@ -82,28 +82,28 @@ function onBlur(event: FocusEvent) {
 }
 
 // Exports
-defineExpose<IPotInputExpose>({
+defineExpose<Readonly<IPotInputExpose>>({
     input: input,
 });
 </script>
 
 <template>
-    <label :class="$classList">
+    <label :class="['pot-input', $classList]">
         <slot name="prepend"></slot>
 
         <div
             v-if="$slots.preicon"
-            class="pot-input__icon pot-input__icon_left"
+            class="pot-input-icon pot-input-icon_left"
         >
             <slot name="preicon" />
         </div>
 
-        <div class="pot-input__wrapper">
+        <div class="pot-input-wrapper">
             <slot name="label" />
 
             <input
                 ref="input"
-                class="pot-input__wrapper__target"
+                class="pot-input-target"
                 :value="currentValue"
                 :type="type"
                 :name="inputName"
@@ -126,7 +126,7 @@ defineExpose<IPotInputExpose>({
 
         <div
             v-if="$slots.icon"
-            class="pot-input__icon pot-input__icon_right"
+            class="pot-input-icon pot-input-icon_right"
         >
             <slot name="icon" />
         </div>
@@ -139,11 +139,8 @@ defineExpose<IPotInputExpose>({
 .pot-input {
     display: flex;
     align-items: center;
-    width: 100%;
+    flex-wrap: nowrap;
     border-style: solid;
-    cursor: text;
-    font-weight: 400;
-    line-height: 1;
     cursor: text;
     transition:
         color var(--pot-input-transition-duration, 0.2s) var(--pot-input-transition-function, ease),
@@ -171,20 +168,20 @@ defineExpose<IPotInputExpose>({
     border-radius: var(--pot-input-radius-value, 0);
 }
 
-.pot-input._disabled .pot-input__wrapper__target {
-    cursor: not-allowed;
+.pot-input._input-disabled .pot-input-target {
+    cursor: default;
 }
 
-.pot-input._fluid {
+.pot-input._input-fluid {
     width: 100%;
 }
 
-.pot-input__wrapper {
+.pot-input-wrapper {
     display: flex;
     flex-direction: column;
 }
 
-.pot-input__wrapper__target {
+.pot-input-target {
     outline: none;
     padding: 0;
     border: none;
@@ -197,31 +194,31 @@ defineExpose<IPotInputExpose>({
     font-size: inherit;
     cursor: inherit;
 
-    /* Color */
+    /* --- PotInput - Color --- */
     color: inherit;
     background-color: transparent;
     caret-color: var(--pot-input-color-caret, currentColor);
 
-    /* Size */
+    /* --- PotInput - Size --- */
     height: var(--pot-input-size-height, auto);
 }
 
-.pot-input__wrapper__target::placeholder {
+.pot-input-target::placeholder {
     font-weight: var(--pot-input-size-placeholder-weight, inherit);
     color: var(--pot-input-color-placeholder, initial);
 }
 
-.pot-input__wrapper__target[type='number']::-webkit-inner-spin-button,
-.pot-input__wrapper__target[type='number']::-webkit-outer-spin-button {
+.pot-input-target[type='number']::-webkit-inner-spin-button,
+.pot-input-target[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.pot-input__wrapper__target[disabled] {
+.pot-input-target[disabled] {
     opacity: 1;
 }
 
-.pot-input__wrapper__target::-ms-clear {
+.pot-input-target::-ms-clear {
     display: none;
 }
 

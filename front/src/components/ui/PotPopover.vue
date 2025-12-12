@@ -4,7 +4,7 @@ import type { VNode } from 'vue';
 import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
 
 // Vue
-import { cloneVNode, computed, isVNode, ref } from 'vue';
+import { cloneVNode, computed, isVNode, ref, toRef } from 'vue';
 
 // Constants
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
@@ -15,10 +15,10 @@ import { useDeviceProperties } from '@/composables/device-is';
 import { useAttach } from '@/composables/attach';
 import { useDialog } from '@/composables/dialog';
 import { useClassList } from '@/composables/class-list';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
 const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     visible: undefined,
@@ -36,14 +36,6 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
-const $dialog = useDialog({
-    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    triggers: ['clickoutside', 'escape'],
-    layer: DIALOG_LAYERS.POPOVER,
-    close,
-    open,
-});
-
 // Data
 const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
@@ -53,19 +45,35 @@ const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
+const currentStyles = computed(() => {
+    return {
+        zIndex: $dialog.zIndex.value,
+        transform: `translate(${$attach.x.value}px, ${$attach.y.value}px)`,
+    };
+});
+
+// Composables
+const $dialog = useDialog({
+    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    triggers: ['clickoutside', 'escape'],
+    layer: DIALOG_LAYERS.POPOVER,
+    close,
+    open,
+});
+
 const $properties = useDeviceProperties(
     {
-        position: $props.position,
-        nudge: $props.nudge,
-        edgeMargin: $props.edgeMargin,
-        color: $props.color,
-        size: $props.size,
-        radius: $props.radius,
+        position: toRef(() => $props.position),
+        nudge: toRef(() => $props.nudge),
+        edgeMargin: toRef(() => $props.edgeMargin),
+        color: toRef(() => $props.color),
+        size: toRef(() => $props.size),
+        radius: toRef(() => $props.radius),
     },
-    $props.devices,
+    toRef(() => $props.devices),
 );
 
-const classList = useClassList(
+const $classList = useClassList(
     {
         position: $properties.position,
         color: $properties.color,
@@ -73,35 +81,24 @@ const classList = useClassList(
         radius: $properties.radius,
         opened: $dialog.isOpen,
         closed: computed(() => !$dialog.isOpen.value),
+        hidden: computed(() => $attach.x.value === null || $attach.y.value === null),
     },
     'popover',
 );
 
-const currentStyles = computed(() => {
-    const x = $attach.x.value;
-    const y = $attach.y.value;
-
-    return {
-        zIndex: $dialog.zIndex.value,
-        transform: `translate(${x}px, ${y}px)`,
-    };
-});
-
-// Helper-hooks
 const $attach = useAttach({
     target: currentTarget,
     box: box,
     position: $properties.position,
     nudge: $properties.nudge,
     edgeMargin: $properties.edgeMargin,
-    persistent: $props.persistent,
-    sticky: !$props.noSticky,
+    persistent: toRef(() => $props.persistent),
+    sticky: toRef(() => !$props.noSticky),
     onChange: () => {
         if ($props.closeOnMove) $dialog.close();
     },
 });
 
-// Subscriptions
 useFocusTrap(computed(() => ($props.noFocusTrap ? null : box.value)));
 
 useAutoFocus(computed(() => ($props.noAutoFocus ? null : box.value)));
@@ -139,14 +136,14 @@ function findTarget(vnode: VNode): VNode | null {
 }
 
 // Exports
-defineExpose<IPotPopoverExpose>({
-    dialogId: $dialog.id,
+defineExpose<Readonly<IPotPopoverExpose>>({
     isOpen: $dialog.isOpen,
-    coordinates: [$attach.x.value, $attach.y.value],
+    x: $attach.x,
+    y: $attach.y,
     target: currentTarget,
     popover: box,
-    open: () => $dialog.open(),
-    close: () => $dialog.close(),
+    open,
+    close,
 });
 </script>
 
@@ -161,10 +158,13 @@ defineExpose<IPotPopoverExpose>({
                 ref="box"
                 v-bind="$dialog.marker"
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                :class="['pot-popover', classList]"
+                :class="['pot-popover', $classList]"
                 :style="currentStyles"
             >
-                <slot :dialog-id="$dialog.id" />
+                <slot
+                    :open="open"
+                    :close="close"
+                />
             </div>
         </Transition>
     </Teleport>
@@ -173,49 +173,44 @@ defineExpose<IPotPopoverExpose>({
         <slot
             name="target"
             :marker="$dialog.marker"
+            :open="open"
+            :close="close"
         />
     </PotSlotCatcher>
 </template>
 
 <style>
 .pot-popover {
-    /* --- Color - Configuration --- */
-    --pot-popover-color-background: transparent;
-    --pot-popover-color-border: transparent;
-    --pot-popover-color-text: inherit;
-
-    /* --- Size - Configuration --- */
-    --pot-popover-size-border: 0;
-    --pot-popover-size-padding: 0;
-    --pot-popover-size-shadow: none;
-    --pot-popover-size-text: inherit;
-
-    /* --- Radius - Configuration --- */
-    --pot-popover-radius-value: 0;
-
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
 
     /* --- PotPopover - Color --- */
-    border-color: var(--pot-popover-color-border);
-    background-color: var(--pot-popover-color-background);
-    color: var(--pot-popover-color-text);
+    border-color: var(--pot-popover-color-border, transparent);
+    background-color: var(--pot-popover-color-background, transparent);
+    color: var(--pot-popover-color-text, inherit);
 
     /* --- PotPopover - Size --- */
-    border-width: var(--pot-popover-size-border);
-    padding: var(--pot-popover-size-padding);
-    box-shadow: var(--pot-popover-size-shadow);
-    font-size: var(--pot-popover-size-text);
+    border-width: var(--pot-popover-size-border, 0);
+    padding: var(--pot-popover-size-padding, 0);
+    box-shadow: var(--pot-popover-size-shadow, none);
+    font-size: var(--pot-popover-size-text, inherit);
+    font-weight: var(--pot-button-size-text-weight, 400);
+    line-height: var(--pot-button-size-text-height, 1);
 
     /* --- PotPopover - Radius --- */
-    border-radius: var(--pot-popover-radius-value);
+    border-radius: var(--pot-popover-radius-value, 0);
+}
+
+.pot-popover._popover-hidden {
+    opacity: 0;
 }
 
 .pot-popover-transition-enter-active,
 .pot-popover-transition-leave-active {
-    transition: opacity 0.2s ease;
+    transition: opacity var(--pot-popover-transition-duration, 0.2s)
+        var(--pot-popover-transition-function, ease);
 }
 
 .pot-popover-transition-enter-from,

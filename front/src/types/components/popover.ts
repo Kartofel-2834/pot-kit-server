@@ -69,20 +69,20 @@ export interface IPotPopoverProps {
 }
 
 export interface IPotPopoverExpose {
-    /** Popover dialog unique id */
-    dialogId: Symbol;
-
     /** Popover visibility flag */
     isOpen: ComputedRef<boolean>;
 
-    /** Popover left-top corner coordinates */
-    coordinates?: [x: number, y: number];
+    /** Popover x coordinate */
+    x: ComputedRef<number | null>;
+
+    /** Popover y coordinate */
+    y: ComputedRef<number | null>;
 
     /** Popover target element */
-    target: Ref<Element | null>;
+    target: Readonly<Ref<Element | null>>;
 
     /** Popover element */
-    popover: Ref<Element | null>;
+    popover: Readonly<Ref<Element | null>>;
 
     /** Open popover */
     open: () => void;

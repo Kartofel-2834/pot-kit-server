@@ -31,14 +31,14 @@ const $classList = useClassList(
         square: toRef(() => $props.square),
         fluid: toRef(() => $props.fluid),
     },
-    'pot-button',
+    'button',
 );
 </script>
 
 <template>
     <component
         :is="tag"
-        :class="$classList"
+        :class="['pot-button', $classList]"
         :disabled="disabled"
     >
         <slot />
@@ -88,17 +88,17 @@ const $classList = useClassList(
 
 /* --- PotButton - Disabled --- */
 .pot-button:disabled {
-    cursor: not-allowed;
+    cursor: default;
 }
 
 /* --- PotButton - Square --- */
-.pot-button.pot-button_square {
+.pot-button._button-square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
 /* --- PotButton - Fluid --- */
-.pot-button.pot-button_fluid {
+.pot-button._button-fluid {
     width: 100%;
 }
 </style>

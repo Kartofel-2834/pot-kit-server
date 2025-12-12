@@ -69,7 +69,10 @@ export interface IPotDrawerProps {
 
 export interface IPotDrawerExpose {
     /** Drawer visibility flag */
-    readonly isOpen: ComputedRef<boolean>;
+    isOpen: ComputedRef<boolean>;
+
+    /** Drawer container element */
+    container: Readonly<Ref<Element | null>>;
 
     /** Open drawer */
     open: () => void;

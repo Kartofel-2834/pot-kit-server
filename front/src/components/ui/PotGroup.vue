@@ -47,7 +47,7 @@ const $classList = useClassList(
             typeof $properties.gap.value !== 'number' ? $properties.gap.value : null,
         ),
     },
-    'pot-group',
+    'group',
 );
 
 // Methods
@@ -59,7 +59,7 @@ function formatGap(gap: EPotGridGap | number | null | undefined): string {
 <template>
     <component
         :is="tag"
-        :class="$classList"
+        :class="['pot-group', $classList]"
         :style="currentStyles"
     >
         <slot />

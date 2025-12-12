@@ -66,7 +66,7 @@ const $classList = useClassList(
         color: $properties.color,
         radius: $properties.radius,
     },
-    'pot-dialog',
+    'dialog',
 );
 
 useFocusTrap(computed(() => ($props.noFocusTrap ? null : container.value)));
@@ -87,6 +87,7 @@ function close() {
 // Exports
 defineExpose<Readonly<IPotDialogExpose>>({
     isOpen: $dialog.isOpen,
+    container,
     open,
     close,
 });
@@ -101,24 +102,28 @@ defineExpose<Readonly<IPotDialogExpose>>({
             <div
                 v-if="$dialog.isOpen.value"
                 v-bind="$dialog.marker"
-                :class="$classList"
+                :class="['pot-dialog', $classList]"
                 :style="currentStyles"
             >
                 <div
                     v-if="!noOverlay"
-                    class="pot-dialog__overlay"
+                    class="pot-dialog-overlay"
                     @click="close"
                 />
 
                 <div
                     ref="container"
-                    class="pot-dialog__container"
+                    class="pot-dialog-container"
                     role="dialog"
                     aria-modal="true"
                     :aria-labelledby="ariaLabelledby"
                     :aria-describedby="ariaDescribedby"
                 >
-                    <slot />
+                    <slot
+                        :marker="$dialog.marker"
+                        :close="close"
+                        :open="open"
+                    />
                 </div>
             </div>
         </Transition>
@@ -130,7 +135,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
     position: fixed;
 }
 
-.pot-dialog__container {
+.pot-dialog-container {
     position: fixed;
     overflow: auto;
     border-style: solid;
@@ -151,7 +156,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
     border-radius: var(--pot-dialog-radius-value, 0);
 }
 
-.pot-dialog__overlay {
+.pot-dialog-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -163,7 +168,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Center --- */
-.pot-dialog.pot-dialog_position-center .pot-dialog__container {
+.pot-dialog._dialog-position-center .pot-dialog-container {
     --pot-dialog-position-transform: scale(0.5) translate(-50%, -50%);
 
     top: 50%;
@@ -173,7 +178,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Bottom --- */
-.pot-dialog.pot-dialog_position-bottom .pot-dialog__container {
+.pot-dialog._dialog-position-bottom .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         -50%,
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
@@ -185,7 +190,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Bottom-Left --- */
-.pot-dialog.pot-dialog_position-bottom-left .pot-dialog__container {
+.pot-dialog._dialog-position-bottom-left .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -195,7 +200,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Bottom-Right --- */
-.pot-dialog.pot-dialog_position-bottom-right .pot-dialog__container {
+.pot-dialog._dialog-position-bottom-right .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -205,7 +210,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Top --- */
-.pot-dialog.pot-dialog_position-top .pot-dialog__container {
+.pot-dialog._dialog-position-top .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         -50%,
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
@@ -217,7 +222,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Top-Left --- */
-.pot-dialog.pot-dialog_position-top-left .pot-dialog__container {
+.pot-dialog._dialog-position-top-left .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -227,7 +232,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Top-Right --- */
-.pot-dialog.pot-dialog_position-top-right .pot-dialog__container {
+.pot-dialog._dialog-position-top-right .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -237,7 +242,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Left --- */
-.pot-dialog.pot-dialog_position-left .pot-dialog__container {
+.pot-dialog._dialog-position-left .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px)),
         -50%
@@ -249,7 +254,7 @@ defineExpose<Readonly<IPotDialogExpose>>({
 }
 
 /* --- Position - Right --- */
-.pot-dialog.pot-dialog_position-right .pot-dialog__container {
+.pot-dialog._dialog-position-right .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px)),
         -50%
@@ -267,20 +272,20 @@ defineExpose<Readonly<IPotDialogExpose>>({
         var(--pot-dialog-transition-function, ease);
 }
 
-.pot-dialog-transition-enter-active .pot-dialog__overlay,
-.pot-dialog-transition-leave-active .pot-dialog__overlay {
+.pot-dialog-transition-enter-active .pot-dialog-overlay,
+.pot-dialog-transition-leave-active .pot-dialog-overlay {
     transition: opacity var(--pot-dialog-transition-duration, 0.2s)
         var(--pot-dialog-transition-function, ease);
 }
 
-.pot-dialog-transition-enter-from .pot-dialog__overlay,
-.pot-dialog-transition-leave-to .pot-dialog__overlay {
+.pot-dialog-transition-enter-from .pot-dialog-overlay,
+.pot-dialog-transition-leave-to .pot-dialog-overlay {
     opacity: 0;
 }
 
 /* --- Container - Transition --- */
-.pot-dialog-transition-enter-active .pot-dialog__container,
-.pot-dialog-transition-leave-active .pot-dialog__container {
+.pot-dialog-transition-enter-active .pot-dialog-container,
+.pot-dialog-transition-leave-active .pot-dialog-container {
     transition:
         opacity var(--pot-dialog-transition-duration, 0.2s)
             var(--pot-dialog-transition-function, ease),
@@ -288,8 +293,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
             var(--pot-dialog-transition-function, ease);
 }
 
-.pot-dialog.pot-dialog-transition-enter-from .pot-dialog__container,
-.pot-dialog.pot-dialog-transition-leave-to .pot-dialog__container {
+.pot-dialog.pot-dialog-transition-enter-from .pot-dialog-container,
+.pot-dialog.pot-dialog-transition-leave-to .pot-dialog-container {
     opacity: 0;
     transform: var(--pot-dialog-position-transform);
 }

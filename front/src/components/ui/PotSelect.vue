@@ -1,27 +1,30 @@
-<script setup lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION">
+<script lang="ts" setup generic="OPTION, VALUE_FIELD extends keyof OPTION">
 // Types
-import type { ISpec, ISpecsOptions, TOptionValue } from '@/types/composables/specs';
+import type { Component, Ref } from 'vue';
+import type { ISpec, TOptionValue } from '@/types/composables/specs';
 import type { IPotSelectProps, IPotSelectSpecData } from '@/types/components/select';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
+import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Vue
-import { computed, ref } from 'vue';
+import { computed, ref, toRef } from 'vue';
 
 // Composables
+import { useDialog } from '@/composables/dialog';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useDebounce } from '@/composables/timer';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useSpecs } from '@/composables/specs';
-import { useClassListArray } from '@/composables/class-list';
+import { useClassList } from '@/composables/class-list';
 import { useFocusableChildren, useFocusBox } from '@/composables/focus';
 import { useKeyboard } from '@/composables/keyboard';
+import { useAttach } from '@/composables/attach';
 
 // Components
 import PotInput from '@/components/ui/PotInput.vue';
 import PotOption from '@/components/ui/PotOption.vue';
-import PotPopover from '@/components/ui/PotPopover.vue';
 
 const $props = withDefaults(defineProps<IPotSelectProps<OPTION, VALUE_FIELD>>(), {
     value: null,
@@ -44,13 +47,14 @@ const $emit = defineEmits<{
 
 // Data
 const container = ref<InstanceType<typeof PotInput> | null>(null);
-const dropdown = ref<InstanceType<typeof PotPopover> | null>(null);
+const dropdown = ref<HTMLElement | null>(null);
+const optionsElements = ref<InstanceType<typeof PotInput>[]>([]);
 
 const isOpen = ref<boolean>(false);
 const isFocused = ref<boolean>(false);
-const containerWidth = ref<number>(0);
 
-const focusedSpec = ref<ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null>(null);
+const focusedSpec = ref(null) as Ref<ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null>;
+const containerWidth = ref<number>(0);
 
 const resizeObserver = new ResizeObserver(
     useDebounce({
@@ -62,41 +66,13 @@ const resizeObserver = new ResizeObserver(
 // Computed
 const currentValue = computed(() => $props.value ?? $props.modelValue ?? null);
 
-const $properties = useDeviceProperties(
-    {
-        position: $props.position,
-        nudge: $props.nudge,
-        edgeMargin: $props.edgeMargin,
-        color: $props.color,
-        size: $props.size,
-        radius: $props.radius,
-    },
-    $props.devices,
-);
-
 const dropdownStyles = computed(() => {
-    const dropdownWidth = containerWidth.value ? `${containerWidth.value}px` : '';
-
     return {
-        '--pot-select-size-dropdown': dropdownWidth,
+        '--pot-select-size-dropdown': containerWidth.value ? `${containerWidth.value}px` : '',
+        zIndex: $dialog.zIndex.value,
+        transform: `translate(${$attach.x.value}px, ${$attach.y.value}px)`,
     };
 });
-
-const classList = useClassListArray(
-    {
-        position: $properties.position,
-        color: $properties.color,
-        size: $properties.size,
-        radius: $properties.radius,
-        editable: $props.editable,
-        opened: isOpen,
-        closed: computed(() => !isOpen.value),
-        focused: isFocused,
-        fluid: $props.fluid,
-        'fixed-width': $props.fixedDropdownWidth,
-    },
-    'select',
-);
 
 const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
 
@@ -109,39 +85,93 @@ const label = computed(() => {
 
 const isEditing = computed<boolean>(() => isFocused.value && $props.editable);
 
-// Subscriptions
+const containerWrapper = computed<Element | null>(() => container.value?.$el ?? null);
+
+const containerInput = computed<HTMLInputElement | null>(() => container.value?.input ?? null);
+
+const teleportTo = computed(() => $props.to ?? 'body');
+
+// Composables
 const $subscriptions = useComponentSubscriptions();
+
+const $dialog = useDialog({
+    isOpen,
+    triggers: ['clickoutside', 'escape'],
+    layer: DIALOG_LAYERS.POPOVER,
+    close,
+    open,
+});
+
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => $props.position),
+        nudge: toRef(() => $props.nudge),
+        edgeMargin: toRef(() => $props.edgeMargin),
+        color: toRef(() => $props.color),
+        size: toRef(() => $props.size),
+        radius: toRef(() => $props.radius),
+    },
+    toRef(() => $props.devices),
+);
+
+const $attach = useAttach({
+    target: containerWrapper,
+    box: dropdown,
+    position: $properties.position,
+    nudge: $properties.nudge,
+    edgeMargin: $properties.edgeMargin,
+    persistent: toRef(() => $props.persistent),
+    sticky: toRef(() => !$props.noSticky),
+    onChange: () => {
+        if ($props.closeOnMove) $dialog.close();
+    },
+});
+
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
+        opened: isOpen,
+        closed: computed(() => !isOpen.value),
+        focused: isFocused,
+        fluid: toRef(() => $props.fluid),
+        editable: toRef(() => $props.editable),
+        'fixed-width': toRef(() => $props.fixedDropdownWidth),
+    },
+    'select',
+);
+
+const $dropdownClassList = useClassList(
+    {
+        hidden: computed(() => $attach.x.value === null || $attach.y.value === null),
+    },
+    'select-dropdown',
+);
 
 const $specs = useSpecs<OPTION, VALUE_FIELD, IPotSelectSpecData>({
     values: computed(() => (currentValue.value ? [currentValue.value] : [])),
-    options: $props.options,
-    optionLabel: $props.optionLabel,
-    optionDisabled: $props.optionDisabled,
-    optionValue: $props.optionValue,
+    options: toRef(() => $props.options),
+    optionLabel: toRef(() => $props.optionLabel),
+    optionDisabled: toRef(() => $props.optionDisabled),
+    optionValue: toRef(() => $props.optionValue),
     data: (option, value) => ({
         focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
     }),
 });
 
-$subscriptions.observe({
-    key: 'resize',
-    target: computed(() => container.value?.$el ?? null),
-    observer: resizeObserver,
-});
-
-const { focusableChildren: $focusableChildren } = useFocusableChildren(
-    computed(() => dropdown.value?.popover ?? null),
-);
+const { focusableChildren: $focusableChildren } = useFocusableChildren(dropdown);
 
 useFocusBox({
-    element: computed(() => dropdown.value?.popover ?? null),
-    leave: () => container.value?.input?.focus?.(),
+    element: dropdown,
+    leave: () => containerInput.value?.focus(),
     leaveFromEnd: () => close(),
     leaveFromStart: event => event.preventDefault(),
 });
 
 useKeyboard({
-    target: computed(() => container.value?.input ?? null),
+    target: containerInput,
     keydown: event => {
         if (event.key.length !== 1 || !event.key.trim()) return;
 
@@ -206,6 +236,11 @@ useKeyboard({
     },
 });
 
+$subscriptions.observe({
+    target: containerWrapper,
+    observer: resizeObserver,
+});
+
 // Listeners
 function onClick() {
     open();
@@ -236,22 +271,22 @@ function handleKeypress(event: KeyboardEvent) {
 function focusSameLabeled(text: string) {
     if (!isOpen.value) return;
     const spec = availableSpecs.value.find(spec => spec.label.startsWith(text));
-    focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
+    setFocusToSpec(spec ?? availableSpecs.value[0] ?? null);
 }
 
 function focusSelected() {
     if (!isOpen.value) return;
-    focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
+    setFocusToSpec(selectedSpec.value ?? availableSpecs.value[0] ?? null);
 }
 
 function focusFirst() {
     if (!isOpen.value) return;
-    focusedSpec.value = availableSpecs.value[0] ?? null;
+    setFocusToSpec(availableSpecs.value[0] ?? null);
 }
 
 function focusLast() {
     if (!isOpen.value) return;
-    focusedSpec.value = availableSpecs.value[availableSpecs.value.length - 1] ?? null;
+    setFocusToSpec(availableSpecs.value[availableSpecs.value.length - 1] ?? null);
 }
 
 function focusNext() {
@@ -270,7 +305,7 @@ function focusNext() {
         return;
     }
 
-    focusedSpec.value = nextSpec;
+    setFocusToSpec(nextSpec);
 }
 
 function focusPrev() {
@@ -289,7 +324,18 @@ function focusPrev() {
         return;
     }
 
-    focusedSpec.value = prevSpec;
+    setFocusToSpec(prevSpec);
+}
+
+function setFocusToSpec(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
+    focusedSpec.value = spec;
+
+    const index = availableSpecs.value.findIndex(someSpec => someSpec.value === spec.value);
+    const currentElement = optionsElements.value[index]?.$el ?? null;
+
+    if (currentElement instanceof HTMLElement) {
+        currentElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
 }
 
 function toggle() {
@@ -328,8 +374,8 @@ function changeText(text: string) {
 <template>
     <PotInput
         ref="container"
-        :class="['pot-select', classList]"
-        :data-pot-dialog-id="dropdown?.dialogId.description"
+        v-bind="$dialog.marker"
+        :class="['pot-select', $classList]"
         :value="label"
         :readonly="!editable"
         :devices="devices"
@@ -339,9 +385,11 @@ function changeText(text: string) {
         @focus="onFocus"
         @blur="onBlur"
     >
-        <template #preicon>
+        <template
+            v-if="$slots.preicon"
+            #preicon
+        >
             <slot name="preicon" />
-            {{ $focusableChildren.length }}
         </template>
 
         <template #icon>
@@ -360,129 +408,102 @@ function changeText(text: string) {
         </template>
 
         <template #append>
-            <PotPopover
-                ref="dropdown"
-                :visible="isOpen"
-                :target="container?.$el"
-                :to="to"
-                :transition="transition"
-                :position="position"
-                :nudge="nudge"
-                :edge-margin="edgeMargin"
-                :persistent="persistent"
-                :no-sticky="noSticky"
-                :close-on-move="closeOnMove"
-                :devices="devices"
-                no-auto-focus
-                no-focus-trap
-                @close="close"
-                @open="open"
+            <Teleport
+                :to="teleportTo"
+                :disabled="!to"
             >
-                <div
-                    :class="['pot-select-dropdown', classList]"
-                    :style="dropdownStyles"
-                >
-                    <slot
-                        name="header"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
-                    />
-
-                    <slot
-                        name="options-list"
-                        :specs="$specs"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
+                <Transition :name="transition">
+                    <div
+                        v-if="isOpen"
+                        ref="dropdown"
+                        v-bind="$dialog.marker"
+                        :key="`${$dialog.id.description}_${isOpen}`"
+                        :class="['pot-select-dropdown', $classList, $dropdownClassList]"
+                        :style="dropdownStyles"
+                        tabindex="-1"
                     >
-                        <ul
-                            class="pot-select-options-list"
-                            role="listbox"
-                        >
-                            <slot
-                                v-for="spec of $specs"
-                                name="option"
-                                :key="spec.id"
-                                :spec="spec"
-                                :change="change"
-                            >
-                                <PotOption
-                                    tag="li"
-                                    :class="['pot-select-option', classList]"
-                                    role="option"
-                                    :value="spec.value"
-                                    :label="spec.label"
-                                    :disabled="spec.disabled"
-                                    :selected="spec.selected"
-                                    :focused="spec.data?.focused"
-                                    fluid
-                                    @click="onOptionClick(spec)"
-                                />
-                            </slot>
-                        </ul>
-                    </slot>
+                        <slot
+                            name="header"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        />
 
-                    <slot
-                        name="footer"
-                        :open="open"
-                        :close="close"
-                        :toggle="toggle"
-                        :change="change"
-                    />
-                </div>
-            </PotPopover>
+                        <slot
+                            name="options-list"
+                            :specs="$specs"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        >
+                            <ul
+                                class="pot-select-options-list"
+                                role="listbox"
+                            >
+                                <slot
+                                    v-for="spec of $specs"
+                                    name="option"
+                                    :key="spec.id"
+                                    :spec="spec"
+                                    :change="change"
+                                >
+                                    <PotOption
+                                        ref="optionsElements"
+                                        tag="li"
+                                        role="option"
+                                        :class="['pot-select-option', $classList]"
+                                        :value="spec.value"
+                                        :label="spec.label"
+                                        :disabled="spec.disabled"
+                                        :selected="spec.selected"
+                                        :focused="spec.data?.focused"
+                                        fluid
+                                        @click="onOptionClick(spec)"
+                                    />
+                                </slot>
+                            </ul>
+                        </slot>
+
+                        <slot
+                            name="footer"
+                            :open="open"
+                            :close="close"
+                            :toggle="toggle"
+                            :change="change"
+                        />
+                    </div>
+                </Transition>
+            </Teleport>
         </template>
     </PotInput>
 </template>
 
 <style>
-.pot-select {
-    /* --- Color - Configuration --- */
-    --pot-select-color-border: transparent;
-    --pot-select-color-background: transparent;
-    --pot-select-color-text: inherit;
-    --pot-select-color-caret: currentColor;
-    --pot-select-color-placeholder: inherit;
-    --pot-select-color-icon: initial;
-
-    /* --- Size - Configuration --- */
-    --pot-select-size-height: auto;
-    --pot-select-size-padding: 0;
-    --pot-select-size-border: 0;
-    --pot-select-size-text: inherit;
-    --pot-select-size-gap: 1rem;
-    --pot-select-size-icon: auto;
-    --pot-select-size-outline: initial;
-    --pot-select-size-outline-offset: initial;
-
-    /* --- Radius - Configuration --- */
-    --pot-select-radius-value: 0;
-}
-
 .pot-select.pot-input {
-    /* --- Input - Color - Configuration --- */
-    --pot-input-color-border: var(--pot-select-color-border);
-    --pot-input-color-background: var(--pot-select-color-background);
-    --pot-input-color-text: var(--pot-select-color-text);
-    --pot-input-color-caret: var(--pot-select-color-caret);
-    --pot-input-color-placeholder: var(--pot-select-color-placeholder);
-    --pot-input-color-icon: var(--pot-select-color-icon);
+    /* --- PotSelect - Color - Input --- */
+    --pot-input-color-border: var(--pot-select-color-border, transparent);
+    --pot-input-color-background: var(--pot-select-color-background, transparent);
+    --pot-input-color-text: var(--pot-select-color-text, inherit);
+    --pot-input-color-caret: var(--pot-select-color-caret, currentColor);
+    --pot-input-color-placeholder: var(--pot-select-color-placeholder, inherit);
+    --pot-input-color-icon: var(--pot-select-color-icon, initial);
 
-    /* --- Input - Size - Configuration --- */
-    --pot-input-size-height: var(--pot-select-size-height);
-    --pot-input-size-padding: var(--pot-select-size-padding);
-    --pot-input-size-border: var(--pot-select-size-border);
-    --pot-input-size-text: var(--pot-select-size-text);
-    --pot-input-size-gap: var(--pot-select-size-border);
-    --pot-input-size-icon: var(--pot-select-size-icon);
-    --pot-input-size-outline: var(--pot-select-size-outline);
-    --pot-input-size-outline-offset: var(--pot-select-size-outline-offset);
+    /* --- PotSelect - Size - Input --- */
+    --pot-input-size-height: var(--pot-select-size-height, auto);
+    --pot-input-size-padding: var(--pot-select-size-padding, 0);
+    --pot-input-size-border: var(--pot-select-size-border, 0);
+    --pot-input-size-text: var(--pot-select-size-text, inherit);
+    --pot-input-size-text-weight: var(--pot-select-size-text-weight, 400);
+    --pot-input-size-text-height: var(--pot-select-size-text-height, 1);
+    --pot-input-size-gap: var(--pot-select-size-gap, 0.8em);
+    --pot-input-size-icon: var(--pot-select-size-icon, auto);
+    --pot-input-size-outline: var(--pot-select-size-outline, initial);
+    --pot-input-size-outline-offset: var(--pot-select-size-outline-offset, initial);
 
-    /* --- Input - Radius - Configuration --- */
-    --pot-input-radius-value: var(--pot-select-radius-value);
+    /* --- PotSelect - Radius - Input --- */
+    --pot-input-radius-value: var(--pot-select-radius-value, 0);
 
     cursor: pointer;
 }
@@ -497,88 +518,74 @@ function changeText(text: string) {
     width: 100%;
 }
 
-/* --- PotSelect - Dropdown - Fixed Width --- */
-.pot-select-dropdown._select-fixed-width {
-    width: var(--pot-select-size-dropdown);
-}
-
 .pot-select-dropdown {
-    /* --- Dropdown - Color - Configuration --- */
-    --pot-select-color-dropdown-background: transparent;
-    --pot-select-color-dropdown-border: transparent;
-    --pot-select-color-dropdown-text: inherit;
-    --pot-select-color-option-background: transparent;
-
-    /* --- Dropdown - Size - Configuration --- */
-    --pot-select-size-dropdown-border: 0;
-    --pot-select-size-dropdown-padding: 0;
-    --pot-select-size-dropdown-shadow: none;
-    --pot-select-size-dropdown-text: inherit;
-
-    /* --- Dropdown - Radius - Configuration --- */
-    --pot-select-radius-dropdown-value: 0;
-
+    position: fixed;
+    overflow: auto;
+    top: 0;
+    left: 0;
     border-style: solid;
 
-    /* --- PotSelect - Dropdown - Color --- */
-    border-color: var(--pot-select-color-dropdown-border);
-    background-color: var(--pot-select-color-dropdown-background);
-    color: var(--pot-select-color-dropdown-text);
+    /* --- PotSelect - Color - Dropdown --- */
+    border-color: var(--pot-select-color-dropdown-border, transparent);
+    background-color: var(--pot-select-color-dropdown-background, transparent);
+    color: var(--pot-select-color-dropdown-text, inherit);
 
-    /* --- PotSelect - Dropdown - Size --- */
-    border-width: var(--pot-select-size-dropdown-border);
-    padding: var(--pot-select-size-dropdown-padding);
-    box-shadow: var(--pot-select-size-dropdown-shadow);
-    font-size: var(--pot-select-size-dropdown-text);
+    /* --- PotSelect - Size - Dropdown --- */
+    height: var(--pot-select-size-dropdown-height, auto);
+    max-height: var(--pot-select-size-dropdown-max-height, 16rem);
+    border-width: var(--pot-select-size-dropdown-border, 0);
+    padding: var(--pot-select-size-dropdown-padding, 0);
+    box-shadow: var(--pot-select-size-dropdown-shadow, none);
+    font-size: var(--pot-select-size-dropdown-text, inherit);
+    font-weight: var(--pot-select-size-text-weight, 400);
+    line-height: var(--pot-select-size-text-height, 1);
 
-    /* --- PotSelect - Dropdown - Radius --- */
-    border-radius: var(--pot-select-radius-dropdown-value);
+    /* --- PotSelect - Radius - Dropdown --- */
+    border-radius: var(--pot-select-radius-dropdown-value, 0);
 }
 
-.pot-select-option {
-    /* --- Color - Configuration --- */
-    --pot-select-color-option-border: transparent;
-    --pot-select-color-option-background: transparent;
-    --pot-select-color-option-text: inherit;
-    --pot-select-color-option-outline: initial;
+.pot-select-dropdown._select-fixed-width {
+    /* --- PotSelect - Size - Dropdown --- */
+    width: var(--pot-select-size-dropdown, 100%);
+}
 
-    /* --- Size - Configuration --- */
-    --pot-select-size-option-height: auto;
-    --pot-select-size-option-gap: 0;
-    --pot-select-size-option-padding: 0;
-    --pot-select-size-option-border: 0;
-    --pot-select-size-option-text: inherit;
-    --pot-select-size-option-outline: initial;
-    --pot-select-size-option-outline-offset: initial;
+.pot-select-dropdown._select-dropdown-hidden {
+    opacity: 0;
+}
 
-    /* ---  Radius - Configuration --- */
-    --pot-select-radius-option-value: 0;
+.pot-select-options-list {
+    margin: 0;
+    padding: 0;
 }
 
 .pot-select-option.pot-option {
-    /* --- Option - Color - Configuration --- */
-    --pot-option-color-border: var(--pot-select-color-option-border);
-    --pot-option-color-background: var(--pot-select-color-option-background);
-    --pot-option-color-text: var(--pot-select-color-option-text);
-    --pot-option-color-outline: var(--pot-select-color-option-outline);
+    /* --- PotSelect - Color - Option --- */
+    --pot-option-color-border: var(--pot-select-color-option-border, transparent);
+    --pot-option-color-background: var(--pot-select-color-option-background, transparent);
+    --pot-option-color-text: var(--pot-select-color-option-text, inherit);
+    --pot-option-color-outline: var(--pot-select-color-option-outline, initial);
+    --pot-option-color-icon: var(--pot-select-color-option-icon, initial);
 
-    /* --- Option - Size - Configuration --- */
-    --pot-option-size-height: var(--pot-select-size-option-height);
-    --pot-option-size-gap: var(--pot-select-size-option-gap);
-    --pot-option-size-padding: var(--pot-select-size-option-padding);
-    --pot-option-size-border: var(--pot-select-size-option-border);
-    --pot-option-size-text: var(--pot-select-size-option-text);
-    --pot-option-size-outline: var(--pot-select-size-option-outline);
-    --pot-option-size-outline-offset: var(--pot-select-size-option-outline-offset);
+    /* --- PotSelect - Size - Option --- */
+    --pot-option-size-height: var(--pot-select-size-option-height, auto);
+    --pot-option-size-gap: var(--pot-select-size-option-gap, 0.8em);
+    --pot-option-size-padding: var(--pot-select-size-option-padding, 0);
+    --pot-option-size-border: var(--pot-select-size-option-border, 0);
+    --pot-option-size-text: var(--pot-select-size-option-text, inherit);
+    --pot-option-size-text-weight: var(--pot-select-size-option-text, 400);
+    --pot-option-size-text-height: var(--pot-select-size-option-text, 1);
+    --pot-option-size-outline: var(--pot-select-size-option-outline, initial);
+    --pot-option-size-outline-offset: var(--pot-select-size-option-outline-offset, initial);
 
-    /* --- Option - Radius - Configuration --- */
-    --pot-option-radius-value: var(--pot-select-radius-option-value);
+    /* --- PotSelect - Radius - Option --- */
+    --pot-option-radius-value: var(--pot-select-radius-option-value, 0);
 }
 
 /* --- PotSelect - Transition --- */
 .pot-select-transition-enter-active,
 .pot-select-transition-leave-active {
-    transition: opacity 0.2s ease;
+    transition: opacity var(--pot-select-transition-duration, 0.2s)
+        var(--pot-select-transition-function, ease);
 }
 
 .pot-select-transition-enter-from,

@@ -73,7 +73,7 @@ const $classList = useClassList(
             typeof $properties.columnGap.value !== 'number' ? $properties.columnGap.value : null,
         ),
     },
-    'pot-grid',
+    'grid',
 );
 
 // Methods
@@ -93,7 +93,7 @@ function formatGap(gap: EPotGridGap | number | null | undefined): string {
 <template>
     <component
         :is="tag"
-        :class="$classList"
+        :class="['pot-grid', $classList]"
         :style="currentStyles"
     >
         <slot />
@@ -108,7 +108,7 @@ function formatGap(gap: EPotGridGap | number | null | undefined): string {
     gap: var(--pot-grid-gap-value, 0);
 }
 
-.pot-grid.pot-grid_divided-gap {
+.pot-grid._grid-divided-gap {
     /* Gap */
     row-gap: var(--pot-grid-gap-row, 0);
     column-gap: var(--pot-grid-gap-column, 0);

@@ -12,3 +12,7 @@
     /* --pot-button-color-text: var(--color-text); */
     /* --pot-button-color-outline: var(--color-target); */
 }
+
+.pot-input:hover {
+    --pot-input-color-border: rgb(170, 105, 26);
+}

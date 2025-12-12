@@ -20,6 +20,7 @@ import PotAccordionGroup from './components/ui/PotAccordionGroup.vue';
 import PotSelect from './components/ui/PotSelect.vue';
 import PotGrid from './components/ui/PotGrid.vue';
 import PotGroup from './components/ui/PotGroup.vue';
+import PotOption from './components/ui/PotOption.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -36,7 +37,7 @@ const position = ref<EPotToastPosition>(POT_TOAST_POSITION.TOP_LEFT);
 
 const openedAccordions = ref<string[]>([]);
 
-const someValue = ref<any>(null);
+const someValue = ref<any>('a');
 const text = ref<string>('');
 
 const optionsA = ref<string[]>(['a', 'b', 'c']);
@@ -45,6 +46,19 @@ const optionsC = ref<boolean[]>([true, false]);
 const optionsD = ref<Array<{ name: string; value: number }>>([
     { name: 'a', value: 1 },
     { name: 'b', value: 2 },
+    { name: 'c', value: 3 },
+    { name: 'd', value: 4 },
+    { name: 'e', value: 5 },
+    { name: 'aa', value: 11 },
+    { name: 'bb', value: 22 },
+    { name: 'cc', value: 33 },
+    { name: 'dd', value: 44 },
+    { name: 'ee', value: 55 },
+    { name: 'aaa', value: 111 },
+    { name: 'bbb', value: 222 },
+    { name: 'ccc', value: 333 },
+    { name: 'ddd', value: 444 },
+    { name: 'eee', value: 555 },
 ]);
 </script>
 
@@ -62,9 +76,18 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             overflow: visible;
         "
     >
-        <PotInput>
-            <template #preicon>test</template>
-        </PotInput>
+        {{ someValue }}
+
+        <PotSelect
+            v-model="someValue"
+            :options="optionsD"
+            :nudge="20"
+            color="pot"
+            size="medium"
+            radius="circle"
+            option-label="name"
+            option-value="value"
+        ></PotSelect>
     </main>
 </template>
 

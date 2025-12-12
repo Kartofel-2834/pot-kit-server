@@ -16,15 +16,15 @@ export function useClassList(
         return Object.entries(properties).reduce(
             (res, [property, initialValue]) => {
                 const value = unref(initialValue);
-                const key = [property, typeof value !== 'boolean' ? value : '']
+                const key = [baseValue, property, typeof value !== 'boolean' ? value : '']
                     .filter(Boolean)
                     .join('-');
 
                 if (!value) return res;
 
-                return { ...res, [`${baseValue}_${key}`]: Boolean(value) };
+                return { ...res, [`_${key}`]: Boolean(value) };
             },
-            { [baseValue]: true } as Record<string, boolean>,
+            {} as Record<string, boolean>,
         );
     });
 }
@@ -41,13 +41,13 @@ export function useClassListArray(
         const classList = Object.entries(properties).reduce(
             (res, [property, initialValue]) => {
                 const value = unref(initialValue);
-                const key = [property, typeof value !== 'boolean' ? value : '']
+                const key = [baseValue, property, typeof value !== 'boolean' ? value : '']
                     .filter(Boolean)
                     .join('-');
 
                 if (!value) return res;
 
-                return [...res, `${baseValue}_${key}`];
+                return [...res, `_${key}`];
             },
             [baseValue] as string[],
         );

@@ -1,5 +1,25 @@
 /* NOT EDIT! THIS STYLES GENERATED AUTOMATICALLY! */
 
+.pot-select-option {
+    --pot-select-size-option-text: 1.6rem;
+}
+
+.pot-select-option:hover {
+    background-color: pink;
+}
+
+.pot-select-option._option-focused {
+    background-color: red;
+}
+
+.pot-select-option._option-selected {
+    background-color: blue;
+}
+
+.pot-select-option._option-selected._option-focused {
+    background-color: green;
+}
+
 .pot-select._select-color-pot {
     --pot-select-color-border: #f3f5f7;
     --pot-select-color-background: #f3f5f7;

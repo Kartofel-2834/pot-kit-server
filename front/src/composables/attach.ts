@@ -8,7 +8,7 @@ import type {
 } from '@/types/composables/attach';
 
 // Vue
-import { computed, readonly, ref, unref, watch } from 'vue';
+import { computed, readonly, ref, toRef, unref, watch } from 'vue';
 
 // Composables
 import { useComponentSubscriptions, useSubscriptions } from '@/composables/subscriptions';
@@ -120,8 +120,8 @@ export function useAttach(options: IAttachOptions): IAttach {
     });
 
     const offset = useOffset(initialSurrounding, currentSurrounding);
-    const offsetX = computed(() => offset.value[0]);
-    const offsetY = computed(() => offset.value[1]);
+    const offsetX = toRef(() => offset.value[0]);
+    const offsetY = toRef(() => offset.value[1]);
 
     const position = usePosition({
         targetRect,
@@ -408,13 +408,13 @@ function useY(options: {
     position: MaybeRef<EAttachedBoxPosition | null>;
     edgeMargin: MaybeRef<number>;
     nudge: MaybeRef<number>;
-}): ComputedRef<number> {
+}): ComputedRef<number | null> {
     const yPure = usePureY(options);
 
     return computed(() => {
         const sticky = unref(options.sticky);
 
-        if (!sticky) return yPure.value;
+        if (!sticky || !yPure.value) return yPure.value;
 
         const ySticky = useStickyY({
             ...options,
@@ -433,13 +433,13 @@ function useX(options: {
     position: MaybeRef<EAttachedBoxPosition | null>;
     edgeMargin: MaybeRef<number>;
     nudge: MaybeRef<number>;
-}): ComputedRef<number> {
+}): ComputedRef<number | null> {
     const xPure = usePureX(options);
 
     return computed(() => {
         const sticky = unref(options.sticky);
 
-        if (!sticky) return xPure.value;
+        if (!sticky || !xPure.value) return xPure.value;
 
         const xSticky = useStickyX({
             ...options,
@@ -547,13 +547,13 @@ function usePureY(options: {
     boxRect: MaybeRef<DOMRect | null>;
     nudge: MaybeRef<number>;
     offset: MaybeRef<number>;
-}): ComputedRef<number> {
+}): ComputedRef<number | null> {
     return computed(() => {
         const targetRect = unref(options.targetRect);
         const boxRect = unref(options.boxRect);
         const position = unref(options.position);
 
-        if (!targetRect || !boxRect || !position) return 0;
+        if (!targetRect || !boxRect || !position) return null;
 
         const nudge = unref(options.nudge);
         const offset = unref(options.offset);
@@ -575,13 +575,13 @@ function usePureX(options: {
     boxRect: MaybeRef<DOMRect | null>;
     nudge: MaybeRef<number>;
     offset: MaybeRef<number>;
-}): ComputedRef<number> {
+}): ComputedRef<number | null> {
     return computed(() => {
         const targetRect = unref(options.targetRect);
         const boxRect = unref(options.boxRect);
         const position = unref(options.position);
 
-        if (!targetRect || !boxRect || !position) return 0;
+        if (!targetRect || !boxRect || !position) return null;
 
         const nudge = unref(options.nudge);
         const offset = unref(options.offset);

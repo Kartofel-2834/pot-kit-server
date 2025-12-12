@@ -55,7 +55,7 @@ const $classList = useClassList(
         opened: isOpen,
         disabled: toRef(() => $props.disabled),
     },
-    'pot-accordion',
+    'accordion',
 );
 
 $subscriptions.observe({
@@ -101,7 +101,7 @@ function updateContentHeight() {
 
 <template>
     <div
-        :class="$classList"
+        :class="['pot-accordion', $classList]"
         :style="currentStyles"
     >
         <slot
@@ -113,17 +113,17 @@ function updateContentHeight() {
             <div
                 v-if="$slots.title"
                 data-pot-accordion-header
-                class="pot-accordion__header"
+                class="pot-accordion-header"
                 :tabindex="disabled ? -1 : 0"
                 @click="toggle"
                 @keydown.enter="toggle"
                 @keydown.space="toggle"
             >
-                <div class="pot-accordion__header__title">
+                <div class="pot-accordion-title">
                     <slot name="title" />
                 </div>
 
-                <div class="pot-accordion__header__icon">
+                <div class="pot-accordion-icon">
                     <slot name="icon">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -141,7 +141,7 @@ function updateContentHeight() {
         <Transition name="pot-accordion-transition">
             <div
                 v-show="isOpen"
-                class="pot-accordion__content"
+                class="pot-accordion-content"
                 ref="content"
             >
                 <slot />
@@ -152,16 +152,16 @@ function updateContentHeight() {
 
 <style>
 /* --- PotAccordion - Disabled --- */
-.pot-accordion.pot-accordion_disabled .pot-accordion__header {
-    cursor: not-allowed;
+.pot-accordion._accordion-disabled .pot-accordion-header {
+    cursor: default;
 }
 
 /* --- PotAccordion - Opened --- */
-.pot-accordion.pot-accordion_opened .pot-accordion__header__icon {
+.pot-accordion._accordion-opened .pot-accordion-icon {
     transform: scaleY(-1);
 }
 
-.pot-accordion__header {
+.pot-accordion-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -184,11 +184,11 @@ function updateContentHeight() {
     outline-offset: var(--pot-accordion-size-outline-offset, initial);
 }
 
-.pot-accordion__header:disabled {
-    cursor: not-allowed;
+.pot-accordion-header:disabled {
+    cursor: default;
 }
 
-.pot-accordion__header__icon {
+.pot-accordion-icon {
     display: flex;
     transition: transform var(--pot-accordion-transition-duration, 0.2s)
         var(--pot-accordion-transition-function, ease);
@@ -200,12 +200,12 @@ function updateContentHeight() {
     font-size: var(--pot-accordion-size-icon, 1.4rem);
 }
 
-.pot-accordion__header__icon svg {
+.pot-accordion-icon svg {
     width: 1em;
     height: 1em;
 }
 
-.pot-accordion__content {
+.pot-accordion-content {
     overflow: hidden;
 }
 
