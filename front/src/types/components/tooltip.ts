@@ -1,5 +1,5 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { EPotDevice } from '@/types';
 import type { EAttachedBoxPosition } from '@/types/composables/attach';
 
@@ -84,20 +84,20 @@ export interface IPotTooltipProps {
 }
 
 export interface IPotTooltipExpose {
-    /** Tooltip dialog unique id */
-    dialogId: Symbol;
-
     /** Tooltip visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    isOpen: ComputedRef<boolean>;
 
-    /** Tooltip left-top corner coordinates */
-    coordinates?: [x: number, y: number];
+    /** Tooltip left-top corner x coordinate */
+    x: ComputedRef<number | null>;
+
+    /** Tooltip left-top corner y coordinate */
+    y: ComputedRef<number | null>;
 
     /** Target element */
-    target?: Element | null;
+    target: ComputedRef<Element | null>;
 
     /** Tooltip element */
-    tooltip?: Element | null;
+    tooltip: Readonly<Ref<Element | null>>;
 
     /** Open tooltip */
     open: () => void;

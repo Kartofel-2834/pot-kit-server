@@ -3,7 +3,7 @@
 import type { IPotInputExpose, IPotInputProps } from '@/types/components/input';
 
 // Vue
-import { ref, computed, toRef } from 'vue';
+import { ref, computed, toRef, useTemplateRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -24,9 +24,11 @@ const $emit = defineEmits<{
     keyup: [value: KeyboardEvent];
 }>();
 
-// Data
-const input = ref<HTMLInputElement | null>(null);
+// Refs
+const container = useTemplateRef('container');
+const input = useTemplateRef('input');
 
+// Data
 const isFocused = ref<boolean>(false);
 
 // Computed
@@ -82,13 +84,17 @@ function onBlur(event: FocusEvent) {
 }
 
 // Exports
-defineExpose<Readonly<IPotInputExpose>>({
+defineExpose<IPotInputExpose>({
+    element: container,
     input: input,
 });
 </script>
 
 <template>
-    <label :class="['pot-input', $classList]">
+    <label
+        ref="container"
+        :class="['pot-input', $classList]"
+    >
         <slot name="prepend"></slot>
 
         <div

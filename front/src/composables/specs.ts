@@ -75,10 +75,12 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknow
         return values.includes(specValue);
     }
 
-    return computed<ISpec<OPTION, VALUE_FIELD, DATA>[]>(() => {
-        const options = unref(specOptions.options);
+    const optionsAndIds = computed<Array<[symbol, OPTION]>>(() => {
+        return unref(specOptions.options).map(option => [Symbol(), option]);
+    });
 
-        return options.map(option => {
+    return computed<ISpec<OPTION, VALUE_FIELD, DATA>[]>(() => {
+        return optionsAndIds.value.map(([id, option]) => {
             const value = getValue(option);
             const label = getLabel(option);
             const data = getData(option, value, label);
@@ -86,7 +88,7 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknow
             const selected = checkIsSelected(value);
 
             return {
-                id: Symbol(label),
+                id,
                 option,
                 value,
                 label,

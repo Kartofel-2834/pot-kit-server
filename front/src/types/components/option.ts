@@ -1,3 +1,6 @@
+// Types
+import type { Ref } from 'vue';
+
 export interface IPotOptionProps<VALUE = unknown> {
     tag?: string;
     value?: VALUE;
@@ -6,4 +9,8 @@ export interface IPotOptionProps<VALUE = unknown> {
     focused?: boolean;
     disabled?: boolean;
     fluid?: boolean;
+}
+
+export interface IPotOptionExpose {
+    element: Ref<HTMLElement | null>;
 }

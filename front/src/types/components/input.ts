@@ -54,5 +54,6 @@ export interface IPotInputProps {
 }
 
 export interface IPotInputExpose {
+    element: Ref<HTMLElement | null>;
     input: Ref<HTMLInputElement | null>;
 }

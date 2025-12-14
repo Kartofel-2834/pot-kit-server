@@ -1,9 +1,9 @@
 <script setup lang="ts" generic="VALUE = unknown">
 // Types
-import type { IPotOptionProps } from '@/types/components/option';
+import type { IPotOptionExpose, IPotOptionProps } from '@/types/components/option';
 
 // Vue
-import { toRef } from 'vue';
+import { toRef, useTemplateRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -17,6 +17,9 @@ const $props = withDefaults(defineProps<IPotOptionProps<VALUE>>(), {
     fluid: false,
 });
 
+// Refs
+const container = useTemplateRef<HTMLElement>('container');
+
 // Composables
 const $classList = useClassList(
     {
@@ -27,10 +30,16 @@ const $classList = useClassList(
     },
     'option',
 );
+
+// Exports
+defineExpose<IPotOptionExpose>({
+    element: container,
+});
 </script>
 
 <template>
     <component
+        ref="container"
         :is="tag"
         :class="['pot-option', $classList]"
         :data-label="label"
@@ -85,7 +94,7 @@ const $classList = useClassList(
     /* --- PotOption - Size --- */
     height: var(--pot-option-size-height, auto);
     gap: var(--pot-option-size-gap, 0.8em);
-    padding: 0 var(--pot-option-size-padding, 0);
+    padding: var(--pot-option-size-padding, 0);
     border-width: var(--pot-option-size-border, 0);
     font-size: var(--pot-option-size-text, inherit);
     font-weight: var(--pot-option-size-text-weight, 400);

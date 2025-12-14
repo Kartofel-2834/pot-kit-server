@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 // Types
-import type { VNode } from 'vue';
+import type { Ref, VNode } from 'vue';
 import type { IPotTooltipExpose, IPotTooltipProps } from '@/types/components/tooltip';
+import type { EDialogLayers } from '@/types/composables/dialog';
+import type { IAttachOptions } from '@/types/composables/attach';
 
 // Vue
-import { cloneVNode, computed, isVNode, ref, toRef } from 'vue';
+import { cloneVNode, computed, inject, isVNode, provide, readonly, ref, watch } from 'vue';
 
 // Constants
 import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
@@ -12,14 +14,17 @@ import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
 // Composables
 import { useDeviceProperties } from '@/composables/device-is';
-import { useClassList } from '@/composables/class-list';
-import { useDialog } from '@/composables/dialog';
+import { useClassListArray } from '@/composables/class-list';
+import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
 import { useAttach } from '@/composables/attach';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
-import { useAutoFocus, useFocusTrap } from '@/composables/focus';
+import { useAutoFocus, useFocusTrap } from '@/composables/focus-old';
 
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
+
+const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
+const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
 
 const $props = withDefaults(defineProps<IPotTooltipProps>(), {
     text: '',
@@ -44,23 +49,58 @@ const $emit = defineEmits<{
     'trigger:close': [event: Event, trigger: string];
 }>();
 
+const $subscriptions = useComponentSubscriptions();
+const $targetSubscriptions = useComponentSubscriptions();
+const $boxSubscriptions = useComponentSubscriptions();
+
 // Data
 const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
 
 const isOpen = ref<boolean>(false);
 
+const $dialog = useDialog({
+    triggers: ['escape'],
+    isOpen,
+    layer: useDialogLayer($layer, $parentLayer),
+    close,
+    open,
+});
+
 // Computed
 const currentTarget = computed(() => $props.target ?? target.value ?? null);
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
+const zIndex = useDialogZIndex($dialog);
+
+const properties = useDeviceProperties(
+    computed(() => ({
+        position: $props.position,
+        nudge: $props.nudge,
+        edgeMargin: $props.edgeMargin,
+        color: $props.color,
+        size: $props.size,
+        radius: $props.radius,
+    })),
+    $props.devices,
+);
+
+const classList = computed(() =>
+    useClassListArray({
+        position: properties.value.position,
+        color: properties.value.color,
+        size: properties.value.size,
+        radius: properties.value.radius,
+    }),
+);
+
 const currentStyles = computed(() => {
-    const x = $attach.x.value ?? 0;
-    const y = $attach.y.value ?? 0;
+    const x = $attach.x.value;
+    const y = $attach.y.value;
 
     return {
-        zIndex: $dialog.zIndex.value,
+        zIndex: zIndex.value,
         transform: `translate(${x}px, ${y}px)`,
     };
 });
@@ -69,95 +109,62 @@ const triggers = computed(() => {
     return Array.from(new Set([...($props.openTriggers ?? []), ...($props.closeTriggers ?? [])]));
 });
 
-// Composables
-const $subscriptions = useComponentSubscriptions();
-
-const $dialog = useDialog({
-    triggers: ['escape'],
-    isOpen,
-    layer: DIALOG_LAYERS.POPOVER,
-    close,
-    open,
-});
-
-const $properties = useDeviceProperties(
-    {
-        position: toRef(() => $props.position),
-        nudge: toRef(() => $props.nudge),
-        edgeMargin: toRef(() => $props.edgeMargin),
-        color: toRef(() => $props.color),
-        size: toRef(() => $props.size),
-        radius: toRef(() => $props.radius),
-    },
-    toRef(() => $props.devices),
-);
-
-const $classList = useClassList(
-    {
-        position: $properties.position,
-        color: $properties.color,
-        size: $properties.size,
-        radius: $properties.radius,
-    },
-    'tooltip',
-);
-
+// Helper-hooks
 const $attach = useAttach({
     target: currentTarget,
     box: box,
-    position: $properties.position,
-    nudge: $properties.nudge,
-    edgeMargin: $properties.edgeMargin,
-    persistent: toRef(() => $props.persistent),
-    sticky: toRef(() => !$props.noSticky),
+    position: properties.value.position,
+    nudge: properties.value.nudge,
+    edgeMargin: properties.value.edgeMargin,
+    persistent: $props.persistent,
+    sticky: !$props.noSticky,
     onChange: () => {
         if ($props.closeOnMove) close();
     },
 });
 
-useFocusTrap(computed(() => ($props.noFocusTrap || !isOpen.value ? null : box.value)));
+// Subscriptions
+$subscriptions.bind(
+    computed(() => ($props.noFocusTrap || !isOpen.value ? null : box.value)),
+    boxElement => useFocusTrap(boxElement),
+    controller => controller.abort(),
+);
 
-useAutoFocus(computed(() => ($props.noAutoFocus || !isOpen.value ? null : box.value)));
+$subscriptions.bind(
+    computed(() => ($props.noAutoFocus || !isOpen.value ? null : box.value)),
+    boxElement => useAutoFocus(boxElement, document.activeElement),
+    controller => controller.abort(),
+);
 
-$subscriptions.addEventListener({
+$boxSubscriptions.addEventListener({
     eventName: 'mouseenter',
     target: computed(() => ($props.enterable ? box.value : null)),
     listener: enter,
 });
 
-$subscriptions.addEventListener({
+$boxSubscriptions.addEventListener({
     eventName: 'mouseleave',
     target: computed(() => ($props.enterable ? box.value : null)),
     listener: leave,
 });
 
-$subscriptions.bind(
-    triggers,
-    currentTriggers => {
-        return currentTriggers.map(triggger =>
-            $subscriptions.addEventListener({
+// Watchers
+watch(
+    () => [currentTarget.value, triggers.value],
+    () => {
+        $targetSubscriptions.clear();
+
+        if (!(currentTarget.value instanceof Element) || !Array.isArray(triggers.value)) return;
+
+        triggers.value.forEach(triggger =>
+            $targetSubscriptions.addEventListener({
                 eventName: triggger,
-                target: currentTarget,
+                target: currentTarget.value as Element,
                 listener: event => handleTrigger(triggger, event),
             }),
         );
     },
-    controllers => controllers.forEach(controller => controller.abort()),
 );
-
-// $subscriptions.bind(
-//     computed(() => (currentTarget.value ? triggers.value : null)),
-//     currentTriggers => {
-//         return currentTriggers.map(triggger =>
-//             $subscriptions.addEventListener({
-//                 eventName: triggger,
-//                 target: currentTarget.value,
-//                 listener: event => handleTrigger(triggger, event),
-//             }),
-//         );
-//     },
-//     controllers => controllers.forEach(controller => controller.abort()),
-// );
 
 // Methods
 function enter() {
@@ -262,12 +269,14 @@ function findTarget(vnode: VNode): VNode | null {
 }
 
 // Exports
-defineExpose<Readonly<IPotTooltipExpose>>({
-    isOpen: $dialog.isOpen,
-    x: $attach.x,
-    y: $attach.y,
-    target: currentTarget,
-    tooltip: box,
+provide('pot-dialog-layer', $dialog.layer);
+
+defineExpose<IPotTooltipExpose>({
+    dialogId: $dialog.id,
+    isOpen: readonly($dialog.isOpen),
+    coordinates: [$attach.x.value, $attach.y.value],
+    target: currentTarget.value,
+    tooltip: box.value,
     open,
     close,
     delayedOpen,
@@ -283,13 +292,17 @@ defineExpose<Readonly<IPotTooltipExpose>>({
         <Transition :name="transition">
             <div
                 ref="box"
-                v-if="isOpen"
-                v-bind="$dialog.marker"
-                :key="`${$dialog.id.description}_${isOpen}`"
-                :class="['pot-tooltip', $classList]"
+                v-if="$dialog.isOpen.value"
+                v-bind="$attrs"
+                :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
+                :class="['pot-tooltip', classList]"
                 :style="currentStyles"
+                :data-pot-dialog-id="$dialog.id.description"
             >
-                <slot name="content">
+                <slot
+                    name="content"
+                    :dialog-id="$dialog.id"
+                >
                     {{ text }}
                 </slot>
             </div>
@@ -297,6 +310,57 @@ defineExpose<Readonly<IPotTooltipExpose>>({
     </Teleport>
 
     <PotSlotCatcher :map-v-node="findTarget">
-        <slot :marker="$dialog.marker" />
+        <slot :dialog-id="$dialog.id" />
     </PotSlotCatcher>
 </template>
+
+<style>
+.pot-tooltip {
+    /* --- Color - Configuration --- */
+    --pot-tooltip-color-background: transparent;
+    --pot-tooltip-color-border: transparent;
+    --pot-tooltip-color-text: inherit;
+
+    /* --- Size - Configuration --- */
+    --pot-tooltip-size-border: 0;
+    --pot-tooltip-size-padding: 0;
+    --pot-tooltip-size-shadow: none;
+    --pot-tooltip-size-text: inherit;
+
+    /* --- Radius - Configuration --- */
+    --pot-tooltip-radius-value: 0;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-style: solid;
+
+    /* --- PotTooltip - Color --- */
+    border-color: var(--pot-tooltip-color-border);
+    background-color: var(--pot-tooltip-color-background);
+    color: var(--pot-tooltip-color-text);
+
+    /* --- PotTooltip - Size --- */
+    border-width: var(--pot-tooltip-size-border);
+    padding: var(--pot-tooltip-size-padding);
+    box-shadow: var(--pot-tooltip-size-shadow);
+    font-size: var(--pot-tooltip-size-text);
+
+    /* --- PotTooltip - Radius --- */
+    border-radius: var(--pot-tooltip-radius-value);
+}
+
+.pot-tooltip-transition-enter-active,
+.pot-tooltip-transition-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.pot-tooltip-transition-enter-from,
+.pot-tooltip-transition-leave-to {
+    opacity: 0;
+}
+</style>
+
+<!-- Styles - START -->
+<style src="@/assets/css/styles/test/tooltip.css" />
+<!-- Styles - END -->

@@ -21,6 +21,7 @@ import PotSelect from './components/ui/PotSelect.vue';
 import PotGrid from './components/ui/PotGrid.vue';
 import PotGroup from './components/ui/PotGroup.vue';
 import PotOption from './components/ui/PotOption.vue';
+import PotCheckbox from './components/ui/PotCheckbox.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -81,13 +82,13 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
         <PotSelect
             v-model="someValue"
             :options="optionsD"
-            :nudge="20"
+            option-label="name"
+            option-value="value"
             color="pot"
             size="medium"
             radius="circle"
-            option-label="name"
-            option-value="value"
-        ></PotSelect>
+        >
+        </PotSelect>
     </main>
 </template>
 

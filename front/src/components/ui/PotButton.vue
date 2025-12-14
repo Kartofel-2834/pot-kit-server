@@ -63,7 +63,7 @@ const $classList = useClassList(
     /* --- PotButton - Size --- */
     height: var(--pot-button-size-height, auto);
     gap: var(--pot-button-size-gap, 0);
-    padding: 0 var(--pot-button-size-padding, 0);
+    padding: var(--pot-button-size-padding, 0);
     border-width: var(--pot-button-size-border, 0);
     font-size: var(--pot-button-size-text, inherit);
     font-weight: var(--pot-button-size-text-weight, 500);
