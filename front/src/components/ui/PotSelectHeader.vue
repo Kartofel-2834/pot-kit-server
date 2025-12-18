@@ -30,10 +30,6 @@ const label = computed(() => {
 });
 
 // Listeners
-function onClick() {
-    $emit('click');
-}
-
 function onInput(value: string) {
     $emit('input', value);
 }
@@ -64,12 +60,11 @@ defineExpose<IPotSelectHeaderExpose>({
 <template>
     <PotInput
         ref="container"
-        :class="['pot-select-header', classList]"
+        class="pot-select-header"
         :value="label"
         :readonly="!editable"
         :devices="devices"
         :placeholder="placeholder"
-        @click="onClick"
         @input="onInput"
         @focus="onFocus"
         @blur="onBlur"
@@ -101,27 +96,27 @@ defineExpose<IPotSelectHeaderExpose>({
 <style>
 .pot-select-header.pot-input {
     /* --- PotSelect - Color - Input --- */
-    --pot-input-color-border: var(--pot-select-color-header-border, transparent);
-    --pot-input-color-background: var(--pot-select-color-header-background, transparent);
-    --pot-input-color-text: var(--pot-select-color-header-text, inherit);
-    --pot-input-color-caret: var(--pot-select-color-header-caret, currentColor);
-    --pot-input-color-placeholder: var(--pot-select-color-header-placeholder, inherit);
-    --pot-input-color-icon: var(--pot-select-color-header-icon, initial);
+    --pot-input-color-border: var(--pot-select-header-color-border, transparent);
+    --pot-input-color-background: var(--pot-select-header-color-background, transparent);
+    --pot-input-color-text: var(--pot-select-header-color-text, inherit);
+    --pot-input-color-caret: var(--pot-select-header-color-caret, currentColor);
+    --pot-input-color-placeholder: var(--pot-select-header-color-placeholder, inherit);
+    --pot-input-color-icon: var(--pot-select-header-color-icon, initial);
 
     /* --- PotSelect - Size - Input --- */
-    --pot-input-size-height: var(--pot-select-size-header-height, auto);
-    --pot-input-size-padding: var(--pot-select-size-header-padding, 0);
-    --pot-input-size-border: var(--pot-select-size-header-border, 0);
-    --pot-input-size-text: var(--pot-select-size-header-text, inherit);
-    --pot-input-size-text-weight: var(--pot-select-size-header-text-weight, 400);
-    --pot-input-size-text-height: var(--pot-select-size-header-text-height, 1);
-    --pot-input-size-gap: var(--pot-select-size-header-gap, 0.8em);
-    --pot-input-size-icon: var(--pot-select-size-header-padding-icon, auto);
-    --pot-input-size-outline: var(--pot-select-size-header-outline, initial);
-    --pot-input-size-outline-offset: var(--pot-select-size-header-outline-offset, initial);
+    --pot-input-size-height: var(--pot-select-header-size-height, auto);
+    --pot-input-size-padding: var(--pot-select-header-size-padding, 0);
+    --pot-input-size-border: var(--pot-select-header-size-border, 0);
+    --pot-input-size-text: var(--pot-select-header-size-text, inherit);
+    --pot-input-size-text-weight: var(--pot-select-header-size-text-weight, 400);
+    --pot-input-size-text-height: var(--pot-select-header-size-text-height, 1);
+    --pot-input-size-gap: var(--pot-select-header-size-gap, 0.8em);
+    --pot-input-size-icon: var(--pot-select-header-size-padding-icon, auto);
+    --pot-input-size-outline: var(--pot-select-header-size-outline, initial);
+    --pot-input-size-outline-offset: var(--pot-select-header-size-outline-offset, initial);
 
     /* --- PotSelect - Radius - Input --- */
-    --pot-input-radius-value: var(--pot-select-radius-header-value, 0);
+    --pot-input-radius-value: var(--pot-select-header-radius-value, 0);
 
     cursor: pointer;
 }

@@ -1,7 +1,10 @@
 html {
     font-size: 10px;
+    color: black;
 }
 
 body {
     margin: 0;
+    background-color: white;
+    color: black;
 }

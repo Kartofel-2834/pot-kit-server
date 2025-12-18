@@ -8,7 +8,7 @@ import { toRef, useTemplateRef } from 'vue';
 // Composables
 import { useClassList } from '@/composables/class-list';
 
-const $props = withDefaults(defineProps<IPotOptionProps<VALUE>>(), {
+const props = withDefaults(defineProps<IPotOptionProps<VALUE>>(), {
     tag: 'div',
     label: '',
     selected: false,
@@ -23,10 +23,10 @@ const container = useTemplateRef<HTMLElement>('container');
 // Composables
 const $classList = useClassList(
     {
-        selected: toRef(() => $props.selected),
-        focused: toRef(() => $props.focused),
-        disabled: toRef(() => $props.disabled),
-        fluid: toRef(() => $props.fluid),
+        selected: toRef(() => props.selected),
+        focused: toRef(() => props.focused),
+        disabled: toRef(() => props.disabled),
+        fluid: toRef(() => props.fluid),
     },
     'option',
 );
@@ -34,6 +34,8 @@ const $classList = useClassList(
 // Exports
 defineExpose<IPotOptionExpose>({
     element: container,
+    value: toRef(() => props.value),
+    label: toRef(() => props.label),
 });
 </script>
 

@@ -1,42 +1,40 @@
-<script lang="ts" setup generic="OPTION, VALUE_FIELD extends keyof OPTION">
+<script setup lang="ts">
 // Types
 import type {
     IPotSelectDropdownEmits,
+    IPotSelectDropdownExpose,
     IPotSelectDropdownProps,
-    IPotSelectSpecData,
 } from '@/types/components/select';
-import type { ISpec } from '@/types/composables/specs';
-
-// Constants
-import { DIALOG_LAYERS } from '@/types/composables/dialog';
-import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
 
 // Vue
 import { computed, ref, toRef, useTemplateRef } from 'vue';
 
+// Constants
+import { ATTACHED_BOX_POSITION } from '@/types/composables/attach';
+
 // Composables
-import { useDialog } from '@/composables/dialog';
-import { useFocusableChildren, useFocusBox } from '@/composables/focus';
-import { useAttach } from '@/composables/attach';
-import { useDeviceProperties } from '@/composables/device-is';
 import { useDebounce } from '@/composables/timer';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
+import { useFocusableChildren, useFocusBox } from '@/composables/focus';
 import { useKeyboard } from '@/composables/keyboard';
-import { useClassList } from '@/composables/class-list';
 
-const $props = withDefaults(defineProps<IPotSelectDropdownProps<OPTION, VALUE_FIELD>>(), {
+// Components
+import PotPopover from '@/components/ui/PotPopover.vue';
+
+const props = withDefaults(defineProps<IPotSelectDropdownProps>(), {
     to: 'body',
     fixedDropdownWidth: true,
-    position: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+    position: ATTACHED_BOX_POSITION.BOTTOM_START,
     nudge: 0,
     edgeMargin: 0,
     transition: 'pot-select-dropdown-transition',
 });
 
-const $emit = defineEmits<IPotSelectDropdownEmits<OPTION, VALUE_FIELD>>();
+const emit = defineEmits<IPotSelectDropdownEmits>();
 
 // Refs
 const container = useTemplateRef('container');
+const popover = useTemplateRef('popover');
 
 // Data
 const headerWidth = ref<number>(0);
@@ -49,17 +47,13 @@ const resizeObserver = new ResizeObserver(
 );
 
 // Computed
-const headerElement = computed(() => $props.header?.element ?? null);
+const headerElement = computed(() => props.header?.element ?? null);
 
-const headerInput = computed(() => $props.header?.input ?? null);
-
-const teleportTo = computed(() => $props.to ?? 'body');
+const headerInput = computed(() => props.header?.input ?? null);
 
 const currentStyles = computed(() => {
     return {
-        '--pot-select-size-dropdown-width': headerWidth.value ? `${headerWidth.value}px` : '',
-        zIndex: $dialog.zIndex.value,
-        transform: `translate(${$attach.x.value}px, ${$attach.y.value}px)`,
+        '--pot-select-dropdown-size-width': headerWidth.value ? `${headerWidth.value}px` : '',
     };
 });
 
@@ -68,46 +62,9 @@ const $subscriptions = useComponentSubscriptions();
 
 const { focusableChildren: $focusableChildren } = useFocusableChildren(container);
 
-const $dialog = useDialog({
-    isOpen: computed(() => $props.opened ?? false),
-    triggers: ['clickoutside', 'escape'],
-    layer: DIALOG_LAYERS.POPOVER,
-    close,
-    open,
-});
-
-const $properties = useDeviceProperties(
-    {
-        position: toRef(() => $props.position),
-        nudge: toRef(() => $props.nudge),
-        edgeMargin: toRef(() => $props.edgeMargin),
-    },
-    toRef(() => $props.devices),
-);
-
-const $dropdownClassList = useClassList(
-    {
-        hidden: computed(() => $attach.x.value === null || $attach.y.value === null),
-    },
-    'select-dropdown',
-);
-
-const $attach = useAttach({
-    target: headerElement,
-    box: container,
-    position: $properties.position,
-    nudge: $properties.nudge,
-    edgeMargin: $properties.edgeMargin,
-    persistent: toRef(() => $props.persistent),
-    sticky: toRef(() => !$props.noSticky),
-    onChange: () => {
-        if ($props.closeOnMove) $dialog.close();
-    },
-});
-
 useFocusBox({
     element: container,
-    leave: () => $props.header?.focus?.(),
+    leave: () => props.header?.focus?.(),
     leaveFromEnd: () => close(),
     leaveFromStart: event => event.preventDefault(),
 });
@@ -140,83 +97,65 @@ $subscriptions.observe({
 });
 
 // Methods
-function open() {
-    if ($dialog.isOpen.value) return;
-    $emit('open');
-}
-
 function close() {
-    if (!$dialog.isOpen.value) return;
-    $emit('close');
+    if (!props.opened) return;
+    emit('close');
 }
 
-function toggle() {
-    if ($dialog.isOpen.value) {
-        close();
-    } else {
-        open();
-    }
-}
-
-function select(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
-    $emit('select', spec);
-}
+// Exports
+defineExpose<IPotSelectDropdownExpose>({
+    element: container,
+    marker: toRef(() => popover.value?.marker ?? null),
+});
 </script>
 
 <template>
-    <Teleport
-        :to="teleportTo"
-        :disabled="!to"
+    <PotPopover
+        ref="popover"
+        :visible="opened"
+        :class-list="classList"
+        :target="headerElement"
+        :to="to"
+        :position="position"
+        :nudge="nudge"
+        :edge-margin="edgeMargin"
+        :persistent="persistent"
+        :no-sticky="noSticky"
+        :close-on-move="closeOnMove"
+        :transition="transition"
+        no-auto-focus
+        no-focus-trap
+        @close="close"
     >
-        <Transition :name="transition">
-            <div
-                v-if="$dialog.isOpen.value"
-                v-bind="$dialog.marker"
-                ref="container"
-                :class="['pot-select-dropdown', classList, $dropdownClassList]"
-                :style="currentStyles"
-                tabindex="-1"
+        <div
+            ref="container"
+            :style="currentStyles"
+            class="pot-select-dropdown"
+            tabindex="-1"
+        >
+            <slot
+                name="dropdown-header"
+                :on-close="close"
+            />
+
+            <slot
+                name="options-list"
+                :on-close="close"
             >
-                <slot
-                    name="dropdown-header"
-                    :open="open"
-                    :close="close"
-                    :toggle="toggle"
-                    :select="select"
-                />
-
-                <slot
-                    name="options-list"
-                    :specs="specs"
-                    :open="open"
-                    :close="close"
-                    :toggle="toggle"
-                    :select="select"
+                <ul
+                    class="pot-select-options-list"
+                    role="listbox"
                 >
-                    <ul
-                        class="pot-select-options-list"
-                        role="listbox"
-                    >
-                        <slot
-                            v-for="spec of specs"
-                            name="option"
-                            :key="spec.id"
-                            :spec="spec"
-                            :select="select"
-                        />
-                    </ul>
-                </slot>
+                    <slot />
+                </ul>
+            </slot>
 
-                <slot
-                    name="dropdown-footer"
-                    :open="open"
-                    :close="close"
-                    :toggle="toggle"
-                    :select="select"
-                />
-            </div>
-        </Transition>
-    </Teleport>
+            <slot
+                name="dropdown-footer"
+                :on-close="close"
+            />
+        </div>
+    </PotPopover>
 </template>
 
 <style>
@@ -229,31 +168,27 @@ function select(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     border-style: solid;
 
     /* --- PotSelect - Color - Dropdown --- */
-    border-color: var(--pot-select-color-dropdown-border, transparent);
-    background-color: var(--pot-select-color-dropdown-background, transparent);
-    color: var(--pot-select-color-dropdown-text, inherit);
+    border-color: var(--pot-select-dropdown-color-border, transparent);
+    background-color: var(--pot-select-dropdown-color-background, transparent);
+    color: var(--pot-select-dropdown-color-text, inherit);
 
     /* --- PotSelect - Size - Dropdown --- */
-    height: var(--pot-select-size-dropdown-height, auto);
-    max-height: var(--pot-select-size-dropdown-max-height, 16rem);
-    border-width: var(--pot-select-size-dropdown-border, 0);
-    padding: var(--pot-select-size-dropdown-padding, 0);
-    box-shadow: var(--pot-select-size-dropdown-shadow, none);
-    font-size: var(--pot-select-size-dropdown-text, inherit);
-    font-weight: var(--pot-select-size-text-weight, 400);
-    line-height: var(--pot-select-size-text-height, 1);
+    height: var(--pot-select-dropdown-size-height, auto);
+    max-height: var(--pot-select-dropdown-size-max-height, 16rem);
+    border-width: var(--pot-select-dropdown-size-border, 0);
+    padding: var(--pot-select-dropdown-size-padding, 0);
+    box-shadow: var(--pot-select-dropdown-size-shadow, none);
+    font-size: var(--pot-select-dropdown-size-text, inherit);
+    font-weight: var(--pot-select-dropdown-size-text-weight, 400);
+    line-height: var(--pot-select-dropdown-size-text-height, 1);
 
     /* --- PotSelect - Radius - Dropdown --- */
-    border-radius: var(--pot-select-radius-dropdown-value, 0);
+    border-radius: var(--pot-select-dropdown-radius-value, 0);
 }
 
-.pot-select-dropdown._select-fixed-width {
+._select-fixed-width .pot-select-dropdown {
     /* --- PotSelect - Size - Dropdown --- */
-    width: var(--pot-select-size-dropdown-width, fit-content);
-}
-
-.pot-select-dropdown._select-dropdown-hidden {
-    opacity: 0;
+    width: var(--pot-select-dropdown-size-width, fit-content);
 }
 
 .pot-select-options-list {
@@ -268,8 +203,8 @@ function select(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
 /* --- PotSelect - Transition --- */
 .pot-select-dropdown-transition-enter-active,
 .pot-select-dropdown-transition-leave-active {
-    transition: opacity var(--pot-select-transition-dropdown-duration, 0.2s)
-        var(--pot-select-transition-dropdown-function, ease);
+    transition: opacity var(--pot-select-dropdown-transition-duration, 0.2s)
+        var(--pot-select-dropdown-transition-function, ease);
 }
 
 .pot-select-dropdown-transition-enter-from,

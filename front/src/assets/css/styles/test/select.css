@@ -20,7 +20,8 @@
     background-color: green;
 }
 
-.pot-select-header._select-color-pot {
+/* Как должно быть */
+._select-color-pot .pot-select-header {
     --pot-select-color-header-border: #f3f5f7;
     --pot-select-color-header-background: #f3f5f7;
     --pot-select-color-header-text: #373a41;
@@ -29,15 +30,16 @@
     --pot-select-color-header-icon: #373a41;
 }
 
-.pot-select-header._select-color-pot._focused {
+._select-color-pot .pot-select-header._input-focused {
     --pot-select-color-header-border: #e4002b;
 }
 
-.pot-select-dropdown._select-color-pot {
+/* Как есть */
+._select-color-pot .pot-select-dropdown {
     --pot-select-color-dropdown-border: #373a41;
 }
 
-.pot-select-header._select-size-medium {
+._select-size-medium .pot-select-header {
     --pot-select-size-header-height: 4rem;
     --pot-select-size-header-padding: 0 1.5rem 0 1.8rem;
     --pot-select-size-header-border: 1px;
@@ -46,18 +48,18 @@
     --pot-select-size-header-icon: 1.6rem;
 }
 
-.pot-select-dropdown._select-size-medium {
+._select-size-medium .pot-select-dropdown {
     --pot-select-size-dropdown-border: 1px;
 }
 
-.pot-select-option._select-size-medium {
+._select-size-medium .pot-select-option {
     --pot-select-size-option-padding: 1rem 2rem;
 }
 
-.pot-select-header._select-radius-circle {
+._select-radius-circle .pot-select-header {
     --pot-select-radius-header-value: 1000px;
 }
 
-.pot-select-dropdown._select-radius-circle {
+._select-radius-circle .pot-select-dropdown {
     --pot-select-radius-dropdown-value: 2rem;
 }

@@ -3,6 +3,12 @@ import type { ComputedRef, MaybeRef, Ref } from 'vue';
 
 export type TDialogTrigger = 'clickoutside' | 'escape';
 
+export type TDialogMarkerKey = 'data-pot-dialog-id';
+
+export type TDialogMarker = {
+    [key in TDialogMarkerKey]: string;
+};
+
 export const DIALOG_LAYERS = {
     NONE: 1,
     POPOVER: 500,
@@ -59,9 +65,7 @@ export interface IDialog {
     readonly controller: AbortController;
 
     /** Bindable marker for dialog component elements */
-    readonly marker: {
-        'data-pot-dialog-id': string;
-    };
+    readonly marker: TDialogMarker;
 
     /** Close dialog */
     close: () => void;

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 // Types
 import type { VNode } from 'vue';
-import type { IPotPopoverExpose, IPotPopoverProps } from '@/types/components/popover';
+import type {
+    IPotPopoverEmits,
+    IPotPopoverExpose,
+    IPotPopoverProps,
+} from '@/types/components/popover';
 
 // Vue
 import { cloneVNode, computed, isVNode, ref, toRef } from 'vue';
@@ -30,11 +34,7 @@ const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     transition: 'pot-popover-transition',
 });
 
-const $emit = defineEmits<{
-    open: [];
-    close: [];
-    'update:modelValue': [isVisible: boolean];
-}>();
+const $emit = defineEmits<IPotPopoverEmits>();
 
 // Data
 const target = ref<Element | null>(null);
@@ -142,6 +142,7 @@ defineExpose<Readonly<IPotPopoverExpose>>({
     y: $attach.y,
     target: currentTarget,
     popover: box,
+    marker: toRef(() => $dialog.marker),
     open,
     close,
 });
@@ -158,7 +159,7 @@ defineExpose<Readonly<IPotPopoverExpose>>({
                 ref="box"
                 v-bind="$dialog.marker"
                 :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                :class="['pot-popover', $classList]"
+                :class="['pot-popover', $classList, classList]"
                 :style="currentStyles"
             >
                 <slot

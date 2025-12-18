@@ -11,6 +11,8 @@ export interface IPotOptionProps<VALUE = unknown> {
     fluid?: boolean;
 }
 
-export interface IPotOptionExpose {
+export interface IPotOptionExpose<VALUE = unknown> {
     element: Ref<HTMLElement | null>;
+    value: Ref<VALUE | null>;
+    label: Ref<string>;
 }

@@ -1,11 +1,5 @@
-import type {
-    Ref,
-    RendererElement,
-    ShallowRef,
-    ShallowUnwrapRef,
-    TemplateRef,
-    UnwrapRef,
-} from 'vue';
+import type { Ref, RendererElement, UnwrapRef } from 'vue';
+import type { TDialogMarker } from '@/types/composables/dialog';
 import type { ISpec, TOptionValue } from '@/types/composables/specs';
 import type { EAttachedBoxPosition } from '@/types/composables/attach';
 import type { EPotDevice } from '@/types';
@@ -72,7 +66,6 @@ export interface IPotSelectEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
 /* --- Header --- */
 export interface IPotSelectHeaderProps<OPTION, VALUE_FIELD extends keyof OPTION> {
     specs: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>[];
-    classList?: Record<string, boolean>;
     text?: string;
     editable?: boolean;
     fluid?: boolean;
@@ -81,7 +74,6 @@ export interface IPotSelectHeaderProps<OPTION, VALUE_FIELD extends keyof OPTION>
 }
 
 export interface IPotSelectHeaderEmits {
-    click: [];
     input: [value: string];
     focus: [event: FocusEvent];
     blur: [event: FocusEvent];
@@ -94,13 +86,13 @@ export interface IPotSelectHeaderExpose {
 }
 
 /* --- Dropdown --- */
-export interface IPotSelectDropdownProps<OPTION, VALUE_FIELD extends keyof OPTION> {
+export interface IPotSelectDropdownProps {
     header: UnwrapRef<IPotSelectHeaderExpose> | null;
-    specs: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>[];
 
     opened?: boolean;
 
-    classList?: Record<string, boolean>;
+    className?: string;
+    classList?: string[] | Record<string, boolean>;
     devices?: EPotDevice[];
 
     to?: string | RendererElement | null;
@@ -113,17 +105,12 @@ export interface IPotSelectDropdownProps<OPTION, VALUE_FIELD extends keyof OPTIO
     transition?: string;
 }
 
-export interface IPotSelectDropdownEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
-    select: [spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>];
-    open: [];
+export interface IPotSelectDropdownEmits {
     close: [];
+    open: [];
 }
 
-/* --- Option --- */
-export interface IPotSelectOptionProps<OPTION, VALUE_FIELD extends keyof OPTION> {
-    spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
-}
-
-export interface IPotSelectOptionEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
-    select: [spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>];
+export interface IPotSelectDropdownExpose {
+    element: Ref<HTMLElement | null>;
+    marker: Ref<TDialogMarker | null>;
 }

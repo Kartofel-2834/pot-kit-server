@@ -19,7 +19,6 @@ import { useKeyboard } from '@/composables/keyboard';
 
 // Components
 import PotSelectHeader from '@/components/ui/PotSelectHeader.vue';
-import PotInput from '@/components/ui/PotInput.vue';
 import PotSelectDropdown from '@/components/ui/PotSelectDropdown.vue';
 import PotSelectOption from '@/components/ui/PotSelectOption.vue';
 
@@ -34,6 +33,8 @@ const $emit = defineEmits<IPotSelectEmits<OPTION, VALUE_FIELD>>();
 
 // Refs
 const header = useTemplateRef('header');
+const dropdown = useTemplateRef('dropdown');
+const options = useTemplateRef('options');
 
 // Data
 const isOpen = ref<boolean>(false);
@@ -159,6 +160,14 @@ function onInputText(text: string) {
     changeText(text);
 }
 
+function onClose() {
+    close();
+}
+
+function onChange(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
+    change(spec);
+}
+
 // Methods
 function handleKeypress(event: KeyboardEvent) {
     open();
@@ -168,22 +177,22 @@ function handleKeypress(event: KeyboardEvent) {
 function focusSameLabeled(text: string) {
     if (!isOpen.value) return;
     const spec = availableSpecs.value.find(spec => spec.label.startsWith(text));
-    focusedSpec.value = spec ?? availableSpecs.value[0] ?? null;
+    setFocusToSpec(spec ?? availableSpecs.value[0] ?? null);
 }
 
 function focusSelected() {
     if (!isOpen.value) return;
-    focusedSpec.value = selectedSpec.value ?? availableSpecs.value[0] ?? null;
+    setFocusToSpec(selectedSpec.value ?? availableSpecs.value[0] ?? null);
 }
 
 function focusFirst() {
     if (!isOpen.value) return;
-    focusedSpec.value = availableSpecs.value[0] ?? null;
+    setFocusToSpec(availableSpecs.value[0] ?? null);
 }
 
 function focusLast() {
     if (!isOpen.value) return;
-    focusedSpec.value = availableSpecs.value[availableSpecs.value.length - 1] ?? null;
+    setFocusToSpec(availableSpecs.value[availableSpecs.value.length - 1] ?? null);
 }
 
 function focusNext() {
@@ -202,7 +211,7 @@ function focusNext() {
         return;
     }
 
-    focusedSpec.value = nextSpec;
+    setFocusToSpec(nextSpec);
 }
 
 function focusPrev() {
@@ -221,7 +230,14 @@ function focusPrev() {
         return;
     }
 
-    focusedSpec.value = prevSpec;
+    setFocusToSpec(prevSpec);
+}
+
+function setFocusToSpec(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null) {
+    const currentOption = (options.value ?? []).find(data => spec && data?.value === spec.value);
+
+    focusedSpec.value = spec;
+    currentOption?.element?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
 }
 
 function open() {
@@ -232,7 +248,15 @@ function open() {
 function close() {
     if (!isOpen.value) return;
     isOpen.value = false;
-    focusedSpec.value = null;
+    setFocusToSpec(null);
+}
+
+function toggle() {
+    if (isOpen.value) {
+        close();
+    } else {
+        open();
+    }
 }
 
 function change(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
@@ -250,50 +274,71 @@ function changeText(text: string) {
 </script>
 
 <template>
-    <div :class="['pot-select', $classList]">
+    <div
+        :class="['pot-select', $classList]"
+        v-bind="dropdown?.marker"
+        @click="onClick"
+    >
         <PotSelectHeader
             ref="header"
-            :class-list="$classList"
             :specs="$specs"
             :text="text"
             :placeholder="placeholder"
             :editable="editable"
             :fluid="fluid"
             :devices="devices"
-            @click="onClick"
             @focus="onFocus"
             @blur="onBlur"
             @input="onInputText"
         ></PotSelectHeader>
 
         <PotSelectDropdown
-            :opened="isOpen"
-            :specs="$specs"
+            ref="dropdown"
             :class-list="$classList"
+            :opened="isOpen"
             :header="header"
-            @open="open"
-            @close="close"
-            @select="change"
+            @close="onClose"
         >
-            <template #option="{ key, spec, select }">
-                <PotSelectOption
-                    :key="key"
-                    :class="$classList"
-                    :spec="spec"
-                    @select="select"
+            <PotSelectOption
+                v-for="spec in $specs"
+                ref="options"
+                :key="spec.id"
+                :spec="spec"
+                @select="onChange"
+            >
+                <template
+                    v-if="$slots['option-content']"
+                    #content
                 >
-                </PotSelectOption>
-            </template>
+                    <slot name="option-content" />
+                </template>
+
+                <template
+                    v-if="$slots['option-label']"
+                    #default
+                >
+                    <slot name="option-label" />
+                </template>
+
+                <template
+                    v-if="$slots['option-preicon']"
+                    #preicon
+                >
+                    <slot name="option-preicon" />
+                </template>
+
+                <template
+                    v-if="$slots['option-icon']"
+                    #preicon
+                >
+                    <slot name="option-icon" />
+                </template>
+            </PotSelectOption>
         </PotSelectDropdown>
     </div>
 </template>
 
 <style>
-/* --- PotSelect - Opened --- */
-.pot-select._select-opened .pot-select-arrow-icon {
-    transform: scaleY(-1);
-}
-
 /* --- PotSelect - Fluid --- */
 .pot-select._select-fluid {
     width: 100%;
