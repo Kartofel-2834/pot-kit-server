@@ -145,7 +145,7 @@ useKeyboard({
 
 // Listeners
 function onClick() {
-    open();
+    toggle();
 }
 
 function onFocus() {
@@ -277,7 +277,6 @@ function changeText(text: string) {
     <div
         :class="['pot-select', $classList]"
         v-bind="dropdown?.marker"
-        @click="onClick"
     >
         <PotSelectHeader
             ref="header"
@@ -290,6 +289,7 @@ function changeText(text: string) {
             @focus="onFocus"
             @blur="onBlur"
             @input="onInputText"
+            @click="onClick"
         ></PotSelectHeader>
 
         <PotSelectDropdown

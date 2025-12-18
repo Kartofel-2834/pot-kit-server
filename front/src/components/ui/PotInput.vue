@@ -22,6 +22,7 @@ const $emit = defineEmits<{
     'update:modelValue': [value: string];
     keydown: [value: KeyboardEvent];
     keyup: [value: KeyboardEvent];
+    click: [value: PointerEvent];
 }>();
 
 // Refs
@@ -83,6 +84,18 @@ function onBlur(event: FocusEvent) {
     isFocused.value = false;
 }
 
+function onClick(event: PointerEvent) {
+    $emit('click', event);
+}
+
+function onKeydown(event: KeyboardEvent) {
+    $emit('keydown', event);
+}
+
+function onKeyup(event: KeyboardEvent) {
+    $emit('keyup', event);
+}
+
 // Exports
 defineExpose<IPotInputExpose>({
     element: container,
@@ -125,8 +138,9 @@ defineExpose<IPotInputExpose>({
                 @change="onChange"
                 @focus="onFocus"
                 @blur="onBlur"
-                @keydown="$emit('keydown', $event)"
-                @keyup="$emit('keyup', $event)"
+                @keydown="onKeydown"
+                @keyup="onKeyup"
+                @click="onClick"
             />
         </div>
 
