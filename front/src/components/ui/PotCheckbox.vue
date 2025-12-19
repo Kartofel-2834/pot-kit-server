@@ -9,12 +9,12 @@ import { ref, computed, toRef } from 'vue';
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 
-const $props = withDefaults(defineProps<IPotCheckboxProps>(), {
+const props = withDefaults(defineProps<IPotCheckboxProps>(), {
     value: undefined,
     modelValue: undefined,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     change: [value: boolean];
     'update:modelValue': [value: boolean];
 }>();
@@ -23,16 +23,16 @@ const $emit = defineEmits<{
 const input = ref<HTMLInputElement | null>(null);
 
 // Computed
-const isChecked = computed(() => $props.value ?? $props.modelValue ?? false);
+const isChecked = computed(() => props.value ?? props.modelValue ?? false);
 
 // Composables
 const $properties = useDeviceProperties(
     {
-        size: toRef(() => $props.size),
-        color: toRef(() => $props.color),
-        radius: toRef(() => $props.radius),
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -41,8 +41,8 @@ const $classList = useClassList(
         color: $properties.color,
         radius: $properties.radius,
         checked: isChecked,
-        disabled: toRef(() => $props.disabled),
-        invalid: toRef(() => $props.invalid),
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
     },
     'checkbox',
 );
@@ -53,8 +53,8 @@ function onChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const newValue = target.checked;
 
-    $emit('update:modelValue', newValue);
-    $emit('change', newValue);
+    emit('update:modelValue', newValue);
+    emit('change', newValue);
 }
 
 // Exports
@@ -110,6 +110,7 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
     cursor: pointer;
     user-select: none;
     border-style: solid;
+
     transition:
         color var(--pot-checkbox-transition-duration, 0.2s)
             var(--pot-checkbox-transition-function, ease),

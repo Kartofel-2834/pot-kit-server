@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<IPotSelectDropdownProps>(), {
     to: 'body',
     fixedDropdownWidth: true,
     position: ATTACHED_BOX_POSITION.BOTTOM_START,
-    nudge: 0,
+    nudge: 20,
     edgeMargin: 0,
     transition: 'pot-select-dropdown-transition',
 });
@@ -83,6 +83,7 @@ useKeyboard({
                 close();
             } else if (!event.shiftKey) {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 firstFocusableElement.focus();
             } else {
                 close();

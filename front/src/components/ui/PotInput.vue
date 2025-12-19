@@ -162,17 +162,12 @@ defineExpose<IPotInputExpose>({
     flex-wrap: nowrap;
     border-style: solid;
     cursor: text;
-    transition:
-        color var(--pot-input-transition-duration, 0.2s) var(--pot-input-transition-function, ease),
-        background-color var(--pot-input-transition-duration, 0.2s)
-            var(--pot-input-transition-function, ease),
-        border-color var(--pot-input-transition-duration, 0.2s)
-            var(--pot-input-transition-function, ease);
 
     /* --- PotInput - Color --- */
     color: var(--pot-input-color-text, inherit);
     background-color: var(--pot-input-color-background, transparent);
     border-color: var(--pot-input-color-border, transparent);
+    outline-color: var(--pot-input-color-outline, initial);
 
     /* --- PotInput - Size --- */
     padding: var(--pot-input-size-padding, 0);
@@ -186,6 +181,18 @@ defineExpose<IPotInputExpose>({
 
     /* --- PotInput - Radius --- */
     border-radius: var(--pot-input-radius-value, 0);
+
+    /* --- PotInput - Transition --- */
+    transition:
+        color var(--pot-input-transition-duration, 0.2s) var(--pot-input-transition-function, ease),
+        background-color var(--pot-input-transition-duration, 0.2s)
+            var(--pot-input-transition-function, ease),
+        border-color var(--pot-input-transition-duration, 0.2s)
+            var(--pot-input-transition-function, ease);
+}
+
+.pot-input._input-focused {
+    outline: solid;
 }
 
 .pot-input._input-disabled .pot-input-target {
@@ -205,7 +212,6 @@ defineExpose<IPotInputExpose>({
     outline: none;
     padding: 0;
     border: none;
-    outline: none;
     font-family: inherit;
     -webkit-appearance: none;
     -moz-appearance: none;

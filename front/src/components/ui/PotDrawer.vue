@@ -15,7 +15,7 @@ import { useDeviceProperties } from '@/composables/device-is';
 import { useDialog } from '@/composables/dialog';
 import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 
-const $props = withDefaults(defineProps<IPotDrawerProps>(), {
+const props = withDefaults(defineProps<IPotDrawerProps>(), {
     visible: undefined,
     modelValue: undefined,
     position: POT_DRAWER_POSITION.LEFT,
@@ -26,7 +26,7 @@ const $props = withDefaults(defineProps<IPotDrawerProps>(), {
     noFocusTrap: false,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     open: [];
     close: [];
     'update:modelValue': [isVisible: boolean];
@@ -36,14 +36,14 @@ const $emit = defineEmits<{
 const container = ref<Element | null>(null);
 
 // Computed
-const teleportTo = computed(() => $props.to ?? 'body');
+const teleportTo = computed(() => props.to ?? 'body');
 
 const currentStyles = computed(() => ({ zIndex: $dialog.zIndex.value }));
 
 // Composables
 const $dialog = useDialog({
     triggers: ['escape'],
-    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    isOpen: computed(() => Boolean(props.visible ?? props.modelValue)),
     layer: DIALOG_LAYERS.DIALOG,
     close,
     open,
@@ -51,12 +51,12 @@ const $dialog = useDialog({
 
 const $properties = useDeviceProperties(
     {
-        position: toRef(() => $props.position),
-        size: toRef(() => $props.size),
-        color: toRef(() => $props.color),
-        radius: toRef(() => $props.radius),
+        position: toRef(() => props.position),
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -69,19 +69,19 @@ const $classList = useClassList(
     'drawer',
 );
 
-useFocusTrap(computed(() => ($props.noFocusTrap ? null : container.value)));
+useFocusTrap(computed(() => (props.noFocusTrap ? null : container.value)));
 
-useAutoFocus(computed(() => ($props.noAutoFocus ? null : container.value)));
+useAutoFocus(computed(() => (props.noAutoFocus ? null : container.value)));
 
 // Methods
 function open() {
-    $emit('open');
-    $emit('update:modelValue', true);
+    emit('open');
+    emit('update:modelValue', true);
 }
 
 function close() {
-    $emit('close');
-    $emit('update:modelValue', false);
+    emit('close');
+    emit('update:modelValue', false);
 }
 
 // Exports

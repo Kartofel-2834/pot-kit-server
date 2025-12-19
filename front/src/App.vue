@@ -77,8 +77,6 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             overflow: visible;
         "
     >
-        {{ someValue }}
-
         <PotSelect
             v-model="someValue"
             :options="optionsD"
@@ -89,8 +87,12 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             radius="circle"
             multiple
         >
-            <template #dropdown-footer><button>Test</button></template>
+            <!-- <template #dropdown-footer><button>Test</button></template> -->
+
+            <template #dropdown-header><button>Kamal</button></template>
         </PotSelect>
+
+        <button>Kaml</button>
     </main>
 </template>
 

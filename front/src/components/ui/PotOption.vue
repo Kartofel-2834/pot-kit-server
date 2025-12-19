@@ -77,15 +77,6 @@ defineExpose<IPotOptionExpose>({
     cursor: pointer;
     user-select: none;
     border-style: solid;
-    transition:
-        color var(--pot-option-transition-duration, 0.2s)
-            var(--pot-option-transition-function, ease),
-        border-color var(--pot-option-transition-duration, 0.2s)
-            var(--pot-option-transition-function, ease),
-        outline-color var(--pot-option-transition-duration, 0.2s)
-            var(--pot-option-transition-function, ease),
-        background-color var(--pot-option-transition-duration, 0.2s)
-            var(--pot-option-transition-function, ease);
 
     /* --- PotOption - Color --- */
     border-color: var(--pot-option-color-border, transparent);
@@ -106,6 +97,17 @@ defineExpose<IPotOptionExpose>({
 
     /* --- PotOption - Radius --- */
     border-radius: var(--pot-option-radius-value, 0);
+
+    /* --- PotOption - Transition --- */
+    transition:
+        color var(--pot-option-transition-duration, 0.2s)
+            var(--pot-option-transition-function, ease),
+        border-color var(--pot-option-transition-duration, 0.2s)
+            var(--pot-option-transition-function, ease),
+        outline-color var(--pot-option-transition-duration, 0.2s)
+            var(--pot-option-transition-function, ease),
+        background-color var(--pot-option-transition-duration, 0.2s)
+            var(--pot-option-transition-function, ease);
 }
 
 .pot-option._option-fluid {

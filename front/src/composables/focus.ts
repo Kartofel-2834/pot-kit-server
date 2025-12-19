@@ -199,12 +199,12 @@ export function useFocusBox(options: {
             const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
             const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
 
-            if (firstFocusableElement && document.activeElement === firstFocusableElement) {
-                options.enter?.(event, target, focusableChildren);
-                options.enterFromStart?.(event, target, focusableChildren);
-            } else if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+            if (lastFocusableElement && document.activeElement === lastFocusableElement) {
                 options.leave?.(event, target, focusableChildren);
                 options.leaveFromEnd?.(event, target, focusableChildren);
+            } else if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+                options.enter?.(event, target, focusableChildren);
+                options.enterFromStart?.(event, target, focusableChildren);
             } else if (isInTrap) {
                 options.next?.(event, target, focusableChildren);
             }
@@ -214,12 +214,12 @@ export function useFocusBox(options: {
             const lastFocusableElement = focusableChildren[focusableChildren.length - 1];
             const isInTrap = focusableChildren.includes(document.activeElement as HTMLElement);
 
-            if (lastFocusableElement && document.activeElement === lastFocusableElement) {
-                options.enter?.(event, target, focusableChildren);
-                options.enterFromEnd?.(event, target, focusableChildren);
-            } else if (firstFocusableElement && document.activeElement === firstFocusableElement) {
+            if (firstFocusableElement && document.activeElement === firstFocusableElement) {
                 options.leave?.(event, target, focusableChildren);
                 options.leaveFromStart?.(event, target, focusableChildren);
+            } else if (lastFocusableElement && document.activeElement === lastFocusableElement) {
+                options.enter?.(event, target, focusableChildren);
+                options.enterFromEnd?.(event, target, focusableChildren);
             } else if (isInTrap) {
                 options.previous?.(event, target, focusableChildren);
             }

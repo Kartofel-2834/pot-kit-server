@@ -110,7 +110,6 @@ useKeyboard({
             handleKeypress(event);
             if (!isEditing.value && spec) {
                 change(spec);
-                close();
             } else if (!isEditing.value && !spec) {
                 focusSelected();
             }
@@ -121,7 +120,6 @@ useKeyboard({
             handleKeypress(event);
             if (!isEditing.value && spec) {
                 change(spec);
-                close();
             } else if (!isEditing.value && !spec) {
                 focusSelected();
             }
@@ -300,7 +298,7 @@ function selectSingle(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
 function selectMultiple(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     const data = [...currentValue.value.filter(value => spec.value !== value)];
 
-    if (!spec.selected && spec.value !== null) {
+    if (spec.value !== null && !currentValue.value.includes(spec.value)) {
         data.push(spec.value);
     }
 

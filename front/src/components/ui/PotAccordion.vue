@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Types
-import type { IPotAccordionProps, IPotAccordionSlots } from '@/types/components/accordion';
+import type { IPotAccordionProps } from '@/types/components/accordion';
 
 // Vue
 import { ref, computed, onMounted, toRef } from 'vue';
@@ -10,15 +10,13 @@ import { useClassList } from '@/composables/class-list';
 import { useThrottle } from '@/composables/timer';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 
-const $slots = defineSlots<IPotAccordionSlots>();
-
-const $props = withDefaults(defineProps<IPotAccordionProps>(), {
+const props = withDefaults(defineProps<IPotAccordionProps>(), {
     opened: undefined,
     modelValue: undefined,
     disabled: false,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     open: [];
     close: [];
     'update:modelValue': [isVisible: boolean];
@@ -39,7 +37,7 @@ const contentHeight = ref<number>(NaN);
 onMounted(() => setTimeout(updateContentHeight));
 
 // Computed
-const isOpen = computed(() => Boolean(!$props.disabled && ($props.opened ?? $props.modelValue)));
+const isOpen = computed(() => Boolean(!props.disabled && (props.opened ?? props.modelValue)));
 
 const currentStyles = computed(() => {
     return {
@@ -53,7 +51,7 @@ const $subscriptions = useComponentSubscriptions();
 const $classList = useClassList(
     {
         opened: isOpen,
-        disabled: toRef(() => $props.disabled),
+        disabled: toRef(() => props.disabled),
     },
     'accordion',
 );
@@ -65,7 +63,7 @@ $subscriptions.observe({
 
 // Methods
 function toggle() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
     if (isOpen.value) {
         close();
@@ -75,17 +73,17 @@ function toggle() {
 }
 
 function open() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
-    $emit('open');
-    $emit('update:modelValue', true);
+    emit('open');
+    emit('update:modelValue', true);
 }
 
 function close() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
-    $emit('close');
-    $emit('update:modelValue', false);
+    emit('close');
+    emit('update:modelValue', false);
 }
 
 function updateContentHeight() {
@@ -151,12 +149,10 @@ function updateContentHeight() {
 </template>
 
 <style>
-/* --- PotAccordion - Disabled --- */
 .pot-accordion._accordion-disabled .pot-accordion-header {
     cursor: default;
 }
 
-/* --- PotAccordion - Opened --- */
 .pot-accordion._accordion-opened .pot-accordion-icon {
     transform: scaleY(-1);
 }
@@ -209,7 +205,6 @@ function updateContentHeight() {
     overflow: hidden;
 }
 
-/* --- Transition --- */
 .pot-accordion-transition-enter-active,
 .pot-accordion-transition-leave-active {
     max-height: var(--pot-accordion-content-height);

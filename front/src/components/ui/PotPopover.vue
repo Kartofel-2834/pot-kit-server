@@ -24,7 +24,7 @@ import { useAutoFocus, useFocusTrap } from '@/composables/focus';
 // Components
 import PotSlotCatcher from '@/components/ui/PotSlotCatcher.vue';
 
-const $props = withDefaults(defineProps<IPotPopoverProps>(), {
+const props = withDefaults(defineProps<IPotPopoverProps>(), {
     visible: undefined,
     modelValue: undefined,
     position: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
@@ -34,16 +34,16 @@ const $props = withDefaults(defineProps<IPotPopoverProps>(), {
     transition: 'pot-popover-transition',
 });
 
-const $emit = defineEmits<IPotPopoverEmits>();
+const emit = defineEmits<IPotPopoverEmits>();
 
 // Data
 const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
 
 // Computed
-const currentTarget = computed(() => $props.target ?? target.value ?? null);
+const currentTarget = computed(() => props.target ?? target.value ?? null);
 
-const teleportTo = computed(() => $props.to ?? 'body');
+const teleportTo = computed(() => props.to ?? 'body');
 
 const currentStyles = computed(() => {
     return {
@@ -54,7 +54,7 @@ const currentStyles = computed(() => {
 
 // Composables
 const $dialog = useDialog({
-    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    isOpen: computed(() => Boolean(props.visible ?? props.modelValue)),
     triggers: ['clickoutside', 'escape'],
     layer: DIALOG_LAYERS.POPOVER,
     close,
@@ -63,14 +63,14 @@ const $dialog = useDialog({
 
 const $properties = useDeviceProperties(
     {
-        position: toRef(() => $props.position),
-        nudge: toRef(() => $props.nudge),
-        edgeMargin: toRef(() => $props.edgeMargin),
-        color: toRef(() => $props.color),
-        size: toRef(() => $props.size),
-        radius: toRef(() => $props.radius),
+        position: toRef(() => props.position),
+        nudge: toRef(() => props.nudge),
+        edgeMargin: toRef(() => props.edgeMargin),
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -92,26 +92,26 @@ const $attach = useAttach({
     position: $properties.position,
     nudge: $properties.nudge,
     edgeMargin: $properties.edgeMargin,
-    persistent: toRef(() => $props.persistent),
-    sticky: toRef(() => !$props.noSticky),
+    persistent: toRef(() => props.persistent),
+    sticky: toRef(() => !props.noSticky),
     onChange: () => {
-        if ($props.closeOnMove) $dialog.close();
+        if (props.closeOnMove) $dialog.close();
     },
 });
 
-useFocusTrap(computed(() => ($props.noFocusTrap ? null : box.value)));
+useFocusTrap(computed(() => (props.noFocusTrap ? null : box.value)));
 
-useAutoFocus(computed(() => ($props.noAutoFocus ? null : box.value)));
+useAutoFocus(computed(() => (props.noAutoFocus ? null : box.value)));
 
 // Methods
 function open() {
-    $emit('open');
-    $emit('update:modelValue', true);
+    emit('open');
+    emit('update:modelValue', true);
 }
 
 function close() {
-    $emit('close');
-    $emit('update:modelValue', false);
+    emit('close');
+    emit('update:modelValue', false);
 }
 
 function findTarget(vnode: VNode): VNode | null {

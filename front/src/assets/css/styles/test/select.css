@@ -20,6 +20,11 @@
     background-color: green;
 }
 
+.pot-select-header {
+    --pot-select-header-size-outline: 2px;
+    --pot-select-header-color-outline: black;
+}
+
 /* Как должно быть */
 ._select-color-pot .pot-select-header {
     --pot-select-color-header-border: #f3f5f7;

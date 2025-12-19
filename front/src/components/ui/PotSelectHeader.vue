@@ -12,9 +12,9 @@ import { computed, ref, toRef, useTemplateRef } from 'vue';
 // Components
 import PotInput from '@/components/ui/PotInput.vue';
 
-const $props = defineProps<IPotSelectHeaderProps<OPTION, VALUE_FIELD>>();
+const props = defineProps<IPotSelectHeaderProps<OPTION, VALUE_FIELD>>();
 
-const $emit = defineEmits<IPotSelectHeaderEmits>();
+const emit = defineEmits<IPotSelectHeaderEmits>();
 
 // Refs
 const container = useTemplateRef('container');
@@ -24,24 +24,24 @@ const isFocused = ref<boolean>(false);
 
 // Computed
 const label = computed(() => {
-    const selectedLabels = $props.specs.filter(spec => spec.selected).map(spec => spec.label);
+    const selectedLabels = props.specs.filter(spec => spec.selected).map(spec => spec.label);
 
-    return $props.editable && isFocused.value ? $props.text : selectedLabels.join(', ');
+    return props.editable && isFocused.value ? props.text : selectedLabels.join(', ');
 });
 
 // Listeners
 function onInput(value: string) {
-    $emit('input', value);
+    emit('input', value);
 }
 
 function onFocus(event: FocusEvent) {
     isFocused.value = true;
-    $emit('focus', event);
+    emit('focus', event);
 }
 
 function onBlur(event: FocusEvent) {
     isFocused.value = false;
-    $emit('blur', event);
+    emit('blur', event);
 }
 
 // Methods
@@ -138,6 +138,7 @@ defineExpose<IPotSelectHeaderExpose>({
     --pot-input-color-caret: var(--pot-select-header-color-caret, currentColor);
     --pot-input-color-placeholder: var(--pot-select-header-color-placeholder, inherit);
     --pot-input-color-icon: var(--pot-select-header-color-icon, initial);
+    --pot-input-color-outline: var(--pot-select-header-color-outline, initial);
 
     /* --- PotSelectHeader - Size - Input --- */
     --pot-input-size-height: var(--pot-select-header-size-height, auto);

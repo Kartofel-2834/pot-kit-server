@@ -9,7 +9,7 @@ import { computed, toRef } from 'vue';
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 
-const $props = withDefaults(defineProps<IPotGridProps>(), {
+const props = withDefaults(defineProps<IPotGridProps>(), {
     tag: 'div',
 });
 
@@ -38,20 +38,20 @@ const currentStyles = computed(() => {
 // Composables
 const $properties = useDeviceProperties(
     {
-        cols: toRef(() => $props.cols),
-        rows: toRef(() => $props.rows),
-        flow: toRef(() => $props.flow),
-        autoCols: toRef(() => $props.autoCols),
-        autoRows: toRef(() => $props.autoRows),
-        align: toRef(() => $props.align),
-        alignContent: toRef(() => $props.alignContent),
-        justify: toRef(() => $props.justify),
-        justifyItems: toRef(() => $props.justifyItems),
-        gap: toRef(() => $props.gap),
-        rowGap: toRef(() => $props.rowGap),
-        columnGap: toRef(() => $props.columnGap),
+        cols: toRef(() => props.cols),
+        rows: toRef(() => props.rows),
+        flow: toRef(() => props.flow),
+        autoCols: toRef(() => props.autoCols),
+        autoRows: toRef(() => props.autoRows),
+        align: toRef(() => props.align),
+        alignContent: toRef(() => props.alignContent),
+        justify: toRef(() => props.justify),
+        justifyItems: toRef(() => props.justifyItems),
+        gap: toRef(() => props.gap),
+        rowGap: toRef(() => props.rowGap),
+        columnGap: toRef(() => props.columnGap),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -109,7 +109,6 @@ function formatGap(gap: EPotGridGap | number | null | undefined): string {
 }
 
 .pot-grid._grid-divided-gap {
-    /* Gap */
     row-gap: var(--pot-grid-gap-row, 0);
     column-gap: var(--pot-grid-gap-column, 0);
 }

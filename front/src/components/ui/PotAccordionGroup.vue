@@ -3,19 +3,19 @@
 import type { IPotAccordionGroupProps } from '@/types/components/accordion';
 
 // Vue
-import { computed, ref } from 'vue';
+import { computed, ref, toRef } from 'vue';
 
 // Composables
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 import { useFocusableChildren } from '@/composables/focus';
 import { useKeyboard } from '@/composables/keyboard';
 
-const $props = withDefaults(defineProps<IPotAccordionGroupProps>(), {
+const props = withDefaults(defineProps<IPotAccordionGroupProps>(), {
     values: undefined,
     modelValue: undefined,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     change: [newValues: unknown[]];
     'update:modelValue': [newValues: unknown[]];
 }>();
@@ -25,7 +25,7 @@ const container = ref<Element | null>(null);
 const selectedHeader = ref<HTMLElement | null>(null);
 
 // Computed
-const currentValues = computed(() => $props.values ?? $props.modelValue ?? []);
+const currentValues = computed(() => props.values ?? props.modelValue ?? []);
 
 const accordionsHeaders = computed(() => {
     return $focusableChildren.value.filter(element => {
@@ -84,7 +84,7 @@ $subscriptions.bind(
 // Methods
 function singleBind(key: unknown) {
     return {
-        opened: currentValues.value.includes(key),
+        opened: toRef(() => currentValues.value.includes(key)),
         onOpen: () => openSingleAccordion(key),
         onClose: () => closeAccordion(key),
     };
@@ -92,7 +92,7 @@ function singleBind(key: unknown) {
 
 function multipleBind(key: unknown) {
     return {
-        opened: currentValues.value.includes(key),
+        opened: toRef(() => currentValues.value.includes(key)),
         onOpen: () => openMultipleAccordion(key),
         onClose: () => closeAccordion(key),
     };
@@ -100,20 +100,20 @@ function multipleBind(key: unknown) {
 
 function openMultipleAccordion(key: unknown) {
     const updatedKeys = [...currentValues.value, key];
-    $emit('change', updatedKeys);
-    $emit('update:modelValue', updatedKeys);
+    emit('change', updatedKeys);
+    emit('update:modelValue', updatedKeys);
 }
 
 function openSingleAccordion(key: unknown) {
     const updatedKeys = [key];
-    $emit('change', updatedKeys);
-    $emit('update:modelValue', updatedKeys);
+    emit('change', updatedKeys);
+    emit('update:modelValue', updatedKeys);
 }
 
 function closeAccordion(key: unknown) {
     const updatedKeys = currentValues.value.filter(selectedKey => selectedKey !== key);
-    $emit('change', updatedKeys);
-    $emit('update:modelValue', updatedKeys);
+    emit('change', updatedKeys);
+    emit('update:modelValue', updatedKeys);
 }
 
 function moveUp() {

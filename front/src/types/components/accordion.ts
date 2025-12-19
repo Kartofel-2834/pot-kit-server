@@ -1,10 +1,3 @@
-export interface IPotAccordionSlots {
-    default?: () => unknown;
-    title?: () => unknown;
-    icon?: () => unknown;
-    header?: (options: { toggle: () => void; open: () => void; close: () => void }) => unknown;
-}
-
 export interface IPotAccordionProps {
     /** Accordion open flag */
     opened?: boolean;

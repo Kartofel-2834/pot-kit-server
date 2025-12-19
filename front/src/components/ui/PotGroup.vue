@@ -10,7 +10,7 @@ import { computed, toRef } from 'vue';
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 
-const $props = withDefaults(defineProps<IPotGroupProps>(), {
+const props = withDefaults(defineProps<IPotGroupProps>(), {
     tag: 'div',
 });
 
@@ -30,15 +30,15 @@ const currentStyles = computed(() => {
 // Composables
 const $properties = useDeviceProperties(
     {
-        gap: toRef(() => $props.gap),
-        direction: toRef(() => $props.direction),
-        align: toRef(() => $props.align),
-        alignContent: toRef(() => $props.alignContent),
-        justify: toRef(() => $props.justify),
-        justifyItems: toRef(() => $props.justifyItems),
-        wrap: toRef(() => $props.wrap),
+        gap: toRef(() => props.gap),
+        direction: toRef(() => props.direction),
+        align: toRef(() => props.align),
+        alignContent: toRef(() => props.alignContent),
+        justify: toRef(() => props.justify),
+        justifyItems: toRef(() => props.justifyItems),
+        wrap: toRef(() => props.wrap),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(

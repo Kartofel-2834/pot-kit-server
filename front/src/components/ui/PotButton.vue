@@ -9,18 +9,18 @@ import { toRef } from 'vue';
 import { useDeviceProperties } from '@/composables/device-is';
 import { useClassList } from '@/composables/class-list';
 
-const $props = withDefaults(defineProps<IPotButtonProps>(), {
+const props = withDefaults(defineProps<IPotButtonProps>(), {
     tag: 'button',
 });
 
 // Composables
 const $properties = useDeviceProperties(
     {
-        color: toRef(() => $props.color),
-        size: toRef(() => $props.size),
-        radius: toRef(() => $props.radius),
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -28,8 +28,8 @@ const $classList = useClassList(
         color: $properties.color,
         size: $properties.size,
         radius: $properties.radius,
-        square: toRef(() => $props.square),
-        fluid: toRef(() => $props.fluid),
+        square: toRef(() => props.square),
+        fluid: toRef(() => props.fluid),
     },
     'button',
 );
@@ -86,18 +86,15 @@ const $classList = useClassList(
             var(--pot-button-transition-function, ease);
 }
 
-/* --- PotButton - Disabled --- */
 .pot-button:disabled {
     cursor: default;
 }
 
-/* --- PotButton - Square --- */
 .pot-button._button-square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
-/* --- PotButton - Fluid --- */
 .pot-button._button-fluid {
     width: 100%;
 }
