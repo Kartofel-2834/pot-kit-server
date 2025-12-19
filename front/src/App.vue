@@ -22,6 +22,7 @@ import PotGrid from './components/ui/PotGrid.vue';
 import PotGroup from './components/ui/PotGroup.vue';
 import PotOption from './components/ui/PotOption.vue';
 import PotCheckbox from './components/ui/PotCheckbox.vue';
+import PotIcon from './components/ui/PotIcon.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -89,7 +90,9 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
         >
             <!-- <template #dropdown-footer><button>Test</button></template> -->
 
-            <template #dropdown-header><button>Kamal</button></template>
+            <template #dropdown-header>
+                <button>Kamal <PotIcon icon="ExampleIcon" /></button>
+            </template>
         </PotSelect>
 
         <button>Kaml</button>
