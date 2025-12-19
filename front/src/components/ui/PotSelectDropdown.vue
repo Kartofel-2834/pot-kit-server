@@ -4,7 +4,7 @@ import type {
     IPotSelectDropdownEmits,
     IPotSelectDropdownExpose,
     IPotSelectDropdownProps,
-} from '@/types/components/select';
+} from '@/types/components/select-dropdown';
 
 // Vue
 import { computed, ref, toRef, useTemplateRef } from 'vue';
@@ -131,7 +131,6 @@ defineExpose<IPotSelectDropdownExpose>({
             ref="container"
             :style="currentStyles"
             class="pot-select-dropdown"
-            tabindex="-1"
         >
             <slot
                 name="dropdown-header"
@@ -145,6 +144,7 @@ defineExpose<IPotSelectDropdownExpose>({
                 <ul
                     class="pot-select-options-list"
                     role="listbox"
+                    tabindex="-1"
                 >
                     <slot />
                 </ul>
@@ -162,6 +162,7 @@ defineExpose<IPotSelectDropdownExpose>({
 .pot-select-dropdown {
     position: fixed;
     display: flex;
+    flex-direction: column;
     overflow: hidden;
     top: 0;
     left: 0;
@@ -175,6 +176,7 @@ defineExpose<IPotSelectDropdownExpose>({
     /* --- PotSelect - Size - Dropdown --- */
     height: var(--pot-select-dropdown-size-height, auto);
     max-height: var(--pot-select-dropdown-size-max-height, 16rem);
+    gap: var(--pot-select-dropdown-size-gap, 2rem);
     border-width: var(--pot-select-dropdown-size-border, 0);
     padding: var(--pot-select-dropdown-size-padding, 0);
     box-shadow: var(--pot-select-dropdown-size-shadow, none);

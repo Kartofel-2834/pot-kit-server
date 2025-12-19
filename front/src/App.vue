@@ -38,7 +38,7 @@ const position = ref<EPotToastPosition>(POT_TOAST_POSITION.TOP_LEFT);
 
 const openedAccordions = ref<string[]>([]);
 
-const someValue = ref<any>('a');
+const someValue = ref<any>(['a']);
 const text = ref<string>('');
 
 const optionsA = ref<string[]>(['a', 'b', 'c']);
@@ -87,7 +87,9 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             color="pot"
             size="medium"
             radius="circle"
+            multiple
         >
+            <template #dropdown-footer><button>Test</button></template>
         </PotSelect>
     </main>
 </template>

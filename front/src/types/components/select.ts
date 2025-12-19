@@ -1,6 +1,6 @@
-import type { Ref, RendererElement, UnwrapRef } from 'vue';
-import type { TDialogMarker } from '@/types/composables/dialog';
-import type { ISpec, TOptionValue } from '@/types/composables/specs';
+// Types
+import type { RendererElement } from 'vue';
+import type { TOptionValue } from '@/types/composables/specs';
 import type { EAttachedBoxPosition } from '@/types/composables/attach';
 import type { EPotDevice } from '@/types';
 
@@ -27,13 +27,14 @@ export interface IPotSelectSpecData {
 }
 
 export interface IPotSelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
-    value?: TOptionValue<OPTION, VALUE_FIELD> | null;
-    modelValue?: TOptionValue<OPTION, VALUE_FIELD> | null;
+    values?: TOptionValue<OPTION, VALUE_FIELD>[];
+    modelValue?: TOptionValue<OPTION, VALUE_FIELD>[];
     options?: OPTION[];
     optionLabel?: keyof OPTION | ((option: OPTION) => string);
     optionDisabled?: keyof OPTION | ((option: OPTION) => boolean);
     optionValue?: VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>);
 
+    multiple?: boolean;
     text?: string;
     placeholder?: string;
     editable?: boolean;
@@ -57,60 +58,8 @@ export interface IPotSelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
 }
 
 export interface IPotSelectEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
-    change: [value: TOptionValue<OPTION, VALUE_FIELD> | null, option: OPTION];
-    'update:modelValue': [value: TOptionValue<OPTION, VALUE_FIELD> | null];
+    change: [value: TOptionValue<OPTION, VALUE_FIELD>[], option: OPTION];
+    'update:modelValue': [value: TOptionValue<OPTION, VALUE_FIELD>[]];
     changeText: [text: string];
     'update:text': [text: string];
-}
-
-/* --- Header --- */
-export interface IPotSelectHeaderProps<OPTION, VALUE_FIELD extends keyof OPTION> {
-    specs: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>[];
-    text?: string;
-    editable?: boolean;
-    fluid?: boolean;
-    placeholder?: string;
-    devices?: EPotDevice[];
-}
-
-export interface IPotSelectHeaderEmits {
-    input: [value: string];
-    focus: [event: FocusEvent];
-    blur: [event: FocusEvent];
-}
-
-export interface IPotSelectHeaderExpose {
-    element: Ref<HTMLElement | null>;
-    input: Ref<HTMLInputElement | null>;
-    focus: () => void;
-}
-
-/* --- Dropdown --- */
-export interface IPotSelectDropdownProps {
-    header: UnwrapRef<IPotSelectHeaderExpose> | null;
-
-    opened?: boolean;
-
-    className?: string;
-    classList?: string[] | Record<string, boolean>;
-    devices?: EPotDevice[];
-
-    to?: string | RendererElement | null;
-    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
-    nudge?: number | number[];
-    edgeMargin?: number | number[];
-    persistent?: boolean;
-    noSticky?: boolean;
-    closeOnMove?: boolean;
-    transition?: string;
-}
-
-export interface IPotSelectDropdownEmits {
-    close: [];
-    open: [];
-}
-
-export interface IPotSelectDropdownExpose {
-    element: Ref<HTMLElement | null>;
-    marker: Ref<TDialogMarker | null>;
 }

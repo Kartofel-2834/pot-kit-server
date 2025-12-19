@@ -16,25 +16,25 @@ import { useDeviceProperties } from '@/composables/device-is';
 import { useSpecs } from '@/composables/specs';
 import { useClassList } from '@/composables/class-list';
 import { useKeyboard } from '@/composables/keyboard';
+import { useComponentSubscriptions } from '@/composables/subscriptions';
 
 // Components
 import PotSelectHeader from '@/components/ui/PotSelectHeader.vue';
 import PotSelectDropdown from '@/components/ui/PotSelectDropdown.vue';
 import PotSelectOption from '@/components/ui/PotSelectOption.vue';
 
-const $props = withDefaults(defineProps<IPotSelectProps<OPTION, VALUE_FIELD>>(), {
-    value: null,
-    modelValue: null,
+const props = withDefaults(defineProps<IPotSelectProps<OPTION, VALUE_FIELD>>(), {
+    values: undefined,
+    modelValue: undefined,
     options: () => [],
     fixedDropdownWidth: true,
 });
 
-const $emit = defineEmits<IPotSelectEmits<OPTION, VALUE_FIELD>>();
+const emit = defineEmits<IPotSelectEmits<OPTION, VALUE_FIELD>>();
 
 // Refs
 const header = useTemplateRef('header');
 const dropdown = useTemplateRef('dropdown');
-const options = useTemplateRef('options');
 
 // Data
 const isOpen = ref<boolean>(false);
@@ -45,25 +45,27 @@ const focusedSpec = ref(null) as Ref<ISpec<OPTION, VALUE_FIELD, IPotSelectSpecDa
 // Computed
 const headerInput = computed(() => header.value?.input ?? null);
 
-const currentValue = computed(() => $props.value ?? $props.modelValue ?? null);
+const currentValue = computed(() => props.values ?? props.modelValue ?? []);
 
 const availableSpecs = computed(() => $specs.value.filter(spec => !spec.disabled));
 
 const selectedSpec = computed(() => $specs.value.find(spec => spec.selected) ?? null);
 
-const isEditing = computed<boolean>(() => isFocused.value && $props.editable);
+const isEditing = computed<boolean>(() => isFocused.value && props.editable);
 
 // Composables
+const $subscriptions = useComponentSubscriptions();
+
 const $properties = useDeviceProperties(
     {
-        position: toRef(() => $props.position),
-        nudge: toRef(() => $props.nudge),
-        edgeMargin: toRef(() => $props.edgeMargin),
-        color: toRef(() => $props.color),
-        size: toRef(() => $props.size),
-        radius: toRef(() => $props.radius),
+        position: toRef(() => props.position),
+        nudge: toRef(() => props.nudge),
+        edgeMargin: toRef(() => props.edgeMargin),
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -75,19 +77,19 @@ const $classList = useClassList(
         opened: isOpen,
         closed: computed(() => !isOpen.value),
         focused: isFocused,
-        fluid: toRef(() => $props.fluid),
-        editable: toRef(() => $props.editable),
-        'fixed-width': toRef(() => $props.fixedDropdownWidth),
+        fluid: toRef(() => props.fluid),
+        editable: toRef(() => props.editable),
+        'fixed-width': toRef(() => props.fixedDropdownWidth),
     },
     'select',
 );
 
 const $specs = useSpecs<OPTION, VALUE_FIELD, IPotSelectSpecData>({
-    values: computed(() => (currentValue.value ? [currentValue.value] : [])),
-    options: toRef(() => $props.options),
-    optionLabel: toRef(() => $props.optionLabel),
-    optionDisabled: toRef(() => $props.optionDisabled),
-    optionValue: toRef(() => $props.optionValue),
+    values: toRef(() => currentValue.value),
+    options: toRef(() => props.options),
+    optionLabel: toRef(() => props.optionLabel),
+    optionDisabled: toRef(() => props.optionDisabled),
+    optionValue: toRef(() => props.optionValue),
     data: (option, value) => ({
         focused: Boolean(focusedSpec.value && focusedSpec.value.value === value),
     }),
@@ -103,7 +105,7 @@ useKeyboard({
     },
     handlers: {
         space: event => {
-            const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
+            const spec = focusedSpec.value;
 
             handleKeypress(event);
             if (!isEditing.value && spec) {
@@ -114,7 +116,7 @@ useKeyboard({
             }
         },
         enter: event => {
-            const spec = focusedSpec.value as ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>;
+            const spec = focusedSpec.value;
 
             handleKeypress(event);
             if (!isEditing.value && spec) {
@@ -234,10 +236,28 @@ function focusPrev() {
 }
 
 function setFocusToSpec(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null) {
-    const currentOption = (options.value ?? []).find(data => spec && data?.value === spec.value);
-
     focusedSpec.value = spec;
-    currentOption?.element?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+
+    $subscriptions.add(
+        () => {
+            return setTimeout(() => {
+                scrollToOption(spec);
+                $subscriptions.remove('option-focus');
+            }, 100);
+        },
+        timeoutId => clearTimeout(timeoutId),
+        'option-focus',
+    );
+}
+
+function scrollToOption(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData> | null) {
+    if (!spec || !dropdown.value?.element) return;
+
+    const currentOptionElement = dropdown.value.element.querySelector(
+        `[data-pot-option-id="${spec?.id?.description}"]`,
+    );
+
+    currentOptionElement?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
 }
 
 function open() {
@@ -260,16 +280,37 @@ function toggle() {
 }
 
 function change(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
+    if (props.multiple) {
+        selectMultiple(spec);
+    } else {
+        selectSingle(spec);
+    }
+}
+
+function selectSingle(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
     if (spec.disabled || spec.selected) return;
 
-    $emit('change', spec.value, spec.option);
-    $emit('update:modelValue', spec.value);
+    const data = spec.value !== null ? [spec.value] : [];
+
+    emit('change', data, spec.option);
+    emit('update:modelValue', data);
     close();
 }
 
+function selectMultiple(spec: ISpec<OPTION, VALUE_FIELD, IPotSelectSpecData>) {
+    const data = [...currentValue.value.filter(value => spec.value !== value)];
+
+    if (!spec.selected && spec.value !== null) {
+        data.push(spec.value);
+    }
+
+    emit('change', data, spec.option);
+    emit('update:modelValue', data);
+}
+
 function changeText(text: string) {
-    $emit('changeText', text);
-    $emit('update:text', text);
+    emit('changeText', text);
+    emit('update:text', text);
 }
 </script>
 
@@ -290,7 +331,57 @@ function changeText(text: string) {
             @blur="onBlur"
             @input="onInputText"
             @click="onClick"
-        ></PotSelectHeader>
+        >
+            <template
+                v-if="$slots.preicon"
+                #preicon="$slotData"
+            >
+                <slot
+                    name="preicon"
+                    v-bind="$slotData"
+                />
+            </template>
+
+            <template
+                v-if="$slots.prepend"
+                #prepend="$slotData"
+            >
+                <slot
+                    name="prepend"
+                    v-bind="$slotData"
+                />
+            </template>
+
+            <template
+                v-if="$slots.append"
+                #append="$slotData"
+            >
+                <slot
+                    name="append"
+                    v-bind="$slotData"
+                />
+            </template>
+
+            <template
+                v-if="$slots.icon"
+                #icon="$slotData"
+            >
+                <slot
+                    name="icon"
+                    v-bind="$slotData"
+                />
+            </template>
+
+            <template
+                v-if="$slots.label"
+                #label="$slotData"
+            >
+                <slot
+                    name="label"
+                    v-bind="$slotData"
+                />
+            </template>
+        </PotSelectHeader>
 
         <PotSelectDropdown
             ref="dropdown"
@@ -299,41 +390,93 @@ function changeText(text: string) {
             :header="header"
             @close="onClose"
         >
-            <PotSelectOption
-                v-for="spec in $specs"
-                ref="options"
-                :key="spec.id"
-                :spec="spec"
-                @select="onChange"
+            <template #default>
+                <slot
+                    v-for="spec in $specs"
+                    name="option"
+                    :key="spec.id"
+                    :spec="spec"
+                    :data-pot-option-id="spec.id.description"
+                    :on-select="onChange"
+                >
+                    <PotSelectOption
+                        :key="spec.id"
+                        :spec="spec"
+                        :data-pot-option-id="spec.id.description"
+                        @select="onChange"
+                    >
+                        <template
+                            v-if="$slots['option-content']"
+                            #content="$slotData"
+                        >
+                            <slot
+                                name="option-content"
+                                v-bind="$slotData"
+                            />
+                        </template>
+
+                        <template
+                            v-if="$slots['option-label']"
+                            #default="$slotData"
+                        >
+                            <slot
+                                name="option-label"
+                                v-bind="$slotData"
+                            />
+                        </template>
+
+                        <template
+                            v-if="$slots['option-preicon']"
+                            #preicon="$slotData"
+                        >
+                            <slot
+                                name="option-preicon"
+                                v-bind="$slotData"
+                            />
+                        </template>
+
+                        <template
+                            v-if="$slots['option-icon']"
+                            #preicon="$slotData"
+                        >
+                            <slot
+                                name="option-icon"
+                                v-bind="$slotData"
+                            />
+                        </template>
+                    </PotSelectOption>
+                </slot>
+            </template>
+
+            <template
+                v-if="$slots['options-list']"
+                #options-list="$slotData"
             >
-                <template
-                    v-if="$slots['option-content']"
-                    #content
-                >
-                    <slot name="option-content" />
-                </template>
+                <slot
+                    name="options-list"
+                    v-bind="$slotData"
+                />
+            </template>
 
-                <template
-                    v-if="$slots['option-label']"
-                    #default
-                >
-                    <slot name="option-label" />
-                </template>
+            <template
+                v-if="$slots['dropdown-header']"
+                #dropdown-header="$slotData"
+            >
+                <slot
+                    name="dropdown-header"
+                    v-bind="$slotData"
+                />
+            </template>
 
-                <template
-                    v-if="$slots['option-preicon']"
-                    #preicon
-                >
-                    <slot name="option-preicon" />
-                </template>
-
-                <template
-                    v-if="$slots['option-icon']"
-                    #preicon
-                >
-                    <slot name="option-icon" />
-                </template>
-            </PotSelectOption>
+            <template
+                v-if="$slots['dropdown-footer']"
+                #dropdown-footer="$slotData"
+            >
+                <slot
+                    name="dropdown-footer"
+                    v-bind="$slotData"
+                />
+            </template>
         </PotSelectDropdown>
     </div>
 </template>

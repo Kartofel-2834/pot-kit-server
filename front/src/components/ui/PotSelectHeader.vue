@@ -4,7 +4,7 @@ import type {
     IPotSelectHeaderEmits,
     IPotSelectHeaderExpose,
     IPotSelectHeaderProps,
-} from '@/types/components/select';
+} from '@/types/components/select-header';
 
 // Vue
 import { computed, ref, toRef, useTemplateRef } from 'vue';
@@ -71,15 +71,51 @@ defineExpose<IPotSelectHeaderExpose>({
     >
         <template
             v-if="$slots.preicon"
-            #preicon
+            #preicon="$slotData"
         >
-            <slot name="preicon" />
+            <slot
+                name="preicon"
+                v-bind="$slotData"
+            />
         </template>
 
-        <template #icon>
-            <slot name="icon">
+        <template
+            v-if="$slots.prepend"
+            #prepend="$slotData"
+        >
+            <slot
+                name="prepend"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.append"
+            #append="$slotData"
+        >
+            <slot
+                name="append"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.label"
+            #label="$slotData"
+        >
+            <slot
+                name="label"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template #icon="$slotData">
+            <slot
+                name="icon"
+                v-bind="$slotData"
+            >
                 <svg
-                    class="pot-select-arrow-icon"
+                    class="pot-select-header-arrow-icon"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 -960 960 960"
                     width="24px"
@@ -95,7 +131,7 @@ defineExpose<IPotSelectHeaderExpose>({
 
 <style>
 .pot-select-header.pot-input {
-    /* --- PotSelect - Color - Input --- */
+    /* --- PotSelectHeader - Color - Input --- */
     --pot-input-color-border: var(--pot-select-header-color-border, transparent);
     --pot-input-color-background: var(--pot-select-header-color-background, transparent);
     --pot-input-color-text: var(--pot-select-header-color-text, inherit);
@@ -103,7 +139,7 @@ defineExpose<IPotSelectHeaderExpose>({
     --pot-input-color-placeholder: var(--pot-select-header-color-placeholder, inherit);
     --pot-input-color-icon: var(--pot-select-header-color-icon, initial);
 
-    /* --- PotSelect - Size - Input --- */
+    /* --- PotSelectHeader - Size - Input --- */
     --pot-input-size-height: var(--pot-select-header-size-height, auto);
     --pot-input-size-padding: var(--pot-select-header-size-padding, 0);
     --pot-input-size-border: var(--pot-select-header-size-border, 0);
@@ -115,9 +151,22 @@ defineExpose<IPotSelectHeaderExpose>({
     --pot-input-size-outline: var(--pot-select-header-size-outline, initial);
     --pot-input-size-outline-offset: var(--pot-select-header-size-outline-offset, initial);
 
-    /* --- PotSelect - Radius - Input --- */
+    /* --- PotSelectHeader - Radius - Input --- */
     --pot-input-radius-value: var(--pot-select-header-radius-value, 0);
 
+    /* --- PotSelectHeader - Transition - Input --- */
+    --pot-input-transition-duration: var(--pot-select-header-transition-duration, 0.2s);
+    --pot-input-transition-function: var(--pot-select-header-transition-function, ease);
+
     cursor: pointer;
+}
+
+._select-opened .pot-select-header-arrow-icon {
+    transform: rotate(180deg);
+}
+
+.pot-select-header-arrow-icon {
+    transition: transform var(--pot-input-transition-duration, 0.2s)
+        var(--pot-input-transition-function, ease);
 }
 </style>

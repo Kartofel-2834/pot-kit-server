@@ -47,36 +47,45 @@ defineExpose<IPotSelectOptionExpose<OPTION, VALUE_FIELD>>({
     >
         <template
             v-if="$slots.content"
-            #content
+            #content="$slotData"
         >
-            <slot name="content" />
+            <slot
+                name="content"
+                v-bind="$slotData"
+            />
         </template>
 
         <template
             v-if="$slots.default"
-            #default
+            #default="$slotData"
         >
-            <slot />
+            <slot v-bind="$slotData" />
         </template>
 
         <template
             v-if="$slots.preicon"
-            #preicon
+            #preicon="$slotData"
         >
-            <slot name="preicon" />
+            <slot
+                name="preicon"
+                v-bind="$slotData"
+            />
         </template>
 
         <template
             v-if="$slots.icon"
-            #preicon
+            #icon="$slotData"
         >
-            <slot name="icon" />
+            <slot
+                name="icon"
+                v-bind="$slotData"
+            />
         </template>
     </PotOption>
 </template>
 
 <style>
-.pot-select-option {
+.pot-select-option.pot-option {
     /* --- PotSelect - Color - Option --- */
     --pot-option-color-border: var(--pot-select-option-color-border, transparent);
     --pot-option-color-background: var(--pot-select-option-color-background, transparent);

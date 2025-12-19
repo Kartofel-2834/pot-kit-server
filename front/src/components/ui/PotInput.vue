@@ -9,12 +9,12 @@ import { ref, computed, toRef, useTemplateRef } from 'vue';
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 
-const $props = withDefaults(defineProps<IPotInputProps>(), {
+const props = withDefaults(defineProps<IPotInputProps>(), {
     value: undefined,
     modelValue: undefined,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     input: [value: string];
     change: [value: string];
     focus: [value: FocusEvent];
@@ -33,16 +33,16 @@ const input = useTemplateRef('input');
 const isFocused = ref<boolean>(false);
 
 // Computed
-const currentValue = computed(() => $props.value ?? $props.modelValue);
+const currentValue = computed(() => props.value ?? props.modelValue);
 
 // Composables
 const $properties = useDeviceProperties(
     {
-        size: toRef(() => $props.size),
-        color: toRef(() => $props.color),
-        radius: toRef(() => $props.radius),
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
     },
-    toRef(() => $props.devices),
+    toRef(() => props.devices),
 );
 
 const $classList = useClassList(
@@ -51,9 +51,9 @@ const $classList = useClassList(
         color: $properties.color,
         radius: $properties.radius,
         focused: isFocused,
-        disabled: toRef(() => $props.disabled),
-        invalid: toRef(() => $props.invalid),
-        fluid: toRef(() => $props.fluid),
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
+        fluid: toRef(() => props.fluid),
     },
     'input',
 );
@@ -63,37 +63,37 @@ function onInput(event: Event): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement;
 
-    $emit('update:modelValue', target.value);
-    $emit('input', target.value);
+    emit('update:modelValue', target.value);
+    emit('input', target.value);
 }
 
 function onChange(event: Event): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement;
 
-    $emit('change', target.value);
+    emit('change', target.value);
 }
 
 function onFocus(event: FocusEvent) {
-    $emit('focus', event);
+    emit('focus', event);
     isFocused.value = true;
 }
 
 function onBlur(event: FocusEvent) {
-    $emit('blur', event);
+    emit('blur', event);
     isFocused.value = false;
 }
 
 function onClick(event: PointerEvent) {
-    $emit('click', event);
+    emit('click', event);
 }
 
 function onKeydown(event: KeyboardEvent) {
-    $emit('keydown', event);
+    emit('keydown', event);
 }
 
 function onKeyup(event: KeyboardEvent) {
-    $emit('keyup', event);
+    emit('keyup', event);
 }
 
 // Exports

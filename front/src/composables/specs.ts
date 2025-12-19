@@ -76,7 +76,10 @@ export function useSpecs<OPTION, VALUE_FIELD extends keyof OPTION, DATA = unknow
     }
 
     const optionsAndIds = computed<Array<[symbol, OPTION]>>(() => {
-        return unref(specOptions.options).map(option => [Symbol(), option]);
+        return unref(specOptions.options).map(option => [
+            Symbol(Math.random().toString(36).slice(2, 9)),
+            option,
+        ]);
     });
 
     return computed<ISpec<OPTION, VALUE_FIELD, DATA>[]>(() => {
