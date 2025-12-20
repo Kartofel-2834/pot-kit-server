@@ -23,6 +23,7 @@ import PotGroup from './components/ui/PotGroup.vue';
 import PotOption from './components/ui/PotOption.vue';
 import PotCheckbox from './components/ui/PotCheckbox.vue';
 import PotIcon from './components/ui/PotIcon.vue';
+import PotTag from './components/ui/PotTag.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -97,18 +98,6 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                 </button>
             </template>
         </PotSelect> -->
-
-        <PotTooltip
-            text="Test"
-            enterable
-            :auto-close-delay="1000"
-        >
-            <button @click="() => $toast.add({ data: 'Kamal', lifetime: 3000 })">Kaml</button>
-        </PotTooltip>
-
-        <PotToast v-slot="{ data }">
-            {{ data }}
-        </PotToast>
     </main>
 </template>
 
