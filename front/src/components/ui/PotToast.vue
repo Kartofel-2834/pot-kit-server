@@ -1,72 +1,71 @@
-<script lang="ts" generic="T = unknown" setup>
+<script lang="ts" generic="DATA = any" setup>
 // Types
-import type { Ref } from 'vue';
 import type { IPotToastExpose, IPotToastProps } from '@/types/components/toast';
 import type { IToastDialog } from '@/types/composables/toast';
-import type { EDialogLayers } from '@/types/composables/dialog';
+
+// Vue
+import { computed, toRef } from 'vue';
 
 // Constants
 import { POT_TOAST_POSITION } from '@/types/components/toast';
 import { DIALOG_LAYERS } from '@/types/composables/dialog';
 
-// Vue
-import { computed, ref, inject, provide } from 'vue';
-
 // Composables
 import { useToast } from '@/composables/toast';
-import { useClassList } from '@/composables/class-list';
+import { useDialog } from '@/composables/dialog';
 import { useDeviceProperties } from '@/composables/device-is';
-import { useDialog, useDialogLayer, useDialogZIndex } from '@/composables/dialog';
+import { useClassList } from '@/composables/class-list';
 
-const $layer = DIALOG_LAYERS.TOAST as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('pot-dialog-layer', ref(DIALOG_LAYERS.NONE));
-
-const $props = withDefaults(defineProps<IPotToastProps<T>>(), {
+const $props = withDefaults(defineProps<IPotToastProps<DATA>>(), {
     group: undefined,
     position: POT_TOAST_POSITION.TOP_LEFT,
     to: 'body',
     transition: 'pot-toast-transition',
 });
 
-const $toast = useToast<T>();
-
-const $dialog = useDialog({
-    triggers: [],
-    isOpen: computed(() => Boolean($toast.list.value.length)),
-    layer: useDialogLayer($layer, $parentLayer),
-    close: pop,
-    open: () => {},
-});
-
-// Data
-const toastDialogsList = ref<HTMLElement[]>([]);
-
 // Computed
 const toastsList = computed(() => {
-    return $toast.list.value.filter(toast => toast.group === $props.group) as IToastDialog<T>[];
+    return $toast.list.value.filter(toast => toast.group === $props.group) as IToastDialog<DATA>[];
 });
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const zIndex = useDialogZIndex($dialog);
+const currentStyles = computed(() => ({ zIndex: $dialog.zIndex.value }));
 
-const properties = useDeviceProperties(
-    computed(() => ({
-        position: $props.position,
-        size: $props.size,
-        color: $props.color,
-        radius: $props.radius,
-    })),
-    $props.devices,
+// Composables
+const $toast = useToast<DATA>();
+
+const $dialog = useDialog({
+    triggers: [],
+    isOpen: toRef(() => Boolean($toast.list.value.length)),
+    layer: DIALOG_LAYERS.TOAST,
+    close: pop,
+    open: () => {},
+});
+
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => $props.position),
+        size: toRef(() => $props.size),
+        color: toRef(() => $props.color),
+        radius: toRef(() => $props.radius),
+    },
+    toRef(() => $props.devices),
 );
 
-const classList = computed(() => useClassList({ ...properties.value }));
-
-const currentStyles = computed(() => ({ zIndex: zIndex.value }));
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+    },
+    'toast',
+);
 
 // Methods
-function getData(toast: IToastDialog): T {
-    return toast.data as T;
+function getData(toast: IToastDialog): DATA {
+    return toast.data as DATA;
 }
 
 function pop() {
@@ -79,9 +78,7 @@ function close(id: Symbol) {
 }
 
 // Exports
-provide('pot-dialog-layer', $dialog.layer);
-
-defineExpose<IPotToastExpose<T>>({
+defineExpose<IPotToastExpose<DATA>>({
     list: toastsList,
     pop,
     close,
@@ -95,8 +92,9 @@ defineExpose<IPotToastExpose<T>>({
     >
         <TransitionGroup
             :name="transition"
-            :class="['pot-toast', classList]"
+            :class="['pot-toast', $classList, classList]"
             :style="currentStyles"
+            v-bind="$dialog.marker"
             tag="div"
             role="alert"
         >
@@ -104,9 +102,9 @@ defineExpose<IPotToastExpose<T>>({
                 v-for="(toastDialog, index) in toastsList"
                 :key="toastDialog.id.description"
                 ref="toastDialogsList"
-                class="pot-toast__item"
+                class="pot-toast-item"
             >
-                <div class="pot-toast__item__container">
+                <div class="pot-toast-item-container">
                     <slot
                         :id="toastDialog.id"
                         :data="getData(toastDialog)"
@@ -123,101 +121,85 @@ defineExpose<IPotToastExpose<T>>({
 
 <style>
 .pot-toast {
-    /* --- Color - Configuration --- */
-    --pot-toast-color-background: transparent;
-    --pot-toast-color-border: transparent;
-    --pot-toast-color-text: inherit;
-
-    /* --- Size - Configuration --- */
-    --pot-toast-size-border: 0;
-    --pot-toast-size-padding: 0;
-    --pot-toast-size-shadow: none;
-    --pot-toast-size-text: inherit;
-    --pot-toast-size-edge-margin: 20px;
-    --pot-toast-size-gap: 20px;
-
-    /* --- Radius - Configuration --- */
-    --pot-toast-radius-value: 0;
-
     position: fixed;
     display: flex;
     flex-direction: column;
 }
 
-.pot-toast__item {
+.pot-toast-item {
     position: relative;
     max-height: 1000px;
 }
 
-.pot-toast__item__container {
+.pot-toast-item-container {
     border-style: solid;
 
     /* --- PotToast - Color --- */
-    border-color: var(--pot-toast-color-border);
-    background-color: var(--pot-toast-color-background);
-    color: var(--pot-toast-color-text);
+    border-color: var(--pot-toast-color-border, transparent);
+    background-color: var(--pot-toast-color-background, transparent);
+    color: var(--pot-toast-color-text, inherit);
 
     /* --- PotToast - Size --- */
-    border-width: var(--pot-toast-size-border);
-    padding: var(--pot-toast-size-padding);
-    box-shadow: var(--pot-toast-size-shadow);
-    font-size: var(--pot-toast-size-text);
+    border-width: var(--pot-toast-size-border, 0);
+    padding: var(--pot-toast-size-padding, 0);
+    box-shadow: var(--pot-toast-size-shadow, none);
+    font-size: var(--pot-toast-size-text, inherit);
 
     /* --- PotToast - Radius --- */
-    border-radius: var(--pot-toast-radius-value);
+    border-radius: var(--pot-toast-radius-value, 0);
 }
 
-.pot-toast._position-top-left .pot-toast__item__container,
-.pot-toast._position-top-center .pot-toast__item__container,
-.pot-toast._position-top-right .pot-toast__item__container {
-    margin-bottom: var(--pot-toast-size-gap);
+.pot-toast._toast-position-top-left .pot-toast-item-container,
+.pot-toast._toast-position-top-center .pot-toast-item-container,
+.pot-toast._toast-position-top-right .pot-toast-item-container {
+    margin-bottom: var(--pot-toast-size-gap, 20px);
 }
 
-.pot-toast._position-bottom-left .pot-toast__item__container,
-.pot-toast._position-bottom-center .pot-toast__item__container,
-.pot-toast._position-bottom-right .pot-toast__item__container {
-    margin-top: var(--pot-toast-size-gap);
+.pot-toast._toast-position-bottom-left .pot-toast-item-container,
+.pot-toast._toast-position-bottom-center .pot-toast-item-container,
+.pot-toast._toast-position-bottom-right .pot-toast-item-container {
+    margin-top: var(--pot-toast-size-gap, 20px);
 }
 
 /* --- Toast - Position - Top-left  --- */
-.pot-toast._position-top-left {
-    top: var(--pot-toast-size-edge-margin);
-    left: var(--pot-toast-size-edge-margin);
+.pot-toast._toast-position-top-left {
+    top: var(--pot-toast-size-edge-margin, 20px);
+    left: var(--pot-toast-size-edge-margin, 20px);
 }
 
 /* --- Toast - Position - Top-center  --- */
-.pot-toast._position-top-center {
-    top: var(--pot-toast-size-edge-margin);
+.pot-toast._toast-position-top-center {
+    top: var(--pot-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Toast - Position - Top-right  --- */
-.pot-toast._position-top-right {
-    top: var(--pot-toast-size-edge-margin);
-    right: var(--pot-toast-size-edge-margin);
+.pot-toast._toast-position-top-right {
+    top: var(--pot-toast-size-edge-margin, 20px);
+    right: var(--pot-toast-size-edge-margin, 20px);
 }
 
 /* --- Toast - Position - Bottom-left  --- */
-.pot-toast._position-bottom-left {
+.pot-toast._toast-position-bottom-left {
     flex-direction: column-reverse;
-    bottom: var(--pot-toast-size-edge-margin);
-    left: var(--pot-toast-size-edge-margin);
+    bottom: var(--pot-toast-size-edge-margin, 20px);
+    left: var(--pot-toast-size-edge-margin, 20px);
 }
 
 /* --- Toast - Position - Bottom-center  --- */
-.pot-toast._position-bottom-center {
+.pot-toast._toast-position-bottom-center {
     flex-direction: column-reverse;
-    bottom: var(--pot-toast-size-edge-margin);
+    bottom: var(--pot-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Toast - Position - Bottom-right  --- */
-.pot-toast._position-bottom-right {
+.pot-toast._toast-position-bottom-right {
     flex-direction: column-reverse;
-    bottom: var(--pot-toast-size-edge-margin);
-    right: var(--pot-toast-size-edge-margin);
+    bottom: var(--pot-toast-size-edge-margin, 20px);
+    right: var(--pot-toast-size-edge-margin, 20px);
 }
 
 /* --- Transition - Toast --- */

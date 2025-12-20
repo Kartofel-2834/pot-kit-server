@@ -78,7 +78,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             overflow: visible;
         "
     >
-        <PotSelect
+        <!-- <PotSelect
             v-model="someValue"
             :options="optionsD"
             option-label="name"
@@ -96,18 +96,19 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                     <PotIcon icon="example-icon" />
                 </button>
             </template>
-        </PotSelect>
+        </PotSelect> -->
 
-        <PotAccordion v-model="isOpen">
-            <template #title>Kamal</template>
+        <PotTooltip
+            text="Test"
+            enterable
+            :auto-close-delay="1000"
+        >
+            <button @click="() => $toast.add({ data: 'Kamal', lifetime: 3000 })">Kaml</button>
+        </PotTooltip>
 
-            <button>
-                Kamal
-                <PotIcon icon="example-icon" />
-            </button>
-        </PotAccordion>
-
-        <button>Kaml</button>
+        <PotToast v-slot="{ data }">
+            {{ data }}
+        </PotToast>
     </main>
 </template>
 

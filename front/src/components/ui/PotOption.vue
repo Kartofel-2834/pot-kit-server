@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="VALUE = unknown">
+<script lang="ts" generic="VALUE = unknown" setup>
 // Types
 import type { IPotOptionExpose, IPotOptionProps } from '@/types/components/option';
 

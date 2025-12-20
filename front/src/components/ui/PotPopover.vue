@@ -46,9 +46,12 @@ const currentTarget = computed(() => props.target ?? target.value ?? null);
 const teleportTo = computed(() => props.to ?? 'body');
 
 const currentStyles = computed(() => {
+    const x = $attach.x.value ?? 0;
+    const y = $attach.y.value ?? 0;
+
     return {
         zIndex: $dialog.zIndex.value,
-        transform: `translate(${$attach.x.value}px, ${$attach.y.value}px)`,
+        transform: `translate(${x}px, ${y}px)`,
     };
 });
 
@@ -80,8 +83,8 @@ const $classList = useClassList(
         size: $properties.size,
         radius: $properties.radius,
         opened: $dialog.isOpen,
-        closed: computed(() => !$dialog.isOpen.value),
-        hidden: computed(() => $attach.x.value === null || $attach.y.value === null),
+        closed: toRef(() => !$dialog.isOpen.value),
+        hidden: toRef(() => $attach.x.value === null || $attach.y.value === null),
     },
     'popover',
 );

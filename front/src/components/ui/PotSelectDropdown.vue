@@ -169,15 +169,15 @@ defineExpose<IPotSelectDropdownExpose>({
     left: 0;
     border-style: solid;
 
-    /* --- PotSelect - Color - Dropdown --- */
+    /* --- PotSelectDropdown - Color --- */
     border-color: var(--pot-select-dropdown-color-border, transparent);
     background-color: var(--pot-select-dropdown-color-background, transparent);
     color: var(--pot-select-dropdown-color-text, inherit);
 
-    /* --- PotSelect - Size - Dropdown --- */
+    /* --- PotSelectDropdown - Size --- */
     height: var(--pot-select-dropdown-size-height, auto);
-    max-height: var(--pot-select-dropdown-size-max-height, 16rem);
-    gap: var(--pot-select-dropdown-size-gap, 2rem);
+    max-height: var(--pot-select-dropdown-size-max-height, none);
+    gap: var(--pot-select-dropdown-size-gap, 1.6rem);
     border-width: var(--pot-select-dropdown-size-border, 0);
     padding: var(--pot-select-dropdown-size-padding, 0);
     box-shadow: var(--pot-select-dropdown-size-shadow, none);
@@ -185,12 +185,12 @@ defineExpose<IPotSelectDropdownExpose>({
     font-weight: var(--pot-select-dropdown-size-text-weight, 400);
     line-height: var(--pot-select-dropdown-size-text-height, 1);
 
-    /* --- PotSelect - Radius - Dropdown --- */
+    /* --- PotSelectDropdown - Radius --- */
     border-radius: var(--pot-select-dropdown-radius-value, 0);
 }
 
 ._select-fixed-width .pot-select-dropdown {
-    /* --- PotSelect - Size - Dropdown --- */
+    /* --- PotSelectDropdown - Size --- */
     width: var(--pot-select-dropdown-size-width, fit-content);
 }
 
@@ -198,12 +198,17 @@ defineExpose<IPotSelectDropdownExpose>({
     overflow: auto;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     width: 100%;
     margin: 0;
     padding: 0;
+
+    /* --- PotSelectDropdown - Size --- */
+    height: var(--pot-select-dropdown-size-list-height, auto);
+    max-height: var(--pot-select-dropdown-size-list-max-height, 10rem);
 }
 
-/* --- PotSelect - Transition --- */
+/* --- PotSelectDropdown - Transition --- */
 .pot-select-dropdown-transition-enter-active,
 .pot-select-dropdown-transition-leave-active {
     transition: opacity var(--pot-select-dropdown-transition-duration, 0.2s)

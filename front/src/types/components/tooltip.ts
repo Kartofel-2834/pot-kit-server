@@ -22,6 +22,9 @@ export interface IPotTooltipProps {
     /** Place where tooltip will be mounted */
     to?: string | RendererElement | null;
 
+    /** Tooltip element classlist */
+    classList?: string[] | Record<string, unknown>;
+
     /** Target events names, that will open tooltip */
     openTriggers?: string[];
 

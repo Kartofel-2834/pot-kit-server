@@ -5,10 +5,10 @@ import type { IToast, IToastDialog, IToastDialogData } from '@/types/composables
 // Vue
 import { readonly, ref } from 'vue';
 
-const toastsList = ref<IToastDialog<unknown>[]>([]);
+const toastsList = ref<IToastDialog[]>([]);
 
-export function useToast<T = unknown>(): IToast<T> {
-    function add(toast: IToastDialogData<T>) {
+export function useToast<DATA = unknown>(): IToast<DATA> {
+    function add(toast: IToastDialogData<DATA>) {
         const id = Symbol(Math.random().toString(36).slice(2, 9));
         const data = { ...toast, id };
 
@@ -24,7 +24,7 @@ export function useToast<T = unknown>(): IToast<T> {
     }
 
     return {
-        list: readonly(toastsList) as Readonly<Ref<IToastDialog<unknown>[]>>,
+        list: readonly(toastsList) as Readonly<Ref<IToastDialog[]>>,
         add,
         remove,
     };

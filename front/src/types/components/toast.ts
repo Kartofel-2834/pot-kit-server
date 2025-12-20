@@ -26,12 +26,15 @@ export type EPotToastColor = (typeof POT_TOAST_COLOR)[keyof typeof POT_TOAST_COL
 
 export type EPotToastRadius = (typeof POT_TOAST_RADIUS)[keyof typeof POT_TOAST_RADIUS];
 
-export interface IPotToastProps<T = unknown> {
+export interface IPotToastProps<DATA = unknown> {
     /** Toast composable instance, use this prop for share your toast type to toast slot data */
-    toast?: IToast<T>;
+    toast?: IToast<DATA>;
 
     /** Toast group name */
     group?: string;
+
+    /** Toast element classlist */
+    classList?: string[] | Record<string, unknown>;
 
     /** Toast position */
     position?: EPotToastPosition;

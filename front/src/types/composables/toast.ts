@@ -1,18 +1,18 @@
 // Types
 import type { Ref } from 'vue';
 
-export interface IToastDialogData<T = unknown> {
+export interface IToastDialogData<DATA = unknown> {
     group?: string;
     lifetime?: number;
-    data?: T;
+    data?: DATA;
 }
 
-export interface IToastDialog<T = unknown> extends IToastDialogData<T> {
+export interface IToastDialog<DATA = unknown> extends IToastDialogData<DATA> {
     id: Symbol;
 }
 
-export interface IToast<T = unknown> {
-    list: Readonly<Ref<IToastDialog<unknown>[]>>;
-    add: (toast: IToastDialogData<T>) => void;
+export interface IToast<DATA = unknown> {
+    list: Readonly<Ref<IToastDialog[]>>;
+    add: (toast: IToastDialogData<DATA>) => void;
     remove: (id: Symbol) => void;
 }

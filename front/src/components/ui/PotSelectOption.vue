@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="OPTION, VALUE_FIELD extends keyof OPTION">
+<script lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION" setup>
 // Types
 import type {
     IPotSelectOptionEmits,
