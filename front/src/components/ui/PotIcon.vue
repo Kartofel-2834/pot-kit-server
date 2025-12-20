@@ -1,10 +1,14 @@
 <script lang="ts" setup>
 // Types
 import type { Component } from 'vue';
-import type { IPotIconProps } from '@/types/components/icon';
+import type { EPotIconSize, IPotIconProps } from '@/types/components/icon';
 
 // Vue
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, toRef, unref } from 'vue';
+
+// Composables
+import { useDeviceProperties } from '@/composables/device-is';
+import { useClassList } from '@/composables/class-list';
 
 const props = defineProps<IPotIconProps>();
 
@@ -23,31 +27,61 @@ Object.keys(iconsModules).forEach(path => {
 
 // Computed
 const iconComponent = computed<Component | null>(() => {
-    if (!props.icon) {
-        return null;
-    }
+    const icon = unref($properties.icon);
 
-    const iconLoader = iconsMap.get(props.icon);
+    if (!icon) return null;
+
+    const iconLoader = iconsMap.get(icon);
 
     if (!iconLoader) {
-        console.warn(`Icon with name "${props.icon}" not found in components/ui/icons`);
+        console.warn(`Icon with name "${icon}" not found in components/ui/icons`);
         return null;
     }
 
     return defineAsyncComponent({
         loader: iconLoader,
-        onError: error => {
-            console.warn(`Icon "${props.icon}" load error:`, error);
-        },
+        onError: error => console.warn(`Icon "${icon}" load error:`, error),
         delay: 0,
         timeout: 3000,
     });
 });
 
+const currentStyles = computed(() => {
+    return {
+        '--pot-icon-size-width': formatSize($properties.size.value),
+    };
+});
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        icon: toRef(() => props.icon),
+        size: toRef(() => props.size),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        size: $properties.size,
+    },
+    'icon',
+);
+
 // Methods
 function getIconName(path: string): string {
     const match = path.match(/\/([^/]+)\.vue$/);
-    return match ? match[1] : '';
+    return splitCamelCase(match?.[1] ?? '', '-');
+}
+
+function splitCamelCase(str: string, separator: string) {
+    return str.replace(/[A-Z0-9]+(?![a-z])|[A-Z0-9]/g, (matchedChar, index) => {
+        return (index ? separator : '') + matchedChar.toLowerCase();
+    });
+}
+
+function formatSize(size: EPotIconSize | number | null | undefined): string {
+    return typeof size === 'number' && !isNaN(size) && isFinite(size) ? `${size}px` : '';
 }
 </script>
 
@@ -55,6 +89,15 @@ function getIconName(path: string): string {
     <component
         v-if="iconComponent"
         :is="iconComponent"
-        class="pot-icon"
+        :class="['pot-icon', $classList]"
+        :style="currentStyles"
     />
 </template>
+
+<style>
+.pot-icon {
+    /* --- PotIcon - Size --- */
+    width: var(--pot-icon-size-width, 1em);
+    height: var(--pot-icon-size-height, auto);
+}
+</style>

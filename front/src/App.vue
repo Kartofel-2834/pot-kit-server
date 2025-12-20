@@ -88,12 +88,24 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
             radius="circle"
             multiple
         >
-            <!-- <template #dropdown-footer><button>Test</button></template> -->
+            <template #dropdown-footer><button>Test</button></template>
 
             <template #dropdown-header>
-                <button>Kamal <PotIcon icon="ExampleIcon" /></button>
+                <button>
+                    Kamal
+                    <PotIcon icon="example-icon" />
+                </button>
             </template>
         </PotSelect>
+
+        <PotAccordion v-model="isOpen">
+            <template #title>Kamal</template>
+
+            <button>
+                Kamal
+                <PotIcon icon="example-icon" />
+            </button>
+        </PotAccordion>
 
         <button>Kaml</button>
     </main>

@@ -10,6 +10,9 @@ import { useClassList } from '@/composables/class-list';
 import { useThrottle } from '@/composables/timer';
 import { useComponentSubscriptions } from '@/composables/subscriptions';
 
+// Components
+import PotIcon from '@/components/ui/PotIcon.vue';
+
 const props = withDefaults(defineProps<IPotAccordionProps>(), {
     opened: undefined,
     modelValue: undefined,
@@ -123,14 +126,7 @@ function updateContentHeight() {
 
                 <div class="pot-accordion-icon">
                     <slot name="icon">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 -960 960 960"
-                            width="24px"
-                            fill="currentColor"
-                        >
-                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
-                        </svg>
+                        <PotIcon icon="arrow" />
                     </slot>
                 </div>
             </div>
@@ -194,11 +190,6 @@ function updateContentHeight() {
 
     /* --- PotAccordion - Size --- */
     font-size: var(--pot-accordion-size-icon, 1.4rem);
-}
-
-.pot-accordion-icon svg {
-    width: 1em;
-    height: 1em;
 }
 
 .pot-accordion-content {

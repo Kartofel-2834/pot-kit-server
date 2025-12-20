@@ -63,13 +63,13 @@ const $classList = useClassList(
 
             return hasRowGap || hasColumnGap;
         }),
-        gap: computed(() =>
+        gap: toRef(() =>
             typeof $properties.gap.value !== 'number' ? $properties.gap.value : null,
         ),
-        'row-gap': computed(() =>
+        'row-gap': toRef(() =>
             typeof $properties.rowGap.value !== 'number' ? $properties.rowGap.value : null,
         ),
-        'column-gap': computed(() =>
+        'column-gap': toRef(() =>
             typeof $properties.columnGap.value !== 'number' ? $properties.columnGap.value : null,
         ),
     },

@@ -11,6 +11,7 @@ import { computed, ref, toRef, useTemplateRef } from 'vue';
 
 // Components
 import PotInput from '@/components/ui/PotInput.vue';
+import PotIcon from '@/components/ui/PotIcon.vue';
 
 const props = defineProps<IPotSelectHeaderProps<OPTION, VALUE_FIELD>>();
 
@@ -114,16 +115,11 @@ defineExpose<IPotSelectHeaderExpose>({
                 name="icon"
                 v-bind="$slotData"
             >
-                <svg
+                <PotIcon
                     class="pot-select-header-arrow-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 -960 960 960"
-                    width="24px"
-                    fill="currentColor"
+                    icon="arrow"
                     aria-hidden="true"
-                >
-                    <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
-                </svg>
+                />
             </slot>
         </template>
     </PotInput>
