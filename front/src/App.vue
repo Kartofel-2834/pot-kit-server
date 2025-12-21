@@ -98,6 +98,16 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                 </button>
             </template>
         </PotSelect> -->
+
+        {{ isOpen }}
+
+        <PotCheckbox
+            v-model="isOpen"
+            true-value="kamal"
+            false-value="ambal"
+        >
+            Test
+        </PotCheckbox>
     </main>
 </template>
 

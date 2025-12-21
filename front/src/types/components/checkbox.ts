@@ -14,39 +14,52 @@ export type EPotCheckboxColor = (typeof POT_CHECKBOX_COLOR)[keyof typeof POT_CHE
 
 export type EPotCheckboxRadius = (typeof POT_CHECKBOX_RADIUS)[keyof typeof POT_CHECKBOX_RADIUS];
 
-export interface IPotCheckboxProps {
-    /** Текущее значение */
-    value?: boolean;
+export interface IPotCheckboxProps<TRUE_VALUE = true, FALSE_VALUE = false> {
+    /** Current value */
+    value?: TRUE_VALUE | FALSE_VALUE;
 
-    /** То же, что и `value`, добавлен для поддержки v-model */
-    modelValue?: boolean;
+    /** Same as `value`, added for v-model support */
+    modelValue?: TRUE_VALUE | FALSE_VALUE;
 
-    /** Точки останова для адаптивного дизайна */
-    devices?: EPotDevice[];
+    trueValue?: TRUE_VALUE;
 
-    /** Радиус границ чекбокса */
+    falseValue?: FALSE_VALUE;
+
+    /** Checkbox border radius */
     radius?: EPotCheckboxRadius | EPotCheckboxRadius[] | null;
 
-    /** Размер чекбокса */
+    /** Checkbox size */
     size?: EPotCheckboxSize | EPotCheckboxSize[] | null;
 
-    /** Цвет чекбокса */
+    /** Checkbox color */
     color?: EPotCheckboxColor | EPotCheckboxColor[] | null;
 
-    /** Если true, то чекбокс будет заблокирован и не активен */
+    /** Breakpoints for responsive design */
+    devices?: EPotDevice[];
+
+    indeterminate?: boolean;
+
+    /** If true, the checkbox will be disabled and inactive */
     disabled?: boolean;
 
-    /** Если true, то чекбокс будет невалиден */
+    /** If true, the checkbox will be invalid */
     invalid?: boolean;
 
-    /** Имя для input элемента */
-    name?: string;
+    /** Name for input element */
+    inputName?: string;
 
-    /** Значение для input элемента */
+    /** Value for input element */
     inputValue?: string | number | boolean;
+
+    /** Checkbox checkmark appearance animation */
+    transition?: string;
+}
+
+export interface IPotCheckboxEmits<TRUE_VALUE = true, FALSE_VALUE = false> {
+    change: [value: TRUE_VALUE | FALSE_VALUE];
+    'update:modelValue': [value: TRUE_VALUE | FALSE_VALUE];
 }
 
 export interface IPotCheckboxExpose {
     input: Ref<HTMLInputElement | null>;
 }
-

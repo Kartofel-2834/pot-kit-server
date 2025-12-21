@@ -1,29 +1,56 @@
-<script lang="ts" setup>
+<script lang="ts" generic="TRUE_VALUE = true, FALSE_VALUE = false" setup>
 // Types
-import type { IPotCheckboxExpose, IPotCheckboxProps } from '@/types/components/checkbox';
+import type {
+    IPotCheckboxEmits,
+    IPotCheckboxExpose,
+    IPotCheckboxProps,
+} from '@/types/components/checkbox';
 
 // Vue
-import { ref, computed, toRef } from 'vue';
+import { computed, toRef, useTemplateRef } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
 import { useDeviceProperties } from '@/composables/device-is';
 
-const props = withDefaults(defineProps<IPotCheckboxProps>(), {
+// Components
+import PotIcon from '@/components/ui/PotIcon.vue';
+
+const props = withDefaults(defineProps<IPotCheckboxProps<TRUE_VALUE, FALSE_VALUE>>(), {
     value: undefined,
     modelValue: undefined,
+    trueValue: undefined,
+    falseValue: undefined,
+    inputName: 'checkbox',
+    transition: 'pot-checkbox-transition',
 });
 
-const emit = defineEmits<{
-    change: [value: boolean];
-    'update:modelValue': [value: boolean];
-}>();
+const emit = defineEmits<IPotCheckboxEmits<TRUE_VALUE, FALSE_VALUE>>();
 
 // Data
-const input = ref<HTMLInputElement | null>(null);
+const input = useTemplateRef('input');
 
 // Computed
-const isChecked = computed(() => props.value ?? props.modelValue ?? false);
+const currentValue = computed(() => {
+    return props.value ?? props.modelValue ?? false;
+});
+
+const trueValue = computed(
+    () => (props.trueValue === undefined ? true : props.trueValue) as TRUE_VALUE,
+);
+
+const falseValue = computed(
+    () => (props.falseValue === undefined ? false : props.falseValue) as FALSE_VALUE,
+);
+
+const isIndeterminate = computed(() => {
+    const isTrueValueSelected = currentValue.value === trueValue.value;
+    const isFalseValueSelected = currentValue.value === falseValue.value;
+
+    return props.indeterminate || (!isTrueValueSelected && !isFalseValueSelected);
+});
+
+const isChecked = computed(() => !isIndeterminate.value && currentValue.value === trueValue.value);
 
 // Composables
 const $properties = useDeviceProperties(
@@ -41,6 +68,7 @@ const $classList = useClassList(
         color: $properties.color,
         radius: $properties.radius,
         checked: isChecked,
+        indeterminate: isIndeterminate,
         disabled: toRef(() => props.disabled),
         invalid: toRef(() => props.invalid),
     },
@@ -48,11 +76,9 @@ const $classList = useClassList(
 );
 
 // Methods
-function onChange(event: Event): void {
+function onChange(event: Event) {
     event.stopPropagation();
-    const target = event.target as HTMLInputElement;
-    const newValue = target.checked;
-
+    const newValue = isChecked.value ? falseValue.value : trueValue.value;
     emit('update:modelValue', newValue);
     emit('change', newValue);
 }
@@ -64,42 +90,46 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
 </script>
 
 <template>
-    <label :class="['pot-checkbox', $classList]">
+    <label
+        :class="['pot-checkbox', $classList]"
+        @mousedown.prevent
+    >
         <input
             ref="input"
             type="checkbox"
             class="pot-checkbox-input"
             :checked="isChecked"
-            :name="$props.name"
-            :value="$props.inputValue"
-            :disabled="$props.disabled"
+            :name="inputName"
+            :value="currentValue"
+            :disabled="disabled"
             @change="onChange"
         />
 
-        <div class="pot-checkbox-icon-wrapper">
-            <svg
-                v-if="isChecked"
-                class="pot-checkbox-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+        <span class="pot-checkbox-box">
+            <Transition
+                :name="transition"
+                mode="out-in"
             >
-                <path
-                    d="M20 6L9 17L4 12"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                <PotIcon
+                    v-if="isIndeterminate"
+                    class="pot-checkbox-icon"
+                    icon="minus"
                 />
-            </svg>
-        </div>
 
-        <div
+                <PotIcon
+                    v-else-if="isChecked"
+                    class="pot-checkbox-icon"
+                    icon="check"
+                />
+            </Transition>
+        </span>
+
+        <span
             v-if="$slots.default"
             class="pot-checkbox-content"
         >
             <slot />
-        </div>
+        </span>
     </label>
 </template>
 
@@ -108,46 +138,38 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
     display: inline-flex;
     align-items: center;
     cursor: pointer;
-    user-select: none;
-    border-style: solid;
-
-    transition:
-        color var(--pot-checkbox-transition-duration, 0.2s)
-            var(--pot-checkbox-transition-function, ease),
-        border-color var(--pot-checkbox-transition-duration, 0.2s)
-            var(--pot-checkbox-transition-function, ease),
-        background-color var(--pot-checkbox-transition-duration, 0.2s)
-            var(--pot-checkbox-transition-function, ease);
 
     /* --- PotCheckbox - Color --- */
     color: var(--pot-checkbox-color-text, inherit);
-    border-color: var(--pot-checkbox-color-border, transparent);
 
     /* --- PotCheckbox - Size --- */
     gap: var(--pot-checkbox-size-gap, 0.8em);
     font-size: var(--pot-checkbox-size-text, inherit);
     font-weight: var(--pot-checkbox-size-text-weight, 400);
     line-height: var(--pot-checkbox-size-text-height, 1);
-    border-width: var(--pot-checkbox-size-border, 0);
-    outline-width: var(--pot-checkbox-size-outline, initial);
-    outline-offset: var(--pot-checkbox-size-outline-offset, initial);
+}
+
+.pot-checkbox:focus-within .pot-checkbox-box {
+    outline-style: solid;
 }
 
 .pot-checkbox-input {
     position: absolute;
-    opacity: 0;
     width: 0;
     height: 0;
+    opacity: 0;
     margin: 0;
     padding: 0;
     pointer-events: none;
 }
 
-.pot-checkbox-icon-wrapper {
+.pot-checkbox-box {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    user-select: none;
     border-style: solid;
     transition:
         color var(--pot-checkbox-transition-duration, 0.2s)
@@ -159,13 +181,15 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
 
     /* --- PotCheckbox - Color --- */
     background-color: var(--pot-checkbox-color-background, transparent);
+    color: var(--pot-checkbox-color-icon, currentColor);
     border-color: var(--pot-checkbox-color-border, currentColor);
-    color: var(--pot-checkbox-color-icon, transparent);
 
     /* --- PotCheckbox - Size --- */
-    width: var(--pot-checkbox-size-height, 1.6em);
-    height: var(--pot-checkbox-size-height, 1.6em);
-    border-width: var(--pot-checkbox-size-border, 2px);
+    width: var(--pot-checkbox-size-width, 1.6em);
+    height: var(--pot-checkbox-size-width, 1.6em);
+    border-width: var(--pot-checkbox-size-border, 1px);
+    outline-width: var(--pot-checkbox-size-outline, initial);
+    outline-offset: var(--pot-checkbox-size-outline-offset, initial);
 
     /* --- PotCheckbox - Radius --- */
     border-radius: var(--pot-checkbox-radius-value, 0);
@@ -174,14 +198,7 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
 .pot-checkbox-icon {
     width: 100%;
     height: 100%;
-    stroke: currentColor;
-    fill: none;
     pointer-events: none;
-}
-
-.pot-checkbox-content {
-    flex: 1;
-    min-width: 0;
 }
 
 /* --- PotCheckbox - Disabled --- */
@@ -189,11 +206,15 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
     cursor: default;
 }
 
-/* --- PotCheckbox - Checked --- */
-.pot-checkbox._checkbox-checked .pot-checkbox-icon-wrapper {
-    background-color: var(--pot-checkbox-color-checked-background, currentColor);
-    border-color: var(--pot-checkbox-color-checked-border, currentColor);
-    color: var(--pot-checkbox-color-checked-icon, white);
+.pot-checkbox-transition-enter-active,
+.pot-checkbox-transition-leave-active {
+    transition: opacity var(--pot-checkbox-transition-duration, 0.2s)
+        var(--pot-checkbox-transition-function, ease);
+}
+
+.pot-checkbox-transition-enter-from,
+.pot-checkbox-transition-leave-to {
+    opacity: 0;
 }
 </style>
 
