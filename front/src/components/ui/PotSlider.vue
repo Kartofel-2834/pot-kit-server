@@ -54,15 +54,21 @@ const currentValue = computed(() => {
 });
 
 const normalizedMin = computed(() => {
-    return isRange.value
-        ? (currentValue.value as [number, number])[0]
-        : Math.min(currentValue.value as number, props.max);
+    if (isRange.value) {
+        const range = currentValue.value as [number, number];
+        // Всегда возвращаем минимальное значение из диапазона
+        return Math.min(range[0], range[1]);
+    }
+    return Math.min(currentValue.value as number, props.max);
 });
 
 const normalizedMax = computed(() => {
-    return isRange.value
-        ? (currentValue.value as [number, number])[1]
-        : (currentValue.value as number);
+    if (isRange.value) {
+        const range = currentValue.value as [number, number];
+        // Всегда возвращаем максимальное значение из диапазона
+        return Math.max(range[0], range[1]);
+    }
+    return currentValue.value as number;
 });
 
 const minPercent = computed(() => {
@@ -190,26 +196,45 @@ function updateValue(newValue: number) {
     if (isRange.value) {
         const current = currentValue.value as [number, number];
         let newRange: [number, number];
+        let shouldSwap = false;
 
         if (activeThumb.value === 'min') {
-            newRange = [Math.min(newValue, current[1] - props.step), current[1]];
+            // Разрешаем min шарику перейти за max
+            newRange = [newValue, current[1]];
+            // Если min перешел за max, нужно поменять местами
+            if (newRange[0] > newRange[1]) {
+                shouldSwap = true;
+            }
         } else if (activeThumb.value === 'max') {
-            newRange = [current[0], Math.max(newValue, current[0] + props.step)];
+            // Разрешаем max шарику перейти за min
+            newRange = [current[0], newValue];
+            // Если max перешел за min, нужно поменять местами
+            if (newRange[0] > newRange[1]) {
+                shouldSwap = true;
+            }
         } else {
             const distanceToMin = Math.abs(newValue - current[0]);
             const distanceToMax = Math.abs(newValue - current[1]);
             if (distanceToMin < distanceToMax) {
                 activeThumb.value = 'min';
-                newRange = [Math.min(newValue, current[1] - props.step), current[1]];
+                newRange = [newValue, current[1]];
+                if (newRange[0] > newRange[1]) {
+                    shouldSwap = true;
+                }
             } else {
                 activeThumb.value = 'max';
-                newRange = [current[0], Math.max(newValue, current[0] + props.step)];
+                newRange = [current[0], newValue];
+                if (newRange[0] > newRange[1]) {
+                    shouldSwap = true;
+                }
             }
         }
 
-        // Обеспечиваем, что min <= max
-        if (newRange[0] > newRange[1]) {
+        // Если значения поменялись местами, переключаем активный шарик
+        if (shouldSwap) {
             newRange = [newRange[1], newRange[0]];
+            // Переключаем активный шарик на противоположный
+            activeThumb.value = activeThumb.value === 'min' ? 'max' : 'min';
         }
 
         emit('update:modelRange', newRange);
