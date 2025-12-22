@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<IPotCheckboxProps<TRUE_VALUE, FALSE_VALUE
 
 const emit = defineEmits<IPotCheckboxEmits<TRUE_VALUE, FALSE_VALUE>>();
 
-// Data
+// Refs
 const input = useTemplateRef('input');
 
 // Computed
@@ -75,9 +75,8 @@ const $classList = useClassList(
     'checkbox',
 );
 
-// Methods
-function onChange(event: Event) {
-    event.stopPropagation();
+// Listeners
+function onChange() {
     const newValue = isChecked.value ? falseValue.value : trueValue.value;
     emit('update:modelValue', newValue);
     emit('change', newValue);
@@ -102,7 +101,7 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
             :name="inputName"
             :value="currentValue"
             :disabled="disabled"
-            @change="onChange"
+            @change.stop="onChange"
         />
 
         <span class="pot-checkbox-box">
@@ -110,17 +109,25 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
                 :name="transition"
                 mode="out-in"
             >
-                <PotIcon
+                <slot
                     v-if="isIndeterminate"
-                    class="pot-checkbox-icon"
-                    icon="minus"
-                />
+                    name="indeterminate-icon"
+                >
+                    <PotIcon
+                        class="pot-checkbox-icon"
+                        icon="minus"
+                    />
+                </slot>
 
-                <PotIcon
+                <slot
                     v-else-if="isChecked"
-                    class="pot-checkbox-icon"
-                    icon="check"
-                />
+                    name="check-icon"
+                >
+                    <PotIcon
+                        class="pot-checkbox-icon"
+                        icon="check"
+                    />
+                </slot>
             </Transition>
         </span>
 
@@ -149,8 +156,8 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
     line-height: var(--pot-checkbox-size-text-height, 1);
 }
 
-.pot-checkbox:focus-within .pot-checkbox-box {
-    outline-style: solid;
+.pot-checkbox:has(.pot-checkbox-input:focus-visible) .pot-checkbox-box {
+    outline-style: auto;
 }
 
 .pot-checkbox-input {

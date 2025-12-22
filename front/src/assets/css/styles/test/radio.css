@@ -1,0 +1,92 @@
+/* NOT EDIT! THIS STYLES GENERATED AUTOMATICALLY! */
+
+.pot-radio._color-pot {
+    --pot-radio-color-border: var(--color-border);
+    --pot-radio-color-background: transparent;
+    --pot-radio-color-text: var(--color-text);
+    --pot-radio-color-dot: transparent;
+}
+
+.pot-radio._color-pot:hover:not(._radio-disabled, ._radio-checked, ._radio-invalid) {
+    --pot-radio-color-border: var(--color-hover-border);
+    --pot-radio-color-background: var(--color-hover-target);
+}
+
+.pot-radio._color-pot:active:not(._radio-disabled, ._radio-checked, ._radio-invalid) {
+    --pot-radio-color-border: var(--color-active-border);
+    --pot-radio-color-background: var(--color-active-target);
+}
+
+.pot-radio._color-pot._radio-checked:not(._radio-disabled, ._radio-invalid) {
+    --pot-radio-color-background: var(--color-target);
+    --pot-radio-color-border: var(--color-target);
+    --pot-radio-color-dot: var(--color-text);
+}
+
+.pot-radio._color-pot._radio-checked:hover:not(._radio-disabled, ._radio-invalid) {
+    --pot-radio-color-background: var(--color-hover-target);
+    --pot-radio-color-border: var(--color-hover-border);
+    --pot-radio-color-dot: var(--color-hover-text);
+}
+
+.pot-radio._color-pot._radio-checked:active:not(._radio-disabled, ._radio-invalid) {
+    --pot-radio-color-background: var(--color-active-target);
+    --pot-radio-color-border: var(--color-active-border);
+    --pot-radio-color-dot: var(--color-active-text);
+}
+
+.pot-radio._color-pot._radio-disabled {
+    --pot-radio-color-border: var(--pot-base-400);
+    --pot-radio-color-background: transparent;
+    --pot-radio-color-text: var(--color-disabled-text);
+    --pot-radio-color-dot: transparent;
+}
+
+.pot-radio._color-pot._radio-disabled._radio-checked {
+    --pot-radio-color-background: var(--pot-base-400);
+    --pot-radio-color-border: var(--pot-base-400);
+    --pot-radio-color-dot: var(--color-disabled-text);
+}
+
+.pot-radio._color-pot._radio-invalid:not(._radio-disabled) {
+    --pot-radio-color-border: var(--color-error);
+    --pot-radio-color-background: transparent;
+}
+
+.pot-radio._color-pot._radio-invalid._radio-checked:not(._radio-disabled) {
+    --pot-radio-color-background: var(--color-error);
+    --pot-radio-color-border: var(--color-error);
+    --pot-radio-color-dot: white;
+}
+
+.pot-radio._radius-rounded {
+    --pot-radio-radius-value: 1000px;
+}
+
+.pot-radio._size-tiny {
+    --pot-radio-size-height: var(--pot-spacer-3-200);
+    --pot-radio-size-text: var(--pot-font-size-200);
+    --pot-radio-size-gap: var(--pot-spacer-1-200);
+    --pot-radio-size-border: 1px;
+}
+
+.pot-radio._size-small {
+    --pot-radio-size-height: var(--pot-spacer-3-600);
+    --pot-radio-size-text: var(--pot-font-size-200);
+    --pot-radio-size-gap: var(--pot-spacer-1-600);
+    --pot-radio-size-border: 1px;
+}
+
+.pot-radio._size-medium {
+    --pot-radio-size-height: var(--pot-spacer-4-800);
+    --pot-radio-size-text: var(--pot-font-size-200);
+    --pot-radio-size-gap: var(--pot-spacer-2);
+    --pot-radio-size-border: 2px;
+}
+
+.pot-radio._size-large {
+    --pot-radio-size-height: var(--pot-spacer-5-600);
+    --pot-radio-size-text: var(--pot-font-size-300);
+    --pot-radio-size-gap: var(--pot-spacer-2-800);
+    --pot-radio-size-border: 2px;
+}

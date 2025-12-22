@@ -1,0 +1,92 @@
+/* NOT EDIT! THIS STYLES GENERATED AUTOMATICALLY! */
+
+.pot-switch._color-pot {
+    --pot-switch-color-border: var(--color-border);
+    --pot-switch-color-background: transparent;
+    --pot-switch-color-text: var(--color-text);
+    --pot-switch-color-thumb: white;
+}
+
+.pot-switch._color-pot:hover:not(._switch-disabled, ._switch-checked, ._switch-invalid) {
+    --pot-switch-color-border: var(--color-hover-border);
+    --pot-switch-color-background: var(--color-hover-target);
+}
+
+.pot-switch._color-pot:active:not(._switch-disabled, ._switch-checked, ._switch-invalid) {
+    --pot-switch-color-border: var(--color-active-border);
+    --pot-switch-color-background: var(--color-active-target);
+}
+
+.pot-switch._color-pot._switch-checked:not(._switch-disabled, ._switch-invalid) {
+    --pot-switch-color-checked-background: var(--color-target);
+    --pot-switch-color-checked-border: var(--color-target);
+    --pot-switch-color-checked-thumb: var(--color-text);
+}
+
+.pot-switch._color-pot._switch-checked:hover:not(._switch-disabled, ._switch-invalid) {
+    --pot-switch-color-checked-background: var(--color-hover-target);
+    --pot-switch-color-checked-border: var(--color-hover-border);
+    --pot-switch-color-checked-thumb: var(--color-hover-text);
+}
+
+.pot-switch._color-pot._switch-checked:active:not(._switch-disabled, ._switch-invalid) {
+    --pot-switch-color-checked-background: var(--color-active-target);
+    --pot-switch-color-checked-border: var(--color-active-border);
+    --pot-switch-color-checked-thumb: var(--color-active-text);
+}
+
+.pot-switch._color-pot._switch-disabled {
+    --pot-switch-color-border: var(--pot-base-400);
+    --pot-switch-color-background: transparent;
+    --pot-switch-color-text: var(--color-disabled-text);
+    --pot-switch-color-thumb: white;
+}
+
+.pot-switch._color-pot._switch-disabled._switch-checked {
+    --pot-switch-color-checked-background: var(--pot-base-400);
+    --pot-switch-color-checked-border: var(--pot-base-400);
+    --pot-switch-color-checked-thumb: var(--color-disabled-text);
+}
+
+.pot-switch._color-pot._switch-invalid:not(._switch-disabled) {
+    --pot-switch-color-border: var(--color-error);
+    --pot-switch-color-background: transparent;
+}
+
+.pot-switch._color-pot._switch-invalid._switch-checked:not(._switch-disabled) {
+    --pot-switch-color-checked-background: var(--color-error);
+    --pot-switch-color-checked-border: var(--color-error);
+    --pot-switch-color-checked-thumb: white;
+}
+
+.pot-switch._radius-rounded {
+    --pot-switch-radius-value: 1000px;
+}
+
+.pot-switch._size-tiny {
+    --pot-switch-size-height: var(--pot-spacer-3-200);
+    --pot-switch-size-text: var(--pot-font-size-200);
+    --pot-switch-size-gap: var(--pot-spacer-1-200);
+    --pot-switch-size-border: 1px;
+}
+
+.pot-switch._size-small {
+    --pot-switch-size-height: var(--pot-spacer-3-600);
+    --pot-switch-size-text: var(--pot-font-size-200);
+    --pot-switch-size-gap: var(--pot-spacer-1-600);
+    --pot-switch-size-border: 1px;
+}
+
+.pot-switch._size-medium {
+    --pot-switch-size-height: var(--pot-spacer-4-800);
+    --pot-switch-size-text: var(--pot-font-size-200);
+    --pot-switch-size-gap: var(--pot-spacer-2);
+    --pot-switch-size-border: 2px;
+}
+
+.pot-switch._size-large {
+    --pot-switch-size-height: var(--pot-spacer-5-600);
+    --pot-switch-size-text: var(--pot-font-size-300);
+    --pot-switch-size-gap: var(--pot-spacer-2-800);
+    --pot-switch-size-border: 2px;
+}
