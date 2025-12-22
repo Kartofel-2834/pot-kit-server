@@ -149,60 +149,62 @@ defineExpose<IPotToastExpose<DATA>>({
     border-radius: var(--pot-toast-radius-value, 0);
 }
 
-.pot-toast._toast-position-top-left .pot-toast-item-container,
-.pot-toast._toast-position-top-center .pot-toast-item-container,
-.pot-toast._toast-position-top-right .pot-toast-item-container {
+/* --- Position - Top --- */
+._toast-position-top-left .pot-toast-item-container,
+._toast-position-top-center .pot-toast-item-container,
+._toast-position-top-right .pot-toast-item-container {
     margin-bottom: var(--pot-toast-size-gap, 20px);
 }
 
-.pot-toast._toast-position-bottom-left .pot-toast-item-container,
-.pot-toast._toast-position-bottom-center .pot-toast-item-container,
-.pot-toast._toast-position-bottom-right .pot-toast-item-container {
+/* --- Position - Bottom --- */
+._toast-position-bottom-left .pot-toast-item-container,
+._toast-position-bottom-center .pot-toast-item-container,
+._toast-position-bottom-right .pot-toast-item-container {
     margin-top: var(--pot-toast-size-gap, 20px);
 }
 
-/* --- Toast - Position - Top-left  --- */
-.pot-toast._toast-position-top-left {
+/* --- Position - Top-left  --- */
+._toast-position-top-left {
     top: var(--pot-toast-size-edge-margin, 20px);
     left: var(--pot-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Top-center  --- */
-.pot-toast._toast-position-top-center {
+/* --- Position - Top-center  --- */
+._toast-position-top-center {
     top: var(--pot-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* --- Toast - Position - Top-right  --- */
-.pot-toast._toast-position-top-right {
+/* --- Position - Top-right  --- */
+._toast-position-top-right {
     top: var(--pot-toast-size-edge-margin, 20px);
     right: var(--pot-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Bottom-left  --- */
-.pot-toast._toast-position-bottom-left {
+/* --- Position - Bottom-left  --- */
+._toast-position-bottom-left {
     flex-direction: column-reverse;
     bottom: var(--pot-toast-size-edge-margin, 20px);
     left: var(--pot-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Bottom-center  --- */
-.pot-toast._toast-position-bottom-center {
+/* --- Position - Bottom-center  --- */
+._toast-position-bottom-center {
     flex-direction: column-reverse;
     bottom: var(--pot-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* --- Toast - Position - Bottom-right  --- */
-.pot-toast._toast-position-bottom-right {
+/* --- Position - Bottom-right  --- */
+._toast-position-bottom-right {
     flex-direction: column-reverse;
     bottom: var(--pot-toast-size-edge-margin, 20px);
     right: var(--pot-toast-size-edge-margin, 20px);
 }
 
-/* --- Transition - Toast --- */
+/* --- Transition --- */
 .pot-toast-transition-enter-active,
 .pot-toast-transition-leave-active {
     transition:

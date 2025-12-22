@@ -110,10 +110,12 @@ defineExpose<IPotOptionExpose>({
             var(--pot-option-transition-function, ease);
 }
 
+/* --- Fluid --- */
 .pot-option._option-fluid {
     width: 100%;
 }
 
+/* --- Disabled --- */
 .pot-option._option-disabled {
     cursor: default;
     pointer-events: none;

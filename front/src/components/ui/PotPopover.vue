@@ -207,6 +207,7 @@ defineExpose<Readonly<IPotPopoverExpose>>({
     border-radius: var(--pot-popover-radius-value, 0);
 }
 
+/* --- Hidden --- */
 .pot-popover._popover-hidden {
     opacity: 0;
 }

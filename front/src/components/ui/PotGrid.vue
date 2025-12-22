@@ -108,7 +108,8 @@ function formatGap(gap: EPotGridGap | number | null | undefined): string {
     gap: var(--pot-grid-gap-value, 0);
 }
 
-.pot-grid._grid-divided-gap {
+/* --- Divided-Gap --- */
+._grid-divided-gap {
     row-gap: var(--pot-grid-gap-row, 0);
     column-gap: var(--pot-grid-gap-column, 0);
 }

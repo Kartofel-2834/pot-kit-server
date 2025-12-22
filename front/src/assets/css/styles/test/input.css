@@ -1,12 +1,17 @@
 .pot-input {
     --pot-input-color-border: currentColor;
+    --pot-input-color-outline: red;
+
     
     --pot-input-size-text: 1.6rem;
     --pot-input-size-border: 2px;
     --pot-input-size-padding: 4px 16px;
+    --pot-input-size-outline: 1px;
+    --pot-input-size-outline-offset: 4px;
 
     --pot-input-radius-value: 16px;
-    
+
+
 
     /* --pot-button-color-background: var(--color-target); */
     /* --pot-button-color-text: var(--color-text); */

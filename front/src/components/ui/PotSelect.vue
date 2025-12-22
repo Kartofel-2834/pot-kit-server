@@ -480,7 +480,7 @@ function changeText(text: string) {
 </template>
 
 <style>
-/* --- PotSelect - Fluid --- */
+/* --- Fluid --- */
 .pot-select._select-fluid {
     width: 100%;
 }

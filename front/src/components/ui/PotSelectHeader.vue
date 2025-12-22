@@ -158,6 +158,7 @@ defineExpose<IPotSelectHeaderExpose>({
     cursor: pointer;
 }
 
+/* --- Opened --- */
 ._select-opened .pot-select-header-arrow-icon {
     transform: rotate(180deg);
 }

@@ -208,7 +208,7 @@ defineExpose<Readonly<IPotCheckboxExpose>>({
     pointer-events: none;
 }
 
-/* --- PotCheckbox - Disabled --- */
+/* --- Disabled --- */
 .pot-checkbox._checkbox-disabled {
     cursor: default;
 }

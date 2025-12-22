@@ -145,14 +145,6 @@ function updateContentHeight() {
 </template>
 
 <style>
-.pot-accordion._accordion-disabled .pot-accordion-header {
-    cursor: default;
-}
-
-.pot-accordion._accordion-opened .pot-accordion-icon {
-    transform: scaleY(-1);
-}
-
 .pot-accordion-header {
     display: flex;
     align-items: center;
@@ -194,6 +186,16 @@ function updateContentHeight() {
 
 .pot-accordion-content {
     overflow: hidden;
+}
+
+/* --- Disabled --- */
+._accordion-disabled .pot-accordion-header {
+    cursor: default;
+}
+
+/* --- Opened --- */
+._accordion-opened .pot-accordion-icon {
+    transform: scaleY(-1);
 }
 
 .pot-accordion-transition-enter-active,

@@ -173,6 +173,18 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                     </div>
                 </div>
             </div>
+
+            <div>
+                <PotInput>
+                    <template #preicon>
+                        <PotIcon icon="arrow" />
+                    </template>
+
+                    <template #icon>
+                        <PotIcon icon="arrow" />
+                    </template>
+                </PotInput>
+            </div>
         </div>
     </main>
 </template>

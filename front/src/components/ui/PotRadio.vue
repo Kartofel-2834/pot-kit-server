@@ -147,8 +147,8 @@ defineExpose<Readonly<IPotRadioExpose>>({
     border-color: var(--pot-radio-color-border, currentColor);
 
     /* --- PotRadio - Size --- */
-    width: var(--pot-radio-size-width, 1.4em);
-    height: var(--pot-radio-size-width, 1.4em);
+    width: var(--pot-radio-size-width, 1.2em);
+    height: var(--pot-radio-size-width, 1.2em);
     border-width: var(--pot-radio-size-border, 1px);
     outline-width: var(--pot-radio-size-outline, initial);
     outline-offset: var(--pot-radio-size-outline-offset, initial);
@@ -173,8 +173,8 @@ defineExpose<Readonly<IPotRadioExpose>>({
     background-color: var(--pot-radio-color-dot, currentColor);
 
     /* --- PotRadio - Size --- */
-    width: var(--pot-radio-dot-size-width, 1em);
-    height: var(--pot-radio-dot-size-width, 1em);
+    width: var(--pot-radio-dot-size-width, 0.8em);
+    height: var(--pot-radio-dot-size-width, 0.8em);
 
     /* --- PotRadio - Transition --- */
     transition:
@@ -184,7 +184,7 @@ defineExpose<Readonly<IPotRadioExpose>>({
             var(--pot-radio-transition-function, ease);
 }
 
-/* --- PotRadio - Disabled --- */
+/* --- Disabled --- */
 .pot-radio._radio-disabled {
     cursor: default;
 }
@@ -200,7 +200,7 @@ defineExpose<Readonly<IPotRadioExpose>>({
 
 .pot-radio-transition-enter-from,
 .pot-radio-transition-leave-to {
-    transform: scale(50%);
+    transform: scale(70%);
     opacity: 0;
 }
 </style>

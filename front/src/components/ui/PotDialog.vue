@@ -167,7 +167,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     background-color: var(--pot-dialog-color-overlay, rgba(0, 0, 0, 0.3));
 }
 
-.pot-dialog._dialog-position-center .pot-dialog-container {
+/* --- Position - Center --- */
+._dialog-position-center .pot-dialog-container {
     --pot-dialog-position-transform: scale(0.5) translate(-50%, -50%);
 
     top: 50%;
@@ -176,7 +177,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     transform: scale(1) translate(-50%, -50%);
 }
 
-.pot-dialog._dialog-position-bottom .pot-dialog-container {
+/* --- Position - Bottom --- */
+._dialog-position-bottom .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         -50%,
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
@@ -187,7 +189,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     transform: translateX(-50%);
 }
 
-.pot-dialog._dialog-position-bottom-left .pot-dialog-container {
+/* --- Position - Bottom-Left --- */
+._dialog-position-bottom-left .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -196,7 +199,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     left: var(--pot-dialog-size-edge-margin, 20px);
 }
 
-.pot-dialog._dialog-position-bottom-right .pot-dialog-container {
+/* --- Position - Bottom-Right --- */
+._dialog-position-bottom-right .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -205,7 +209,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     right: var(--pot-dialog-size-edge-margin, 20px);
 }
 
-.pot-dialog._dialog-position-top .pot-dialog-container {
+/* --- Position - Top --- */
+._dialog-position-top .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         -50%,
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
@@ -216,7 +221,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     transform: translateX(-50%);
 }
 
-.pot-dialog._dialog-position-top-left .pot-dialog-container {
+/* --- Position - Top-Left --- */
+._dialog-position-top-left .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -225,7 +231,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     left: var(--pot-dialog-size-edge-margin, 20px);
 }
 
-.pot-dialog._dialog-position-top-right .pot-dialog-container {
+/* --- Position - Top-Right --- */
+._dialog-position-top-right .pot-dialog-container {
     --pot-dialog-position-transform: translateX(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px))
     );
@@ -234,7 +241,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     right: var(--pot-dialog-size-edge-margin, 20px);
 }
 
-.pot-dialog._dialog-position-left .pot-dialog-container {
+/* --- Position - Left --- */
+._dialog-position-left .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         calc(-100% - var(--pot-dialog-size-edge-margin, 20px)),
         -50%
@@ -245,7 +253,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
     transform: translateY(-50%);
 }
 
-.pot-dialog._dialog-position-right .pot-dialog-container {
+/* --- Position - Right --- */
+._dialog-position-right .pot-dialog-container {
     --pot-dialog-position-transform: translate(
         calc(100% + var(--pot-dialog-size-edge-margin, 20px)),
         -50%
@@ -284,8 +293,8 @@ defineExpose<Readonly<IPotDialogExpose>>({
             var(--pot-dialog-transition-function, ease);
 }
 
-.pot-dialog.pot-dialog-transition-enter-from .pot-dialog-container,
-.pot-dialog.pot-dialog-transition-leave-to .pot-dialog-container {
+.pot-dialog-transition-enter-from .pot-dialog-container,
+.pot-dialog-transition-leave-to .pot-dialog-container {
     opacity: 0;
     transform: var(--pot-dialog-position-transform);
 }

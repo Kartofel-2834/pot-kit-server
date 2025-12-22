@@ -189,6 +189,7 @@ defineExpose<IPotSelectDropdownExpose>({
     border-radius: var(--pot-select-dropdown-radius-value, 0);
 }
 
+/* --- Fixed-Width --- */
 ._select-fixed-width .pot-select-dropdown {
     /* --- PotSelectDropdown - Size --- */
     width: var(--pot-select-dropdown-size-width, fit-content);

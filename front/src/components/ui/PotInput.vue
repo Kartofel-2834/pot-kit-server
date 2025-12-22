@@ -12,6 +12,7 @@ import { useDeviceProperties } from '@/composables/device-is';
 const props = withDefaults(defineProps<IPotInputProps>(), {
     value: undefined,
     modelValue: undefined,
+    inputName: 'input',
 });
 
 const emit = defineEmits<{
@@ -59,6 +60,10 @@ const $classList = useClassList(
 );
 
 // Methods
+function onLabelMousedown(event: Event) {
+    if (isFocused.value) event.preventDefault();
+}
+
 function onInput(event: Event): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement;
@@ -107,6 +112,7 @@ defineExpose<IPotInputExpose>({
     <label
         ref="container"
         :class="['pot-input', $classList]"
+        @mousedown="onLabelMousedown"
     >
         <slot name="prepend"></slot>
 
@@ -191,14 +197,17 @@ defineExpose<IPotInputExpose>({
             var(--pot-input-transition-function, ease);
 }
 
-.pot-input._input-focused {
-    outline: solid;
+/* --- Focused --- */
+.pot-input:has(.pot-input-target:focus-visible) {
+    outline-style: auto;
 }
 
-.pot-input._input-disabled .pot-input-target {
+/* --- Disabled --- */
+._input-disabled .pot-input-target {
     cursor: default;
 }
 
+/* --- Fluid --- */
 .pot-input._input-fluid {
     width: 100%;
 }

@@ -168,7 +168,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
 }
 
 /* --- Position - Left --- */
-.pot-drawer._drawer-position-left {
+._drawer-position-left {
     --pot-drawer-position-transform: translateX(-100%);
 
     top: 0;
@@ -176,12 +176,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     height: 100%;
 }
 
-.pot-drawer._drawer-position-left .pot-drawer-container {
+._drawer-position-left .pot-drawer-container {
     height: 100%;
 }
 
 /* --- Position - Right --- */
-.pot-drawer._drawer-position-right {
+._drawer-position-right {
     --pot-drawer-position-transform: translateX(100%);
 
     top: 0;
@@ -189,12 +189,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     height: 100%;
 }
 
-.pot-drawer._drawer-position-right .pot-drawer-container {
+._drawer-position-right .pot-drawer-container {
     height: 100%;
 }
 
 /* --- Position - Top --- */
-.pot-drawer._drawer-position-top {
+._drawer-position-top {
     --pot-drawer-position-transform: translateY(-100%);
 
     top: 0;
@@ -202,12 +202,12 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     width: 100%;
 }
 
-.pot-drawer._drawer-position-top .pot-drawer-container {
+._drawer-position-top .pot-drawer-container {
     width: 100%;
 }
 
 /* --- Position - Bottom --- */
-.pot-drawer._drawer-position-bottom {
+._drawer-position-bottom {
     --pot-drawer-position-transform: translateY(100%);
 
     bottom: 0;
@@ -215,7 +215,7 @@ defineExpose<Readonly<IPotDrawerExpose>>({
     width: 100%;
 }
 
-.pot-drawer._drawer-position-bottom .pot-drawer-container {
+._drawer-position-bottom .pot-drawer-container {
     width: 100%;
 }
 

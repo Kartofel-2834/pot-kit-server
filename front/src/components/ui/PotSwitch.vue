@@ -138,13 +138,6 @@ defineExpose<Readonly<IPotSwitchExpose>>({
     align-items: center;
     flex-shrink: 0;
     user-select: none;
-    transition:
-        color var(--pot-switch-transition-duration, 0.2s)
-            var(--pot-switch-transition-function, ease),
-        border-color var(--pot-switch-transition-duration, 0.2s)
-            var(--pot-switch-transition-function, ease),
-        background-color var(--pot-switch-transition-duration, 0.2s)
-            var(--pot-switch-transition-function, ease);
 
     /* --- PotSwitch - Color --- */
     background-color: var(--pot-switch-color-background, transparent);
@@ -159,54 +152,52 @@ defineExpose<Readonly<IPotSwitchExpose>>({
     outline-offset: var(--pot-switch-size-outline-offset, initial);
 
     /* --- PotSwitch - Radius --- */
-    border-radius: var(--pot-switch-radius-value, 999px);
+    border-radius: var(--pot-switch-radius-value, 1000px);
+
+    /* --- PotSwitch - Transition --- */
+    transition:
+        color var(--pot-switch-transition-duration, 0.2s)
+            var(--pot-switch-transition-function, ease),
+        border-color var(--pot-switch-transition-duration, 0.2s)
+            var(--pot-switch-transition-function, ease),
+        background-color var(--pot-switch-transition-duration, 0.2s)
+            var(--pot-switch-transition-function, ease);
 }
 
 .pot-switch-thumb {
     position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+
+    /* --- PotSwitch - Color --- */
+    background-color: var(--pot-switch-color-thumb, currentColor);
+
+    /* --- PotSwitch - Size --- */
     left: var(--pot-switch-thumb-offset, 2px);
     width: var(--pot-switch-thumb-size-width, 1em);
     height: var(--pot-switch-thumb-size-width, 1em);
-    border-radius: 50%;
-    background-color: var(--pot-switch-color-thumb, white);
-    pointer-events: none;
+
+    /* --- PotSwitch - Transition --- */
     transition:
-        left var(--pot-switch-transition-duration, 0.2s) var(--pot-switch-transition-function, ease),
         transform var(--pot-switch-transition-duration, 0.2s)
             var(--pot-switch-transition-function, ease),
         background-color var(--pot-switch-transition-duration, 0.2s)
             var(--pot-switch-transition-function, ease);
 }
 
-.pot-switch._switch-checked .pot-switch-track {
-    background-color: var(
-        --pot-switch-color-checked-background,
-        var(--pot-switch-color-background)
-    );
-    border-color: var(--pot-switch-color-checked-border, var(--pot-switch-color-border));
-}
-
-.pot-switch._switch-checked .pot-switch-thumb {
-    left: calc(
-        100% - var(--pot-switch-thumb-size-width, 1em) - var(--pot-switch-thumb-offset, 2px)
-    );
-    background-color: var(--pot-switch-color-checked-thumb, var(--pot-switch-color-thumb));
-}
-
-/* --- PotSwitch - Disabled --- */
-.pot-switch._switch-disabled {
+/* --- Disabled --- */
+._switch-disabled {
     cursor: default;
 }
 
-.pot-switch-transition-enter-active,
-.pot-switch-transition-leave-active {
-    transition: opacity var(--pot-switch-transition-duration, 0.2s)
-        var(--pot-switch-transition-function, ease);
-}
-
-.pot-switch-transition-enter-from,
-.pot-switch-transition-leave-to {
-    opacity: 0;
+/* --- Checked --- */
+._switch-checked .pot-switch-thumb {
+    transform: translateX(
+        calc(
+            var(--pot-switch-size-width, 2.4em) - var(--pot-switch-thumb-size-width, 1em) - 2 *
+                var(--pot-switch-thumb-offset, 2px)
+        )
+    );
 }
 </style>
 

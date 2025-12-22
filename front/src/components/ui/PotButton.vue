@@ -90,11 +90,13 @@ const $classList = useClassList(
     cursor: default;
 }
 
+/* --- Square --- */
 .pot-button._button-square {
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
+/* --- Fluid --- */
 .pot-button._button-fluid {
     width: 100%;
 }
