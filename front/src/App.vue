@@ -26,6 +26,7 @@ import PotRadio from './components/ui/PotRadio.vue';
 import PotSwitch from './components/ui/PotSwitch.vue';
 import PotIcon from './components/ui/PotIcon.vue';
 import PotTag from './components/ui/PotTag.vue';
+import PotSlider from './components/ui/PotSlider.vue';
 
 const isVisible = ref<boolean>(false);
 const isPopoverVisible = ref<boolean>(false);
@@ -49,6 +50,12 @@ const text = ref<string>('');
 const radioValue = ref<string | number>('option1');
 const switchValue = ref<boolean>(false);
 const switchCustomValue = ref<'on' | 'off'>('off');
+
+const sliderValue = ref<number>(50);
+const sliderRange = ref<[number, number]>([20, 80]);
+const sliderWithStep = ref<number>(25);
+const verticalSlider = ref<number>(60);
+const verticalSliderRange = ref<[number, number]>([30, 70]);
 
 const optionsA = ref<string[]>(['a', 'b', 'c']);
 const optionsB = ref<number[]>([1, 2, 3]);
@@ -184,6 +191,93 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                         <PotIcon icon="arrow" />
                     </template>
                 </PotInput>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem">
+                <h3>PotSlider</h3>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Базовый слайдер: {{ sliderValue }}</div>
+                        <div style="width: 300px">
+                            <PotSlider
+                                v-model="sliderValue"
+                                :min="0"
+                                :max="100"
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Слайдер с диапазоном: {{ sliderRange }}</div>
+                        <div style="width: 300px">
+                            <PotSlider
+                                v-model:model-range="sliderRange"
+                                :min="0"
+                                :max="100"
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Слайдер с шагом (step=5): {{ sliderWithStep }}</div>
+                        <div style="width: 300px">
+                            <PotSlider
+                                v-model="sliderWithStep"
+                                :min="0"
+                                :max="100"
+                                :step="5"
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Вертикальный слайдер: {{ verticalSlider }}</div>
+                        <div style="height: 200px; width: 50px">
+                            <PotSlider
+                                v-model="verticalSlider"
+                                :min="0"
+                                :max="100"
+                                vertical
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Вертикальный слайдер с диапазоном: {{ verticalSliderRange }}</div>
+                        <div style="height: 200px; width: 50px">
+                            <PotSlider
+                                v-model:model-range="verticalSliderRange"
+                                :min="0"
+                                :max="100"
+                                vertical
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Отключенный слайдер: {{ sliderValue }}</div>
+                        <div style="width: 300px">
+                            <PotSlider
+                                v-model="sliderValue"
+                                :min="0"
+                                :max="100"
+                                disabled
+                            />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        <div>Невалидный слайдер: {{ sliderValue }}</div>
+                        <div style="width: 300px">
+                            <PotSlider
+                                v-model="sliderValue"
+                                :min="0"
+                                :max="100"
+                                invalid
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
