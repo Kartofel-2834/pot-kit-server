@@ -24,9 +24,6 @@ export interface IPotSliderProps {
     /** Текущее значение (для диапазона значений) */
     range?: [number, number];
 
-    /** То же, что и `range`, добавлен для поддержки v-model */
-    modelRange?: [number, number];
-
     /** Минимальное значение */
     min?: number;
 
@@ -59,10 +56,10 @@ export interface IPotSliderProps {
 }
 
 export interface IPotSliderEmits {
-    input: [value: number | [number, number]];
-    change: [value: number | [number, number]];
+    change: [value: number];
+    changeRange: [value: [number, number]];
     'update:modelValue': [value: number];
-    'update:modelRange': [value: [number, number]];
+    'update:range': [value: [number, number]];
 }
 
 export interface IPotSliderExpose {

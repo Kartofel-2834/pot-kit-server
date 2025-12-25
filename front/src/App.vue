@@ -211,7 +211,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                         <div>Слайдер с диапазоном: {{ sliderRange }}</div>
                         <div style="width: 300px">
                             <PotSlider
-                                v-model:model-range="sliderRange"
+                                v-model:range="sliderRange"
                                 :min="0"
                                 :max="100"
                             />
