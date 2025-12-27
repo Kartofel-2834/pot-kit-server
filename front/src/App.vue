@@ -226,6 +226,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                                 :min="0"
                                 :max="100"
                                 :step="5"
+                                fluid
                             />
                         </div>
                     </div>
@@ -246,7 +247,7 @@ const optionsD = ref<Array<{ name: string; value: number }>>([
                         <div>Вертикальный слайдер с диапазоном: {{ verticalSliderRange }}</div>
                         <div style="height: 200px; width: 50px">
                             <PotSlider
-                                v-model:model-range="verticalSliderRange"
+                                v-model:range="verticalSliderRange"
                                 :min="0"
                                 :max="100"
                                 vertical

@@ -42,6 +42,8 @@ export interface IPotSliderProps {
     /** Если true, слайдер будет невалиден */
     invalid?: boolean;
 
+    fluid?: boolean;
+
     /** Точки останова для адаптивного дизайна */
     devices?: EPotDevice[];
 
@@ -64,5 +66,4 @@ export interface IPotSliderEmits {
 
 export interface IPotSliderExpose {
     element: Ref<HTMLElement | null>;
-    track: Ref<HTMLElement | null>;
 }

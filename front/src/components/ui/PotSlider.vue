@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 // Types
+import type { Ref } from 'vue';
 import type { IPotSliderEmits, IPotSliderExpose, IPotSliderProps } from '@/types/components/slider';
 
 // Vue
-import { computed, ref, toRef, useTemplateRef } from 'vue';
+import { computed, ref, toRef, useTemplateRef, watch } from 'vue';
 
 // Composables
 import { useClassList } from '@/composables/class-list';
@@ -19,20 +20,19 @@ const props = withDefaults(defineProps<IPotSliderProps>(), {
     min: 0,
     max: 100,
     step: 1,
-    vertical: false,
-    disabled: false,
-    invalid: false,
 });
 
 const emit = defineEmits<IPotSliderEmits>();
 
 // Refs
 const container = useTemplateRef('container');
-const track = useTemplateRef('track');
-const startThumb = useTemplateRef('start-thumb');
-const endThumb = useTemplateRef('end-thumb');
+const thumbA = useTemplateRef('thumbA');
+const thumbB = useTemplateRef('thumbB');
 
 // Data
+const thumbAValue = ref<number>(0);
+const thumbBValue = ref<number>(0);
+
 const trackWidth = ref<number>(0);
 const trackHeight = ref<number>(0);
 const trackRect = ref<DOMRect | null>(null);
@@ -59,40 +59,73 @@ const currentRange = computed(() => {
     return [Math.min(...range), Math.max(...range)];
 });
 
-const startOffset = computed(() => {
-    return (trackWidth.value / 100) * startPercent.value;
-});
+const fillStyles = computed(() => {
+    const offset = Math.min(thumbAOffset.value, thumbBOffset.value) * (props.vertical ? -1 : 1);
+    const percentage = Math.abs(thumbAPercent.value - thumbBPercent.value);
 
-const endOffset = computed(() => {
-    return (trackWidth.value / 100) * endPercent.value;
-});
-
-const currentStyles = computed(() => {
     return {
-        '--pot-slider-offset-start': `${startOffset.value}px`,
-        '--pot-slider-offset-end': `${endOffset.value}px`,
-        '--pot-slider-start': `${startPercent.value}%`,
-        '--pot-slider-end': `${endPercent.value}%`,
+        '--pot-slider-fill-offset': `${offset}px`,
+        '--pot-slider-fill-percentage': `${percentage}%`,
     };
 });
 
-const normalizedStart = computed(() => {
-    return isRange.value ? Math.min(...currentRange.value) : 0;
+const thumbAStyles = computed(() => {
+    const offset = thumbAOffset.value * (props.vertical ? -1 : 1);
+    return {
+        '--pot-slider-thumb-offset': `${offset}px`,
+    };
 });
 
-const normalizedEnd = computed(() => {
-    return isRange.value ? Math.max(...currentRange.value) : currentValue.value;
-});
-
-const startPercent = computed(() => {
-    const percentage = (normalizedStart.value - props.min) / (props.max - props.min);
+const thumbAPercent = computed(() => {
+    const percentage = (thumbAValue.value - props.min) / (props.max - props.min);
     return Math.floor(percentage * 10000) / 100;
 });
 
-const endPercent = computed(() => {
-    const percentage = (normalizedEnd.value - props.min) / (props.max - props.min);
+const thumbAOffset = computed(() => {
+    const size = props.vertical ? trackHeight.value : trackWidth.value;
+    return (size / 100) * thumbAPercent.value;
+});
+
+const thumbBStyles = computed(() => {
+    const offset = thumbBOffset.value * (props.vertical ? -1 : 1);
+    return {
+        '--pot-slider-thumb-offset': `${offset}px`,
+    };
+});
+
+const thumbBPercent = computed(() => {
+    const percentage = (thumbBValue.value - props.min) / (props.max - props.min);
     return Math.floor(percentage * 10000) / 100;
 });
+
+const thumbBOffset = computed(() => {
+    const size = props.vertical ? trackHeight.value : trackWidth.value;
+    return (size / 100) * thumbBPercent.value;
+});
+
+// Watchers
+watch(
+    () =>
+        [isRange.value, currentValue.value, currentRange.value] as [
+            boolean,
+            number,
+            [number, number],
+        ],
+    ([isRange, value, range]) => {
+        if (isRange && range?.length === 2) {
+            const [a, b] = range;
+
+            const firstRef = getNearestThumbValueRef(a);
+            const secondRef = firstRef === thumbAValue ? thumbBValue : thumbAValue;
+
+            firstRef.value = a;
+            secondRef.value = b;
+        } else {
+            getNearestThumbValueRef(value).value = value;
+        }
+    },
+    { immediate: true },
+);
 
 // Composables
 const $subscriptions = useComponentSubscriptions();
@@ -116,43 +149,42 @@ const $classList = useClassList(
         vertical: toRef(() => props.vertical),
         disabled: toRef(() => props.disabled),
         invalid: toRef(() => props.invalid),
+        fluid: toRef(() => props.fluid),
     },
     'slider',
 );
 
 const $updateRect = useThrottle({
     action: () => {
-        if (!track.value) return;
-        trackRect.value = track.value.getBoundingClientRect();
+        if (!container.value) return;
+        trackRect.value = container.value.getBoundingClientRect();
     },
     delay: 100,
 });
 
 useKeyboard({
-    target: startThumb,
+    target: thumbA,
     handlers: {
-        arrowRight: event => {
-            event.preventDefault();
-            updateValue(currentRange.value[0] + 1);
-        },
-        arrowLeft: event => {
-            event.preventDefault();
-            updateValue(currentRange.value[0] - 1);
-        },
+        pageUp: event => moveForward(event, thumbAValue, 10),
+        arrowUp: event => moveForward(event, thumbAValue),
+        arrowRight: event => moveForward(event, thumbAValue),
+
+        pageDown: event => moveBack(event, thumbAValue, 10),
+        arrowDown: event => moveBack(event, thumbAValue),
+        arrowLeft: event => moveBack(event, thumbAValue),
     },
 });
 
 useKeyboard({
-    target: endThumb,
+    target: thumbB,
     handlers: {
-        arrowRight: event => {
-            event.preventDefault();
-            updateValue(currentRange.value[1] + 1);
-        },
-        arrowLeft: event => {
-            event.preventDefault();
-            updateValue(currentRange.value[1] - 1);
-        },
+        pageUp: event => moveForward(event, thumbBValue, 10),
+        arrowUp: event => moveForward(event, thumbBValue),
+        arrowRight: event => moveForward(event, thumbBValue),
+
+        pageDown: event => moveBack(event, thumbBValue, 10),
+        arrowDown: event => moveBack(event, thumbBValue),
+        arrowLeft: event => moveBack(event, thumbBValue),
     },
 });
 
@@ -161,57 +193,80 @@ $subscriptions.observe({
     observer: resizeObserver,
 });
 
-// Methods
-function updateValue(newValue: number) {
-    if (props.disabled) return;
+$subscriptions.addEventListener<MouseEvent>({
+    eventName: 'mousedown',
+    target: thumbA,
+    listener: event => handleMouseDown(event, thumbAValue),
+});
 
-    if (!isRange.value) {
-        emit('update:modelValue', newValue);
-        emit('change', newValue);
-        return;
-    }
+$subscriptions.addEventListener<MouseEvent>({
+    eventName: 'mousedown',
+    target: thumbB,
+    listener: event => handleMouseDown(event, thumbBValue),
+});
 
-    const [a, b] = currentRange.value;
-    const thumb = activeThumb.value ?? getNearestThumb(newValue);
+$subscriptions.addEventListener<TouchEvent>({
+    eventName: 'touchstart',
+    target: thumbA,
+    listener: event => handleTouchStart(event, thumbAValue),
+});
 
-    let newRange: [number, number] = thumb === 'start' ? [newValue, b] : [a, newValue];
-
-    if (newRange[0] > newRange[1]) {
-        newRange = [newRange[1], newRange[0]];
-        activeThumb.value = thumb === 'start' ? 'end' : 'start';
-    }
-
-    emit('update:range', newRange);
-    emit('changeRange', newRange);
-}
+$subscriptions.addEventListener<TouchEvent>({
+    eventName: 'touchstart',
+    target: thumbB,
+    listener: event => handleTouchStart(event, thumbBValue),
+});
 
 // Listeners
 function onTrackClick(event: MouseEvent) {
     if (props.disabled || isDragging.value) return;
 
     const value = mapPositionToValue(event.clientX, event.clientY);
-    updateValue(value);
+    const nearestThumbValue = getNearestThumbValueRef(value);
+
+    nearestThumbValue.value = value;
+    update();
 }
 
 function onTrackTouchStart(event: TouchEvent) {
     if (props.disabled || isDragging.value) return;
 
     const value = mapPositionToValue(event.touches[0].clientX, event.touches[0].clientY);
+    const nearestThumbValue = getNearestThumbValueRef(value);
 
-    updateValue(value);
+    nearestThumbValue.value = value;
+    update();
 }
 
-function onThumbMouseDown(thumb: 'start' | 'end') {
+// Methods
+function update() {
+    const a = normalizeValue(thumbAValue.value);
+    const b = normalizeValue(thumbBValue.value);
+
     if (props.disabled) return;
 
-    isDragging.value = true;
-    activeThumb.value = thumb;
+    if (!isRange.value) {
+        emit('update:modelValue', a);
+        emit('change', a);
+        return;
+    }
 
-    $subscriptions.addEventListener({
+    const newRange: [number, number] = [Math.min(a, b), Math.max(a, b)];
+    emit('update:range', newRange);
+    emit('changeRange', newRange);
+}
+
+function handleMouseDown(event: MouseEvent, thumbValueRef: Ref<number>) {
+    if (props.disabled) return;
+
+    event.preventDefault();
+    isDragging.value = true;
+
+    $subscriptions.addEventListener<MouseEvent>({
         key: 'mousemove',
         eventName: 'mousemove',
         target: document,
-        listener: handleMouseMove,
+        listener: event => handleMouseMove(event, thumbValueRef),
     });
 
     $subscriptions.addEventListener({
@@ -222,17 +277,35 @@ function onThumbMouseDown(thumb: 'start' | 'end') {
     });
 }
 
-function onThumbTouchStart(thumb: 'start' | 'end') {
+function handleMouseMove(event: MouseEvent, thumbValueRef: Ref<number>) {
+    if (!isDragging.value) return;
+
+    event.preventDefault();
+    const value = mapPositionToValue(event.clientX, event.clientY);
+
+    thumbValueRef.value = value;
+    update();
+}
+
+function handleMouseUp() {
+    if (!isDragging.value) return;
+
+    isDragging.value = false;
+    $subscriptions.remove('mousemove');
+    $subscriptions.remove('mouseup');
+}
+
+function handleTouchStart(event: TouchEvent, thumbValueRef: Ref<number>) {
     if (props.disabled) return;
 
+    event.preventDefault();
     isDragging.value = true;
-    activeThumb.value = thumb;
 
-    $subscriptions.addEventListener({
+    $subscriptions.addEventListener<TouchEvent>({
         key: 'touchmove',
         eventName: 'touchmove',
         target: document,
-        listener: handleTouchMove,
+        listener: event => handleTouchMove(event, thumbValueRef),
     });
 
     $subscriptions.addEventListener({
@@ -243,31 +316,13 @@ function onThumbTouchStart(thumb: 'start' | 'end') {
     });
 }
 
-// Methods
-function handleMouseMove(event: MouseEvent) {
-    if (!isDragging.value) return;
-
-    event.preventDefault();
-    const value = mapPositionToValue(event.clientX, event.clientY);
-    updateValue(value);
-}
-
-function handleMouseUp() {
-    if (!isDragging.value) return;
-
-    isDragging.value = false;
-    activeThumb.value = null;
-
-    $subscriptions.remove('mousemove');
-    $subscriptions.remove('mouseup');
-}
-
-function handleTouchMove(event: TouchEvent) {
+function handleTouchMove(event: TouchEvent, thumbValueRef: Ref<number>) {
     if (!isDragging.value) return;
 
     event.preventDefault();
     const value = mapPositionToValue(event.touches[0].clientX, event.touches[0].clientY);
-    updateValue(value);
+    thumbValueRef.value = value;
+    update();
 }
 
 function handleTouchEnd() {
@@ -278,6 +333,18 @@ function handleTouchEnd() {
 
     $subscriptions.remove('touchmove');
     $subscriptions.remove('touchend');
+}
+
+function moveForward(event: KeyboardEvent, thumbValueRef: Ref<number>, step?: number) {
+    event.preventDefault();
+    thumbValueRef.value = normalizeValue(thumbValueRef.value + (step ?? props.step));
+    update();
+}
+
+function moveBack(event: KeyboardEvent, thumbValueRef: Ref<number>, step?: number) {
+    event.preventDefault();
+    thumbValueRef.value = normalizeValue(thumbValueRef.value - (step ?? props.step));
+    update();
 }
 
 function normalizeValue(someValue: number): number {
@@ -295,7 +362,7 @@ function trimValue(someValue: number): number {
 }
 
 function mapPositionToValue(x: number, y: number): number {
-    if (!track.value) return props.min;
+    if (!container.value) return props.min;
 
     const rect = getCurrentTrackRect();
 
@@ -315,21 +382,18 @@ function getCurrentTrackRect(): DOMRect | null {
     return trackRect.value;
 }
 
-function getNearestThumb(value: number): 'start' | 'end' {
-    if (!isRange.value) return 'end';
+function getNearestThumbValueRef(value: number): Ref<number> {
+    if (!isRange.value) return thumbAValue;
 
-    const [a, b] = currentRange.value;
+    const distanceToA = Math.abs(value - thumbAValue.value);
+    const distanceToB = Math.abs(value - thumbBValue.value);
 
-    const distanceToMin = Math.abs(value - a);
-    const distanceToMax = Math.abs(value - b);
-
-    return distanceToMin < distanceToMax ? 'start' : 'end';
+    return distanceToA < distanceToB ? thumbAValue : thumbBValue;
 }
 
 // Exports
 defineExpose<IPotSliderExpose>({
     element: container,
-    track: track,
 });
 </script>
 
@@ -337,76 +401,61 @@ defineExpose<IPotSliderExpose>({
     <div
         ref="container"
         :class="['pot-slider', $classList]"
-        :style="currentStyles"
+        @click="onTrackClick"
+        @touchstart="onTrackTouchStart"
     >
-        <span
-            ref="track"
-            class="pot-slider-track"
-            @click="onTrackClick"
-            @touchstart="onTrackTouchStart"
+        <slot name="fill">
+            <span
+                class="pot-slider-fill"
+                :style="fillStyles"
+            />
+        </slot>
+
+        <slot
+            v-if="isRange"
+            name="thumb"
         >
-            <slot name="fill">
-                <span class="pot-slider-fill" />
-            </slot>
+            <span
+                ref="thumbB"
+                :style="thumbBStyles"
+                class="pot-slider-thumb"
+                tabindex="0"
+            />
+        </slot>
 
-            <slot
-                v-if="isRange"
-                name="thumb"
-            >
-                <span
-                    ref="start-thumb"
-                    tabindex="0"
-                    class="pot-slider-thumb pot-slider-thumb_start"
-                    @mousedown="onThumbMouseDown('start')"
-                    @touchstart="onThumbTouchStart('start')"
-                />
-            </slot>
-
-            <slot name="thumb">
-                <span
-                    ref="end-thumb"
-                    class="pot-slider-thumb pot-slider-thumb_end"
-                    tabindex="0"
-                    @mousedown="onThumbMouseDown('end')"
-                    @touchstart="onThumbTouchStart('end')"
-                />
-            </slot>
-        </span>
+        <slot name="thumb">
+            <span
+                ref="thumbA"
+                :style="thumbAStyles"
+                class="pot-slider-thumb"
+                tabindex="0"
+            />
+        </slot>
     </div>
 </template>
 
 <style>
 .pot-slider {
+    position: relative;
     display: flex;
     align-items: center;
-    position: relative;
-    user-select: none;
+    justify-content: center;
+    border-style: solid;
+    cursor: pointer;
     touch-action: none;
 
     /* --- PotSlider - Color --- */
     color: var(--pot-slider-color-text, inherit);
+    background-color: var(--pot-slider-color-background, transparent);
+    border-color: var(--pot-slider-color-border, currentColor);
 
     /* --- PotSlider - Size --- */
-    width: var(--pot-slider-size-width, 100%);
-    height: var(--pot-slider-size-height, auto);
+    width: var(--pot-slider-size-width, 20rem);
+    height: var(--pot-slider-size-height, 0.4rem);
     padding: var(--pot-slider-size-padding, 0);
-}
+    border-width: var(--pot-slider-size-border, 1px);
 
-.pot-slider-track {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-
-    /* --- PotSlider - Color --- */
-    background-color: var(--pot-slider-color-track-background, transparent);
-    border-color: var(--pot-slider-color-track-border, currentColor);
-    border-style: solid;
-
-    /* --- PotSlider - Size --- */
-    border-width: var(--pot-slider-size-track-border, 1px);
+    /* --- PotSlider - Radius --- */
     border-radius: var(--pot-slider-radius-value, 1000px);
 
     /* --- PotSlider - Transition --- */
@@ -421,9 +470,10 @@ defineExpose<IPotSliderExpose>({
     position: absolute;
     pointer-events: none;
     width: 100%;
+    height: 100%;
+    touch-action: none;
     transform-origin: left;
-    transform: translateX(var(--pot-slider-offset-start))
-        scaleX(calc(var(--pot-slider-end) - var(--pot-slider-start)));
+    transform: translateX(var(--pot-slider-fill-offset)) scaleX(var(--pot-slider-fill-percentage));
 
     /* --- PotSlider - Color --- */
     background-color: var(--pot-slider-color-fill, currentColor);
@@ -436,22 +486,26 @@ defineExpose<IPotSliderExpose>({
     position: absolute;
     cursor: grab;
     border: none;
-    outline: none;
     padding: 0;
     margin: 0;
     pointer-events: auto;
-
+    touch-action: none;
     left: calc(var(--pot-slider-size-thumb-width, 1.2em) / -2);
-    transform: translateX(var(--pot-slider-offset-end));
+    transform: translateX(var(--pot-slider-thumb-offset));
 
     /* --- PotSlider - Color --- */
     background-color: var(--pot-slider-color-thumb, currentColor);
-    box-shadow: var(--pot-slider-color-thumb-shadow, none);
+    outline-color: var(--pot-slider-color-thumb-outline, currentColor);
 
     /* --- PotSlider - Size --- */
     width: var(--pot-slider-size-thumb-width, 1.2em);
     height: var(--pot-slider-size-thumb-height, 1.2em);
-    border-radius: var(--pot-slider-radius-thumb-value, 50%);
+    box-shadow: var(--pot-slider-size-thumb-shadow, none);
+    outline-width: var(--pot-slider-size-outline, 2px);
+    outline-offset: var(--pot-slider-size-outline-offset, 2px);
+
+    /* --- PotSlider - Radius --- */
+    border-radius: var(--pot-slider-radius-thumb, 50%);
 
     /* --- PotSlider - Transition --- */
     transition:
@@ -461,56 +515,38 @@ defineExpose<IPotSliderExpose>({
             var(--pot-slider-transition-function, ease);
 }
 
-.pot-slider-thumb_start {
-    transform: translateX(var(--pot-slider-offset-start));
-}
-
-.pot-slider-thumb_end {
-    transform: translateX(var(--pot-slider-offset-end));
-}
-
 .pot-slider-thumb:active {
     cursor: grabbing;
 }
 
-.pot-slider-thumb:focus-visible {
-    outline-style: auto;
-    outline-width: var(--pot-slider-size-outline, 2px);
-    outline-offset: var(--pot-slider-size-outline-offset, 2px);
-    outline-color: var(--pot-slider-color-outline, currentColor);
+/* --- Fluid --- */
+.pot-slider._slider-fluid {
+    width: 100%;
+}
+
+.pot-slider._slider-vertical._slider-fluid {
+    height: 100%;
 }
 
 /* --- Vertical --- */
 .pot-slider._slider-vertical {
-    flex-direction: column;
-    height: 100%;
+    width: var(--pot-slider-size-height, 0.4rem);
+    height: var(--pot-slider-size-width, 20rem);
 }
 
-.pot-slider._slider-vertical .pot-slider-track {
-    width: var(--pot-slider-size-track-width-vertical, 0.4em);
-    height: 100%;
+._slider-vertical .pot-slider-fill {
+    transform-origin: bottom;
+    transform: translateY(var(--pot-slider-fill-offset)) scaleY(var(--pot-slider-fill-percentage));
 }
 
-.pot-slider._slider-vertical .pot-slider-fill {
-    width: 100%;
-}
-
-/* --- Horizontal (default) --- */
-.pot-slider:not(._slider-vertical) .pot-slider-track {
-    width: 100%;
-    height: var(--pot-slider-size-track-height, 0.4em);
-}
-
-.pot-slider:not(._slider-vertical) .pot-slider-fill {
-    height: 100%;
+._slider-vertical .pot-slider-thumb {
+    left: auto;
+    bottom: calc(var(--pot-slider-size-thumb-width, 1.2em) / -2);
+    transform: translateY(var(--pot-slider-thumb-offset));
 }
 
 /* --- Disabled --- */
-._slider-disabled {
-    cursor: default;
-}
-
-._slider-disabled .pot-slider-track {
+.pot-slider._slider-disabled {
     cursor: default;
 }
 
