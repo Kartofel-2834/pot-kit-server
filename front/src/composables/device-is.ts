@@ -1,4 +1,5 @@
 // Types
+import type { MaybeRef } from 'vue';
 import type {
     TDeviceIs,
     TDeviceProperties,
@@ -13,7 +14,7 @@ import { ALL_DEVICES, ALL_DEVICES_REVERSED, POT_BREAKPOINT } from '@/types';
 import { useSubscriptions } from '@/composables/subscriptions';
 
 // Vue
-import { computed, readonly, ref, unref, type ComputedRef, type MaybeRef } from 'vue';
+import { computed, readonly, ref, unref } from 'vue';
 
 const $subscriptions = useSubscriptions();
 
