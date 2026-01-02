@@ -3,44 +3,42 @@
 import type { I<%camel%>ButtonProps } from '<%typesImport%>/components/button';
 
 // Vue
-import { computed } from 'vue';
+import { toRef } from 'vue';
 
 // Composables
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
 
-const $props = withDefaults(defineProps<I<%camel%>ButtonProps>(), {
+const props = withDefaults(defineProps<I<%camel%>ButtonProps>(), {
     tag: 'button',
 });
 
-const $deviceIs = useDeviceIs();
+// Composables
+const $properties = useDeviceProperties(
+    {
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
 
-// Computed
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
-
-const classList = computed(() =>
-    useClassList({
-        ...properties.value,
-        square: $props.square,
-    }),
+const $classList = useClassList(
+    {
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
+        square: toRef(() => props.square),
+        fluid: toRef(() => props.fluid),
+    },
+    'button',
 );
 </script>
 
 <template>
     <component
         :is="tag"
-        :class="['<%kebab%>-button', classList]"
+        :class="['<%kebab%>-button', $classList]"
         :disabled="disabled"
     >
         <slot />
@@ -49,65 +47,57 @@ const classList = computed(() =>
 
 <style>
 .<%kebab%>-button {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-button-color-border: transparent;
-    --<%kebab%>-button-color-background: transparent;
-    --<%kebab%>-button-color-text: inherit;
-    --<%kebab%>-button-color-outline: initial;
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-button-size-height: auto;
-    --<%kebab%>-button-size-gap: 0;
-    --<%kebab%>-button-size-padding: 0;
-    --<%kebab%>-button-size-border: 0;
-    --<%kebab%>-button-size-text: inherit;
-    --<%kebab%>-button-size-outline: initial;
-    --<%kebab%>-button-size-outline-offset: initial;
-
-    /* --- Radius - Configuration --- */
-    --<%kebab%>-button-radius-value: 0;
-
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     user-select: none;
     border-style: solid;
-    font-weight: 500;
-    line-height: 1;
-    transition:
-        color 0.4s ease,
-        border-color 0.4s ease,
-        outline-color 0.4s ease,
-        background-color 0.4s ease;
 
     /* --- <%camel%>Button - Color --- */
-    border-color: var(--<%kebab%>-button-color-border);
-    background-color: var(--<%kebab%>-button-color-background);
-    color: var(--<%kebab%>-button-color-text);
-    outline-color: var(--<%kebab%>-button-color-outline);
+    border-color: var(--<%kebab%>-button-color-border, transparent);
+    background-color: var(--<%kebab%>-button-color-background, transparent);
+    color: var(--<%kebab%>-button-color-text, inherit);
+    outline-color: var(--<%kebab%>-button-color-outline, initial);
 
     /* --- <%camel%>Button - Size --- */
-    height: var(--<%kebab%>-button-size-height);
-    gap: var(--<%kebab%>-button-size-gap);
-    padding: 0 var(--<%kebab%>-button-size-padding);
-    border-width: var(--<%kebab%>-button-size-border);
-    font-size: var(--<%kebab%>-button-size-text);
-    outline-width: var(--<%kebab%>-button-size-outline);
-    outline-offset: var(--<%kebab%>-button-size-outline-offset);
+    height: var(--<%kebab%>-button-size-height, auto);
+    gap: var(--<%kebab%>-button-size-gap, 0);
+    padding: var(--<%kebab%>-button-size-padding, 0);
+    border-width: var(--<%kebab%>-button-size-border, 0);
+    font-size: var(--<%kebab%>-button-size-text, inherit);
+    font-weight: var(--<%kebab%>-button-size-text-weight, 500);
+    line-height: var(--<%kebab%>-button-size-text-height, 1);
+    outline-width: var(--<%kebab%>-button-size-outline, initial);
+    outline-offset: var(--<%kebab%>-button-size-outline-offset, initial);
 
     /* --- <%camel%>Button - Radius --- */
-    border-radius: var(--<%kebab%>-button-radius-value);
+    border-radius: var(--<%kebab%>-button-radius-value, 0);
+
+    /* --- <%camel%>Button - Transition --- */
+    transition:
+        color var(--<%kebab%>-button-transition-duration, 0.2s)
+            var(--<%kebab%>-button-transition-function, ease),
+        border-color var(--<%kebab%>-button-transition-duration, 0.2s)
+            var(--<%kebab%>-button-transition-function, ease),
+        outline-color var(--<%kebab%>-button-transition-duration, 0.2s)
+            var(--<%kebab%>-button-transition-function, ease),
+        background-color var(--<%kebab%>-button-transition-duration, 0.2s)
+            var(--<%kebab%>-button-transition-function, ease);
 }
 
-/* --- <%camel%>Button - Disabled --- */
 .<%kebab%>-button:disabled {
-    cursor: not-allowed;
+    cursor: default;
 }
 
-/* --- <%camel%>Button - Square --- */
-.<%kebab%>-button._square {
+/* --- Square --- */
+.<%kebab%>-button._button-square {
     padding: 0;
     aspect-ratio: 1 / 1;
+}
+
+/* --- Fluid --- */
+.<%kebab%>-button._button-fluid {
+    width: 100%;
 }
 </style>

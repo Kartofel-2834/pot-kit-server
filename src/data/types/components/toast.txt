@@ -26,12 +26,15 @@ export type E<%camel%>ToastColor = (typeof <%upper%>_TOAST_COLOR)[keyof typeof <
 
 export type E<%camel%>ToastRadius = (typeof <%upper%>_TOAST_RADIUS)[keyof typeof <%upper%>_TOAST_RADIUS];
 
-export interface I<%camel%>ToastProps<T = unknown> {
+export interface I<%camel%>ToastProps<DATA = unknown> {
     /** Toast composable instance, use this prop for share your toast type to toast slot data */
-    toast?: IToast<T>;
+    toast?: IToast<DATA>;
 
     /** Toast group name */
     group?: string;
+
+    /** Toast element classlist */
+    classList?: string[] | Record<string, unknown>;
 
     /** Toast position */
     position?: E<%camel%>ToastPosition;

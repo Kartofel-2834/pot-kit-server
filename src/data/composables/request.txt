@@ -1,156 +1,127 @@
-export function useRequest() {}
+// Types
+import type {
+    IRequest,
+    IRequestOptions,
+    TRequestInterceptor,
+    TRequestMethods,
+    TResponseInterceptor,
+} from '<%typesImport%>/composables/request';
 
-// // Types
-// import type {
-//     TRequest,
-//     TRequestInitOptions,
-//     TRequestOptions,
-//     TRequestInterceptor,
-//     TResponseInterceptor,
-//     TRequestParams,
-//     TRequestMethods,
-// } from '<%typesImport%>/ui/composables/request';
+export function useRequest(baseUrl?: string, requestInit?: RequestInit): IRequest {
+    const requestInterceptors: Map<symbol, TRequestInterceptor> = new Map();
+    const responseInterceptors: Map<symbol, TResponseInterceptor> = new Map();
 
-// /**
-//  * Компосабл-обертка над браузерным fetch
-//  *
-//  * @param initRequestOptions - настройки для отправляемых запросов
-//  * @param initRequestOptions.options - options браузерного fetch
-//  * @param initRequestOptions.baseUrl - базовый URL
-//  * @param initRequestOptions.bodyFormatter - функция для обработки тела запроса перед отправкой
-//  *
-//  * @returns - возвращает набор методов для отправки fetch запросов и методы для добавления интерцепторов
-//  */
-// export function useRequest(initRequestOptions: TRequestInitOptions = {}): TRequest {
-//     const requestInterceptors: Map<symbol, TRequestInterceptor> = new Map();
-//     const responseInterceptors: Map<symbol, TResponseInterceptor> = new Map();
+    async function send(
+        method: TRequestMethods,
+        href: string,
+        options: IRequestOptions = {},
+    ): Promise<Response> {
+        const currentOptions = getRequestOptions(options);
+        const url = useRequestUrl(href, currentOptions.params, currentOptions.baseUrl);
+        const flags: boolean[] = [];
 
-//     const defaultRequestOptions: TRequestOptions = {
-//         baseUrl: window?.location?.href || '/',
-//         bodyFormatter: JSON.stringify,
-//         ...initRequestOptions,
-//     };
+        for (const interceptor of requestInterceptors.values()) {
+            flags.push(await interceptor(url, currentOptions));
+        }
 
-//     async function request(
-//         method: TRequestMethods,
-//         url: string,
-//         requestOptions: TRequestOptions = {},
-//     ): Promise<Response> {
-//         const { params, baseUrl, options, body, bodyFormatter } = {
-//             ...defaultRequestOptions,
-//             ...requestOptions,
-//         };
+        if (flags.includes(false)) {
+            throw new Error('[useRequest.send] request aborted');
+        }
 
-//         const requestUrl = createUrl(url, params, baseUrl);
-//         const fetchOptions: RequestInit = {
-//             method,
-//             ...(options || {}),
-//         };
+        return fetch(url, {
+            ...currentOptions.options,
+            method,
+        }).then(async response => {
+            for (const interceptor of responseInterceptors.values()) {
+                await interceptor(response);
+            }
 
-//         if (body && bodyFormatter instanceof Function) {
-//             fetchOptions.body = bodyFormatter(body);
-//         }
+            return response;
+        });
+    }
 
-//         return customFetch(requestUrl, fetchOptions);
-//     }
+    function addRequestInterceptor(interceptor: TRequestInterceptor): symbol {
+        const id = Symbol(Math.ceil(Math.random() * 10000));
+        requestInterceptors.set(id, interceptor);
+        return id;
+    }
 
-//     async function customFetch(resource: URL, options: RequestInit): Promise<Response> {
-//         const abortId = createId();
-//         let updatedRequestOptions: RequestInit = { ...options };
+    function addResponseInterceptor(interceptor: TResponseInterceptor): symbol {
+        const id = Symbol(Math.ceil(Math.random() * 10000));
+        responseInterceptors.set(id, interceptor);
+        return id;
+    }
 
-//         for (const interceptor of requestInterceptors.values()) {
-//             const result = interceptor(updatedRequestOptions, resource, abortId);
+    function removeInterceptor(type: 'request' | 'response', interceptorId: symbol): boolean {
+        const target = type === 'request' ? requestInterceptors : responseInterceptors;
+        return target.delete(interceptorId);
+    }
 
-//             // Если из интерцептора вернули abortId, то запрос оборвется и не будет отправлен
-//             if (abortId === result) {
-//                 return getAbortPromise();
-//             } else if (typeof result !== 'symbol' && result) {
-//                 updatedRequestOptions = result;
-//             }
-//         }
+    function getRequestOptions(options: IRequestOptions): IRequestOptions {
+        return {
+            baseUrl: baseUrl ?? window?.location?.href ?? '/',
+            ...options,
+            options: {
+                ...requestInit,
+                ...options.options,
+            },
+        };
+    }
 
-//         return fetch(resource, updatedRequestOptions).then(response => {
-//             for (const interceptor of responseInterceptors.values()) {
-//                 interceptor(response);
-//             }
+    return {
+        get: (...args) => send('GET', ...args),
+        post: (...args) => send('POST', ...args),
+        put: (...args) => send('PUT', ...args),
+        patch: (...args) => send('PATCH', ...args),
+        delete: (...args) => send('DELETE', ...args),
+        send,
+        addRequestInterceptor,
+        addResponseInterceptor,
+        removeInterceptor,
+    };
+}
 
-//             return response;
-//         });
-//     }
+export function useRequestUrl(href: string, params?: Record<string, unknown>, base?: string): URL {
+    let createdUrl: URL;
 
-//     function getUrl(url: string, params?: TRequestParams, base?: string): URL {
-//         const currentBase = base || defaultRequestOptions.baseUrl;
-//         return createUrl(url, params, currentBase);
-//     }
+    if (base) {
+        const baseUrl = new URL(base);
+        const pathname = [baseUrl.pathname, href].filter(Boolean).join('/').replace(/\/+/gm, '/');
 
-//     function addRequestInterceptor(interceptor: TRequestInterceptor): symbol {
-//         const id = createId();
-//         requestInterceptors.set(id, interceptor);
-//         return id;
-//     }
+        createdUrl = new URL(pathname, base);
+    } else {
+        createdUrl = new URL(href);
+    }
 
-//     function addResponseInterceptor(interceptor: TResponseInterceptor): symbol {
-//         const id = createId();
-//         responseInterceptors.set(id, interceptor);
-//         return id;
-//     }
+    if (!params) {
+        return createdUrl;
+    }
 
-//     function removeInterceptor(type: 'request' | 'response', interceptorId: symbol): boolean {
-//         const target = type === 'request' ? requestInterceptors : responseInterceptors;
+    function parseValue(value: unknown): string {
+        if (['string', 'number', 'boolean'].includes(typeof value)) {
+            return `${value}`;
+        }
 
-//         return target.delete(interceptorId);
-//     }
+        if (value === null || value === undefined || typeof value !== 'object') {
+            return '';
+        }
 
-//     function getAbortPromise(): Promise<Response> {
-//         return new Promise<Response>((res, rej) => rej(new Error('request aborted')));
-//     }
+        try {
+            return JSON.stringify(value);
+        } catch (err) {
+            console.warn('[useRequestUrl] JSON stringify error:', err);
+            return '';
+        }
+    }
 
-//     function createId(): symbol {
-//         return Symbol(`${Date.now()}_${Math.ceil(Math.random() * 10000)}`);
-//     }
+    Object.entries(params).forEach(([key, value]) => {
+        const values = Array.isArray(value) ? value : [value];
 
-//     return {
-//         send: request,
-//         addRequestInterceptor,
-//         addResponseInterceptor,
-//         removeInterceptor,
-//         getUrl,
-//         get: (...args) => request('GET', ...args),
-//         post: (...args) => request('POST', ...args),
-//         put: (...args) => request('PUT', ...args),
-//         patch: (...args) => request('PATCH', ...args),
-//         delete: (...args) => request('DELETE', ...args),
-//     };
-// }
+        values
+            .map(v => parseValue(v))
+            .filter(Boolean)
+            .forEach(v => createdUrl.searchParams.append(key, v));
+    });
 
-// export function createUrl(url: string, params?: TRequestParams, base?: string): URL {
-//     let createdUrl: URL;
-
-//     if (base) {
-//         const baseUrl = new URL(base);
-//         const pathname = [baseUrl.pathname, url].filter(Boolean).join('/').replace(/\/+/gm, '/');
-
-//         createdUrl = new URL(pathname, base);
-//     } else {
-//         createdUrl = new URL(url);
-//     }
-
-//     if (!params) {
-//         return createdUrl;
-//     }
-
-//     Object.entries(params).forEach(([key, value]) => {
-//         if (value === null || value === undefined) {
-//             return;
-//         }
-
-//         if (!Array.isArray(value)) {
-//             createdUrl.searchParams.append(key, `${value}`);
-//             return;
-//         }
-
-//         value.forEach(item => createdUrl.searchParams.append(key, `${item}`));
-//     });
-
-//     return createdUrl;
-// }
+    return createdUrl;
+}

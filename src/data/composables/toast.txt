@@ -5,11 +5,11 @@ import type { IToast, IToastDialog, IToastDialogData } from '<%typesImport%>/com
 // Vue
 import { readonly, ref } from 'vue';
 
-const toastsList = ref<IToastDialog<unknown>[]>([]);
+const toastsList = ref<IToastDialog[]>([]);
 
-export function useToast<T = unknown>(): IToast<T> {
-    function add(toast: IToastDialogData<T>) {
-        const id = generateToastId();
+export function useToast<DATA = unknown>(): IToast<DATA> {
+    function add(toast: IToastDialogData<DATA>) {
+        const id = Symbol(Math.random().toString(36).slice(2, 9));
         const data = { ...toast, id };
 
         toastsList.value = [...toastsList.value, data];
@@ -24,12 +24,8 @@ export function useToast<T = unknown>(): IToast<T> {
     }
 
     return {
-        list: readonly(toastsList) as Readonly<Ref<IToastDialog<unknown>[]>>,
+        list: readonly(toastsList) as Readonly<Ref<IToastDialog[]>>,
         add,
         remove,
     };
-}
-
-function generateToastId(): Symbol {
-    return Symbol(Math.random().toString(36).slice(2, 9));
 }

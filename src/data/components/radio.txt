@@ -1,0 +1,206 @@
+<script lang="ts" generic="VALUE" setup>
+// Types
+import type { I<%camel%>RadioEmits, I<%camel%>RadioExpose, I<%camel%>RadioProps } from '<%typesImport%>/components/radio';
+
+// Vue
+import { computed, toRef, useTemplateRef } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
+
+const props = withDefaults(defineProps<I<%camel%>RadioProps<VALUE>>(), {
+    value: undefined,
+    modelValue: undefined,
+    radioValue: undefined,
+    inputName: 'radio',
+    transition: '<%kebab%>-radio-transition',
+});
+
+const emit = defineEmits<I<%camel%>RadioEmits<VALUE>>();
+
+// Refs
+const input = useTemplateRef('input');
+
+// Computed
+const currentValue = computed(() => {
+    return props.value ?? props.modelValue;
+});
+
+const radioValue = computed(() => {
+    return props.radioValue ?? ((props.value ?? props.modelValue) as VALUE);
+});
+
+const isChecked = computed(() => {
+    return currentValue.value !== undefined && currentValue.value === radioValue.value;
+});
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+        checked: isChecked,
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
+    },
+    'radio',
+);
+
+// Listeners
+function onChange() {
+    emit('update:modelValue', radioValue.value);
+    emit('change', radioValue.value);
+}
+
+// Exports
+defineExpose<Readonly<I<%camel%>RadioExpose>>({
+    input: input,
+});
+</script>
+
+<template>
+    <label :class="['<%kebab%>-radio', $classList]">
+        <input
+            ref="input"
+            type="radio"
+            class="<%kebab%>-radio-input"
+            :checked="isChecked"
+            :name="inputName"
+            :value="radioValue"
+            :disabled="disabled"
+            @change.stop="onChange"
+        />
+
+        <span class="<%kebab%>-radio-box">
+            <Transition
+                :name="transition"
+                mode="out-in"
+            >
+                <span
+                    v-if="isChecked"
+                    class="<%kebab%>-radio-dot"
+                />
+            </Transition>
+        </span>
+
+        <span
+            v-if="$slots.default"
+            class="<%kebab%>-radio-content"
+        >
+            <slot />
+        </span>
+    </label>
+</template>
+
+<style>
+.<%kebab%>-radio {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    /* --- <%camel%>Radio - Color --- */
+    color: var(--<%kebab%>-radio-color-text, inherit);
+
+    /* --- <%camel%>Radio - Size --- */
+    gap: var(--<%kebab%>-radio-size-gap, 0.8em);
+    font-size: var(--<%kebab%>-radio-size-text, inherit);
+    font-weight: var(--<%kebab%>-radio-size-text-weight, 400);
+    line-height: var(--<%kebab%>-radio-size-text-height, 1);
+}
+
+.<%kebab%>-radio:has(.<%kebab%>-radio-input:focus-visible) .<%kebab%>-radio-box {
+    outline-style: auto;
+}
+
+.<%kebab%>-radio-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
+.<%kebab%>-radio-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    user-select: none;
+    border-style: solid;
+
+    /* --- <%camel%>Radio - Color --- */
+    background-color: var(--<%kebab%>-radio-color-background, transparent);
+    border-color: var(--<%kebab%>-radio-color-border, currentColor);
+
+    /* --- <%camel%>Radio - Size --- */
+    width: var(--<%kebab%>-radio-size-width, 1.2em);
+    height: var(--<%kebab%>-radio-size-width, 1.2em);
+    border-width: var(--<%kebab%>-radio-size-border, 1px);
+    outline-width: var(--<%kebab%>-radio-size-outline, initial);
+    outline-offset: var(--<%kebab%>-radio-size-outline-offset, initial);
+
+    /* --- <%camel%>Radio - Radius --- */
+    border-radius: var(--<%kebab%>-radio-radius-value, 50%);
+
+    /* --- <%camel%>Radio - Transition --- */
+    transition:
+        color var(--<%kebab%>-radio-transition-duration, 0.2s) var(--<%kebab%>-radio-transition-function, ease),
+        border-color var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease),
+        background-color var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease);
+}
+
+.<%kebab%>-radio-dot {
+    border-radius: inherit;
+    pointer-events: none;
+
+    /* --- <%camel%>Radio - Color --- */
+    background-color: var(--<%kebab%>-radio-color-dot, currentColor);
+
+    /* --- <%camel%>Radio - Size --- */
+    width: var(--<%kebab%>-radio-dot-size-width, 0.8em);
+    height: var(--<%kebab%>-radio-dot-size-width, 0.8em);
+
+    /* --- <%camel%>Radio - Transition --- */
+    transition:
+        opacity var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease),
+        transform var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease);
+}
+
+/* --- Disabled --- */
+.<%kebab%>-radio._radio-disabled {
+    cursor: default;
+}
+
+.<%kebab%>-radio-transition-enter-active,
+.<%kebab%>-radio-transition-leave-active {
+    transition:
+        opacity var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease),
+        transform var(--<%kebab%>-radio-transition-duration, 0.2s)
+            var(--<%kebab%>-radio-transition-function, ease);
+}
+
+.<%kebab%>-radio-transition-enter-from,
+.<%kebab%>-radio-transition-leave-to {
+    transform: scale(70%);
+    opacity: 0;
+}
+</style>

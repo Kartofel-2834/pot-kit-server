@@ -1,7 +1,13 @@
 // Types
-import type { Ref } from 'vue';
+import type { ComputedRef, MaybeRef, Ref } from 'vue';
 
 export type TDialogTrigger = 'clickoutside' | 'escape';
+
+export type TDialogMarkerKey = 'data-<%kebab%>-dialog-id';
+
+export type TDialogMarker = {
+    [key in TDialogMarkerKey]: string;
+};
 
 export const DIALOG_LAYERS = {
     NONE: 1,
@@ -12,66 +18,80 @@ export const DIALOG_LAYERS = {
 
 export type EDialogLayers = (typeof DIALOG_LAYERS)[keyof typeof DIALOG_LAYERS];
 
-export interface IDialogsSetupOptions {
-    /** Time after the dialog is created, after which triggers will start working */
-    triggersStartDelays: Partial<Record<TDialogTrigger, number>>;
-}
+export type TDialogTriggersDelays = {
+    [key in TDialogTrigger]: number;
+};
 
 export interface IDialogOptions {
     /** Flag that indicates whether dialog is open */
     isOpen: Ref<boolean>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EDialogLayers>;
+    layer: MaybeRef<EDialogLayers>;
+
+    /** Triggers that will close dialog */
+    triggers: MaybeRef<TDialogTrigger[]>;
 
     /** Close dialog */
     close: () => void;
 
     /** Open dialog */
     open: () => void;
-
-    /** Triggers that will close dialog */
-    triggers: TDialogTrigger[];
 }
 
 export interface IDialog {
     /** Dialog unique id */
-    readonly id: Symbol;
+    readonly id: symbol;
 
     /** Triggers that will close dialog */
-    readonly triggers: TDialogTrigger[];
+    readonly triggers: ComputedRef<TDialogTrigger[]>;
 
     /** Flag that indicates whether dialog is open */
-    isOpen: Ref<boolean>;
+    readonly isOpen: ComputedRef<boolean>;
+
+    /** Dialog layer */
+    readonly layer: ComputedRef<EDialogLayers>;
 
     /** Dialog layer z-index value */
-    layer: Ref<EDialogLayers>;
+    readonly zIndex: ComputedRef<number>;
+
+    /** The time in ms when the dialog was created changed */
+    readonly createdAt: Ref<number>;
+
+    /** The time in ms when the dialog open state changed */
+    readonly updatedAt: Ref<number>;
+
+    /** Abort controller, that removes dialog on abort */
+    readonly controller: AbortController;
+
+    /** Bindable marker for dialog component elements */
+    readonly marker: TDialogMarker;
 
     /** Close dialog */
     close: () => void;
 
     /** Open dialog */
     open: () => void;
-
-    /** Terminate dialogs watchers and listeners */
-    terminate: () => void;
 }
 
 export interface IDialogManager {
     /** Dialog unique id */
-    id: Symbol;
+    id: symbol;
+
+    /** Flag that indicates whether dialog is open */
+    isOpen: boolean;
 
     /** Dialog layer z-index value */
     layer: EDialogLayers;
+
+    /** Triggers that will close dialog */
+    triggers: TDialogTrigger[];
 
     /** Open dialog */
     open: () => void;
 
     /** Close dialog */
     close: () => void;
-
-    /** Triggers that will close dialog */
-    triggers: TDialogTrigger[];
 
     /** The time in ms when the dialog was created changed */
     createdAt: number;

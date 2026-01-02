@@ -1,197 +1,211 @@
 // Types
-import type { E<%camel%>AttachedBoxPosition } from '<%typesImport%>/components/attach-target';
-import type { IAttach, IAttachOptions } from '<%typesImport%>/composables/attach';
-import type { ISurroundingData } from '<%typesImport%>/composables/surrounding';
-
-// Constants
-import { <%upper%>_ATTACHED_BOX_POSITION } from '<%typesImport%>/components/attach-target';
+import type { ComputedRef, MaybeRef, Ref } from 'vue';
+import type {
+    IAttach,
+    IAttachOptions,
+    IAttachSurroundingData,
+    EAttachedBoxPosition,
+} from '<%typesImport%>/composables/attach';
 
 // Vue
-import { computed, ref } from 'vue';
+import { computed, readonly, ref, toRef, unref, watch } from 'vue';
 
 // Composables
-import { useSurrounding } from '<%composablesImport%>/surrounding';
-import { useDebounce } from '<%composablesImport%>/timer';
+import { useComponentSubscriptions, useSubscriptions } from '<%composablesImport%>/subscriptions';
+import { useDebounce, useThrottle } from '<%composablesImport%>/timer';
 
-const STICKY_X_POSITIONS: E<%camel%>AttachedBoxPosition[] = [
-    <%upper%>_ATTACHED_BOX_POSITION.TOP_START,
-    <%upper%>_ATTACHED_BOX_POSITION.TOP_END,
-    <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER,
-    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START,
-    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END,
-    <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+// Constants
+import { ATTACHED_BOX_POSITION } from '<%typesImport%>/composables/attach';
+
+const STICKY_X_POSITIONS: EAttachedBoxPosition[] = [
+    ATTACHED_BOX_POSITION.TOP_START,
+    ATTACHED_BOX_POSITION.TOP_END,
+    ATTACHED_BOX_POSITION.TOP_CENTER,
+    ATTACHED_BOX_POSITION.BOTTOM_START,
+    ATTACHED_BOX_POSITION.BOTTOM_END,
+    ATTACHED_BOX_POSITION.BOTTOM_CENTER,
 ];
 
-const STICKY_Y_POSITIONS: E<%camel%>AttachedBoxPosition[] = [
-    <%upper%>_ATTACHED_BOX_POSITION.LEFT_START,
-    <%upper%>_ATTACHED_BOX_POSITION.LEFT_END,
-    <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER,
-    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_START,
-    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_END,
-    <%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER,
+const STICKY_Y_POSITIONS: EAttachedBoxPosition[] = [
+    ATTACHED_BOX_POSITION.LEFT_START,
+    ATTACHED_BOX_POSITION.LEFT_END,
+    ATTACHED_BOX_POSITION.LEFT_CENTER,
+    ATTACHED_BOX_POSITION.RIGHT_START,
+    ATTACHED_BOX_POSITION.RIGHT_END,
+    ATTACHED_BOX_POSITION.RIGHT_CENTER,
 ];
 
-const X_OPPOSITE_POSITIONS: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_START]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_END]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER]: null,
+const X_OPPOSITE_POSITIONS: Record<EAttachedBoxPosition, EAttachedBoxPosition | null> = {
+    [ATTACHED_BOX_POSITION.TOP_START]: null,
+    [ATTACHED_BOX_POSITION.TOP_END]: null,
+    [ATTACHED_BOX_POSITION.TOP_CENTER]: null,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_START]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_END]: null,
+    [ATTACHED_BOX_POSITION.BOTTOM_CENTER]: null,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_START]: <%upper%>_ATTACHED_BOX_POSITION.RIGHT_START,
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_END]: <%upper%>_ATTACHED_BOX_POSITION.RIGHT_END,
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER,
+    [ATTACHED_BOX_POSITION.LEFT_START]: ATTACHED_BOX_POSITION.RIGHT_START,
+    [ATTACHED_BOX_POSITION.LEFT_END]: ATTACHED_BOX_POSITION.RIGHT_END,
+    [ATTACHED_BOX_POSITION.LEFT_CENTER]: ATTACHED_BOX_POSITION.RIGHT_CENTER,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_START]: <%upper%>_ATTACHED_BOX_POSITION.LEFT_START,
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_END]: <%upper%>_ATTACHED_BOX_POSITION.LEFT_END,
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER,
+    [ATTACHED_BOX_POSITION.RIGHT_START]: ATTACHED_BOX_POSITION.LEFT_START,
+    [ATTACHED_BOX_POSITION.RIGHT_END]: ATTACHED_BOX_POSITION.LEFT_END,
+    [ATTACHED_BOX_POSITION.RIGHT_CENTER]: ATTACHED_BOX_POSITION.LEFT_CENTER,
 };
 
-const Y_OPPOSITE_POSITIONS: Record<E<%camel%>AttachedBoxPosition, E<%camel%>AttachedBoxPosition | null> = {
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_START]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START,
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_END]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END,
-    [<%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER,
+const Y_OPPOSITE_POSITIONS: Record<EAttachedBoxPosition, EAttachedBoxPosition | null> = {
+    [ATTACHED_BOX_POSITION.TOP_START]: ATTACHED_BOX_POSITION.BOTTOM_START,
+    [ATTACHED_BOX_POSITION.TOP_END]: ATTACHED_BOX_POSITION.BOTTOM_END,
+    [ATTACHED_BOX_POSITION.TOP_CENTER]: ATTACHED_BOX_POSITION.BOTTOM_CENTER,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START]: <%upper%>_ATTACHED_BOX_POSITION.TOP_START,
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END]: <%upper%>_ATTACHED_BOX_POSITION.TOP_END,
-    [<%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER]: <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER,
+    [ATTACHED_BOX_POSITION.BOTTOM_START]: ATTACHED_BOX_POSITION.TOP_START,
+    [ATTACHED_BOX_POSITION.BOTTOM_END]: ATTACHED_BOX_POSITION.TOP_END,
+    [ATTACHED_BOX_POSITION.BOTTOM_CENTER]: ATTACHED_BOX_POSITION.TOP_CENTER,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_START]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_END]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER]: null,
+    [ATTACHED_BOX_POSITION.LEFT_START]: null,
+    [ATTACHED_BOX_POSITION.LEFT_END]: null,
+    [ATTACHED_BOX_POSITION.LEFT_CENTER]: null,
 
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_START]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_END]: null,
-    [<%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_START]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_END]: null,
+    [ATTACHED_BOX_POSITION.RIGHT_CENTER]: null,
 };
 
-/** Composable for calculating attached to target box position */
 export function useAttach(options: IAttachOptions): IAttach {
-    const coordinates = computed<[x: number, y: number]>(getPosition);
+    const $subscriptions = useComponentSubscriptions();
 
-    const targetElement = ref<Element | null>(null);
-    const boxElement = ref<Element | null>(null);
-
-    const surrounding = useSurrounding({
-        onResize: handleSurroundingResize(),
-        onScroll: handleSurroundingScroll(),
+    const change = useThrottle({
+        delay: 50,
+        action: () => options.onChange?.(),
     });
 
-    const isTargetResizing = ref<boolean>(false);
-    const isBoxResizing = ref<boolean>(false);
-    const isSurroundingResizing = ref<boolean>(false);
-    const isScrolling = ref<boolean>(false);
+    const { handler: targetResizeHandler, isResizing: isTargetResizing } = getResizeHandler(
+        entries => updateTargetRect(entries[0].target).then(),
+        () => change(),
+    );
+
+    const { handler: boxResizeHandler, isResizing: isBoxResizing } = getResizeHandler(
+        entries => updateBoxRect(entries[0].target).then(),
+        () => change(),
+    );
+
+    const targetResizeObserver = new ResizeObserver(targetResizeHandler);
+    const boxResizeObserver = new ResizeObserver(boxResizeHandler);
 
     const targetRect = ref<DOMRect | null>(null);
     const boxRect = ref<DOMRect | null>(null);
 
-    const currentSurrounding = ref<ISurroundingData[]>([]);
+    // Computed
+    const target = computed<Element | null>(() => {
+        const currentTarget = unref(options.target);
+        const currentBox = unref(options.box);
 
-    const targetResizeObserver = new ResizeObserver(
-        useDebounce<[ResizeObserverEntry[]]>({
-            delay: 100,
-            immediateAction: async entries => {
-                if (targetRect.value === null) {
-                    await updateTargetRect(entries[0].target);
-                } else {
-                    isTargetResizing.value = true;
-                }
-            },
-            action: async entries => {
-                if (!isTargetResizing.value) return;
+        return currentTarget && currentBox ? currentTarget : null;
+    });
 
-                isTargetResizing.value = false;
-                await updateTargetRect(entries[0].target);
-            },
-        }),
+    const box = computed<Element | null>(() => {
+        const currentTarget = unref(options.target);
+        const currentBox = unref(options.box);
+
+        return currentTarget && currentBox ? currentBox : null;
+    });
+
+    const { currentSurrounding, initialSurrounding } = useSurrounding({
+        target: target,
+        onChange: () => change(),
+        onResize: () => {
+            if (!isTargetResizing.value) updateTargetRect().then();
+            if (!isBoxResizing.value) updateBoxRect().then();
+        },
+    });
+
+    const offset = useOffset(initialSurrounding, currentSurrounding);
+    const offsetX = toRef(() => offset.value[0]);
+    const offsetY = toRef(() => offset.value[1]);
+
+    const position = usePosition({
+        targetRect,
+        boxRect,
+        offset,
+        position: options.position,
+        persistent: options.persistent,
+        nudge: options.nudge,
+        edgeMargin: options.edgeMargin,
+        oppositeSideX: options.oppositeSideX,
+        oppositeSideY: options.oppositeSideY,
+    });
+
+    const x = useX({
+        targetRect,
+        boxRect,
+        position,
+        offset: offsetX,
+        edgeMargin: options.edgeMargin,
+        nudge: options.nudge,
+        sticky: options.sticky,
+    });
+
+    const y = useY({
+        targetRect,
+        boxRect,
+        position,
+        offset: offsetY,
+        edgeMargin: options.edgeMargin,
+        nudge: options.nudge,
+        sticky: options.sticky,
+    });
+
+    // Watchers
+    watch(
+        () => target.value,
+        async newValue => updateTargetRect(newValue),
     );
 
-    const boxResizeObserver = new ResizeObserver(
-        useDebounce<[ResizeObserverEntry[]]>({
-            delay: 100,
-            immediateAction: async entries => {
-                if (boxRect.value === null) {
-                    await updateBoxRect(entries[0].target);
-                } else {
-                    isBoxResizing.value = true;
-                }
-            },
-            action: async entries => {
-                if (!isBoxResizing.value) return;
-
-                isBoxResizing.value = false;
-                await updateBoxRect(entries[0].target);
-            },
-        }),
+    watch(
+        () => box.value,
+        async newValue => updateBoxRect(newValue),
     );
 
-    /** Set box target element */
-    function setTarget(target: Element) {
-        targetElement.value = target;
+    // Subscriptions
+    $subscriptions.observe({
+        target: target,
+        observer: targetResizeObserver,
+    });
+
+    $subscriptions.observe({
+        target: box,
+        observer: boxResizeObserver,
+    });
+
+    async function updateTargetRect(element?: Element | null) {
+        const data = element === undefined ? unref(options.target) : element;
+        targetRect.value = data instanceof Element ? await getElementBounding(data) : null;
     }
 
-    /** Set box element */
-    function setBox(box: Element) {
-        boxElement.value = box;
+    async function updateBoxRect(element?: Element | null) {
+        const data = element === undefined ? unref(options.box) : element;
+        boxRect.value = data instanceof Element ? await getElementBounding(data) : null;
     }
 
-    /** Setup box, target and their surrounding observers */
-    function setup() {
-        if (!targetElement.value || !boxElement.value) return;
+    return {
+        x,
+        y,
+        targetRect: readonly(targetRect),
+        boxRect: readonly(boxRect),
+    };
+}
 
-        targetResizeObserver.observe(targetElement.value);
-        boxResizeObserver.observe(boxElement.value);
+function useOffset(
+    initialSurrounding: MaybeRef<IAttachSurroundingData[]>,
+    currentSurrounding: MaybeRef<IAttachSurroundingData[]>,
+): ComputedRef<[x: number, y: number]> {
+    return computed(() => {
+        const initial = unref(initialSurrounding);
+        const current = unref(currentSurrounding);
 
-        surrounding.setup(targetElement.value);
-        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
-    }
-
-    /** Terminate box, target and their surrounding observers */
-    function terminate() {
-        targetElement.value = null;
-        boxElement.value = null;
-
-        currentSurrounding.value = [];
-        targetRect.value = null;
-        boxRect.value = null;
-
-        targetResizeObserver.disconnect();
-        boxResizeObserver.disconnect();
-        surrounding.terminate();
-    }
-
-    function getPosition(): [x: number, y: number] {
-        if (!targetRect.value || !boxRect.value) {
-            return [0, 0];
-        }
-
-        const offset = getOffset(currentSurrounding.value, surrounding.data.value);
-
-        const { coordinates, position } = getCurrentPosition(
-            options,
-            offset,
-            targetRect.value,
-            boxRect.value,
-        );
-
-        return getStickyPosition(
-            coordinates,
-            { ...options, position },
-            offset,
-            targetRect.value,
-            boxRect.value,
-        );
-    }
-
-    function getOffset(
-        currentSurrounding: ISurroundingData[],
-        initialSurrounding: ISurroundingData[],
-    ): [x: number, y: number] {
-        return currentSurrounding.reduce(
+        return current.reduce(
             ([x, y], data, index) => {
-                const initialData = initialSurrounding[index];
+                const initialData = initial[index];
 
                 return [
                     x + (initialData.scrollX - data.scrollX),
@@ -200,258 +214,421 @@ export function useAttach(options: IAttachOptions): IAttach {
             },
             [0, 0],
         );
-    }
-
-    /** Update target sizes */
-    async function updateTargetRect(targetElement: Element) {
-        targetRect.value = await getElementBounding(targetElement);
-    }
-
-    /** Update box sizes */
-    async function updateBoxRect(targetElement: Element) {
-        boxRect.value = await getElementBounding(targetElement);
-    }
-
-    /** Update surrounding scroll-data on scroll event */
-    function onScroll(data: ISurroundingData) {
-        const x = data.target === window ? window.scrollX : (data.target as Element).scrollLeft;
-        const y = data.target === window ? window.scrollY : (data.target as Element).scrollTop;
-
-        currentSurrounding.value = [
-            ...currentSurrounding.value.filter(v => v.id !== data.id),
-            { ...data, scrollX: x, scrollY: y },
-        ];
-    }
-
-    /** Update surrounding after resize event */
-    async function onResize() {
-        if (!targetElement.value || !boxElement.value) return;
-
-        getElementBounding(targetElement.value).then(rect => (targetRect.value = rect));
-        getElementBounding(boxElement.value).then(rect => (boxRect.value = rect));
-
-        surrounding.setup(targetElement.value);
-        currentSurrounding.value = surrounding.data.value.map(v => ({ ...v }));
-    }
-
-    function handleSurroundingResize(): () => void {
-        return useDebounce({
-            delay: 200,
-            immediateAction: () => (isSurroundingResizing.value = true),
-            action: () => {
-                if (!isSurroundingResizing.value) return;
-                isSurroundingResizing.value = false;
-                onResize();
-            },
-        });
-    }
-
-    function handleSurroundingScroll(): (data: ISurroundingData) => void {
-        return useDebounce<[ISurroundingData]>({
-            delay: 100,
-            immediateAction: data => {
-                isScrolling.value = true;
-
-                if (data.target === window || data.target instanceof Element) {
-                    onScroll(data);
-                }
-            },
-            action: () => {
-                if (!isScrolling.value) return;
-                isScrolling.value = false;
-            },
-        });
-    }
-
-    return {
-        coordinates,
-        targetRect,
-        boxRect,
-        isTargetResizing,
-        isBoxResizing,
-        isSurroundingResizing,
-        isScrolling,
-        setup,
-        terminate,
-        setTarget,
-        setBox,
-    };
+    });
 }
 
-function getCurrentPosition(
-    options: IAttachOptions,
-    offset: [x: number, y: number],
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): {
-    coordinates: [x: number, y: number];
-    position: E<%camel%>AttachedBoxPosition;
+function useSurrounding(options: {
+    target: MaybeRef<Element | null>;
+    onResize?: () => void;
+    onScroll?: () => void;
+    onChange?: () => void;
+}): {
+    currentSurrounding: Readonly<Ref<IAttachSurroundingData[]>>;
+    initialSurrounding: Readonly<Ref<IAttachSurroundingData[]>>;
+    controller: AbortController;
 } {
-    const { height: boxHeight, width: boxWidth } = boxRect;
+    const $subscriptions = useComponentSubscriptions();
+    const $surroundingSubscriptions = useSubscriptions();
 
-    const [offsetX, offsetY] = offset;
+    const currentSurrounding = ref<IAttachSurroundingData[]>([]);
+    const initialSurrounding = ref<IAttachSurroundingData[]>([]);
 
-    const yStart = calculateYForPosition(options, offsetY, targetRect, boxRect);
-    const yEnd = yStart + boxHeight;
-    const xStart = calculateXForPosition(options, offsetX, targetRect, boxRect);
-    const xEnd = xStart + boxWidth;
+    function setupSurrounding(target: Element) {
+        const surroundingData = getSurrounding(target);
 
-    if (options.persistent) {
-        return {
-            coordinates: [xStart, yStart],
-            position: options.position,
+        const resizeHandler = getSurroundingResizeHandler();
+        const observer = new ResizeObserver(resizeHandler);
+
+        surroundingData.forEach(data => {
+            const scrollHandler = getSurroundingScrollHandler(data);
+
+            $surroundingSubscriptions.addEventListener({
+                eventName: 'scroll',
+                target: data.target,
+                listener: scrollHandler,
+                options: { passive: true },
+            });
+
+            if (data.target === window) {
+                $surroundingSubscriptions.addEventListener({
+                    eventName: 'resize',
+                    target: data.target,
+                    listener: resizeHandler,
+                    options: { capture: true },
+                });
+            } else if (data.target instanceof Element) {
+                $surroundingSubscriptions.observe({
+                    key: data.target,
+                    target: data.target,
+                    observer: observer,
+                });
+            }
+        });
+
+        initialSurrounding.value = surroundingData;
+        currentSurrounding.value = surroundingData.map(v => ({ ...v }));
+    }
+
+    function clearSurrounding() {
+        $surroundingSubscriptions.clear();
+        initialSurrounding.value = [];
+        currentSurrounding.value = [];
+    }
+
+    function getSurroundingResizeHandler(): (entries: ResizeObserverEntry[]) => void {
+        const { handler } = getResizeHandler(
+            () => {
+                const target = unref(options.target);
+
+                if (!target) return;
+
+                options.onResize?.();
+                clearSurrounding();
+                setupSurrounding(target);
+            },
+            () => options.onChange?.(),
+        );
+
+        return handler;
+    }
+
+    function getSurroundingScrollHandler(data: IAttachSurroundingData) {
+        return () => {
+            options.onChange?.();
+
+            const x = data.target instanceof Element ? data.target.scrollLeft : window.scrollX;
+            const y = data.target instanceof Element ? data.target.scrollTop : window.scrollY;
+
+            currentSurrounding.value = [
+                ...currentSurrounding.value.filter(v => v.id !== data.id),
+                { ...data, scrollX: x, scrollY: y },
+            ];
         };
     }
 
-    const edgeMargin = options.edgeMargin || 0;
-    const topLimit = edgeMargin;
-    const bottomLimit = window.innerHeight - edgeMargin;
-    const leftLimit = edgeMargin;
-    const rightLimit = window.innerWidth - edgeMargin;
-
-    const oppositeSideX = options.oppositeSideX ?? X_OPPOSITE_POSITIONS[options.position];
-    const oppositeSideY = options.oppositeSideY ?? Y_OPPOSITE_POSITIONS[options.position];
-
-    const xOptions = { ...options, position: oppositeSideX } as IAttachOptions;
-    const yOptions = { ...options, position: oppositeSideY } as IAttachOptions;
-
-    let currentPosition = options.position;
-    let x: number = xStart;
-    let y: number = yStart;
-
-    if (oppositeSideY && yStart < topLimit) {
-        // If it goes beyond the TOP edge of the screen
-        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
-
-        y = newY > yStart ? newY : yStart;
-        x = newY > yStart ? newX : xStart;
-        currentPosition = oppositeSideY;
-    } else if (oppositeSideY && yEnd > bottomLimit) {
-        // If it goes beyond the BOTTOM edge of the screen
-        const newY = calculateYForPosition(yOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(yOptions, offsetX, targetRect, boxRect);
-
-        y = newY < yStart ? newY : yStart;
-        x = newY < yStart ? newX : xStart;
-        currentPosition = oppositeSideY;
-    } else if (oppositeSideX && xStart < leftLimit) {
-        // If it goes beyond the LEFT edge of the screen
-        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
-
-        y = newX > xStart ? newY : yStart;
-        x = newX > xStart ? newX : xStart;
-        currentPosition = oppositeSideX;
-    } else if (oppositeSideX && xEnd > rightLimit) {
-        // If it goes beyond the RIGHT edge of the screen
-        const newY = calculateYForPosition(xOptions, offsetY, targetRect, boxRect);
-        const newX = calculateXForPosition(xOptions, offsetX, targetRect, boxRect);
-
-        y = newX < xStart ? newY : yStart;
-        x = newX < xStart ? newX : xStart;
-        currentPosition = oppositeSideX;
-    }
+    const controller = $subscriptions.bind(
+        options.target,
+        element => setupSurrounding(element),
+        () => clearSurrounding(),
+    );
 
     return {
-        coordinates: [x, y],
-        position: currentPosition,
+        currentSurrounding,
+        initialSurrounding,
+        controller,
     };
 }
 
-function getStickyPosition(
-    coordinates: [x: number, y: number],
-    options: IAttachOptions,
-    offset: [x: number, y: number],
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): [x: number, y: number] {
-    if (!options.sticky) {
-        return [...coordinates];
-    }
+function usePosition(options: {
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    offset: MaybeRef<[x: number, y: number]>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    persistent: MaybeRef<boolean>;
+    nudge: MaybeRef<number>;
+    edgeMargin: MaybeRef<number>;
+    oppositeSideX?: MaybeRef<EAttachedBoxPosition>;
+    oppositeSideY?: MaybeRef<EAttachedBoxPosition>;
+}): ComputedRef<EAttachedBoxPosition | null> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+        const persistent = unref(options.persistent);
 
-    const {
-        x: targetXInitial,
-        y: targetYInitial,
-        height: targetHeight,
-        width: targetWidth,
-    } = targetRect;
-    const { height: boxHeight, width: boxWidth } = boxRect;
+        if (!boxRect || !targetRect || !position) return null;
 
-    const [xStart, yStart] = coordinates;
-    const [offsetX, offsetY] = offset;
+        if (persistent) return position;
 
-    const yEnd = yStart + boxHeight;
-    const xEnd = xStart + boxWidth;
+        const currentOffset = unref(options.offset);
+        const oppositeSideX = unref(options.oppositeSideX) ?? X_OPPOSITE_POSITIONS[position];
+        const oppositeSideY = unref(options.oppositeSideY) ?? Y_OPPOSITE_POSITIONS[position];
+        const nudge = unref(options.nudge);
+        const edgeMargin = unref(options.edgeMargin) || 0;
 
-    const targetStartY = targetYInitial + offsetY;
-    const targetEndY = targetStartY + targetHeight;
-    const targetStartX = targetXInitial + offsetX;
-    const targetEndX = targetStartX + targetWidth;
+        const { height: boxHeight, width: boxWidth } = boxRect;
+        const {
+            y: yTargetInitial,
+            x: xTargetInitial,
+            width: targetWidth,
+            height: targetHeight,
+        } = targetRect;
+        const [offsetX, offsetY] = currentOffset;
 
-    const edgeMargin = options.edgeMargin || 0;
-    const topLimit = edgeMargin;
-    const bottomLimit = window.innerHeight - edgeMargin;
-    const leftLimit = edgeMargin;
-    const rightLimit = window.innerWidth - edgeMargin;
+        const yTargetStart = yTargetInitial + offsetY;
+        const yTargetEnd = yTargetStart + targetHeight;
+        const xTargetStart = xTargetInitial + offsetX;
+        const xTargetEnd = xTargetStart + targetWidth;
 
-    const isXSticky = STICKY_X_POSITIONS.includes(options.position);
-    const isYSticky = STICKY_Y_POSITIONS.includes(options.position);
+        const yStart = calculateYForPosition({
+            position,
+            targetRect: targetRect,
+            boxRect: boxRect,
+            nudge,
+            offset: offsetY,
+        });
+        const xStart = calculateXForPosition({
+            position,
+            targetRect: targetRect,
+            boxRect: boxRect,
+            nudge,
+            offset: offsetX,
+        });
+        const yEnd = yStart + boxHeight;
+        const xEnd = xStart + boxWidth;
 
-    let x: number = xStart;
-    let y: number = yStart;
+        const topLimit = edgeMargin;
+        const bottomLimit = window.innerHeight - edgeMargin;
+        const leftLimit = edgeMargin;
+        const rightLimit = window.innerWidth - edgeMargin;
 
-    if (isXSticky && xStart < leftLimit) {
-        const stickyLimit = targetEndX;
-        x = Math.min(Math.max(xStart, leftLimit), stickyLimit);
-    } else if (isXSticky && xEnd > rightLimit) {
-        const stickyLimit = targetStartX;
-        x = Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
-    }
+        if (oppositeSideY && yStart < topLimit && yEnd <= yTargetStart) {
+            // If it goes beyond the TOP edge of the screen
+            return oppositeSideY;
+        } else if (oppositeSideY && yEnd > bottomLimit && yStart >= yTargetEnd) {
+            // If it goes beyond the BOTTOM edge of the screen
+            return oppositeSideY;
+        } else if (oppositeSideX && xStart < leftLimit && xEnd <= xTargetStart) {
+            // If it goes beyond the LEFT edge of the screen
+            return oppositeSideX;
+        } else if (oppositeSideX && xEnd > rightLimit && xStart >= xTargetEnd) {
+            // If it goes beyond the RIGHT edge of the screen
+            return oppositeSideX;
+        }
 
-    if (isYSticky && yStart < topLimit) {
-        const stickyLimit = targetEndY;
-        y = Math.min(Math.max(yStart, topLimit), stickyLimit);
-    } else if (isYSticky && yEnd > bottomLimit) {
-        const stickyLimit = targetStartY;
-        y = Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
-    }
+        return position;
+    });
+}
 
-    return [x, y];
+function useY(options: {
+    sticky: MaybeRef<boolean>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+    nudge: MaybeRef<number>;
+}): ComputedRef<number | null> {
+    const yPure = usePureY(options);
+
+    return computed(() => {
+        const sticky = unref(options.sticky);
+
+        if (!sticky || !yPure.value) return yPure.value;
+
+        const ySticky = useStickyY({
+            ...options,
+            y: yPure.value,
+        });
+
+        return unref(ySticky);
+    });
+}
+
+function useX(options: {
+    sticky: MaybeRef<boolean>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+    nudge: MaybeRef<number>;
+}): ComputedRef<number | null> {
+    const xPure = usePureX(options);
+
+    return computed(() => {
+        const sticky = unref(options.sticky);
+
+        if (!sticky || !xPure.value) return xPure.value;
+
+        const xSticky = useStickyX({
+            ...options,
+            x: xPure.value,
+        });
+
+        return unref(xSticky);
+    });
+}
+
+function useStickyY(options: {
+    y: MaybeRef<number>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const y = unref(options.y);
+        const position = unref(options.position);
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+
+        if (!targetRect || !boxRect || !position) return y;
+
+        if (!STICKY_Y_POSITIONS.includes(position)) return y;
+
+        const offsetY = unref(options.offset);
+        const edgeMargin = unref(options.edgeMargin);
+
+        const { y: targetYInitial, height: targetHeight } = targetRect;
+        const { height: boxHeight } = boxRect;
+
+        const yStart = y;
+        const yEnd = yStart + boxHeight;
+
+        const targetStartY = targetYInitial + offsetY;
+        const targetEndY = targetStartY + targetHeight;
+
+        const topLimit = edgeMargin;
+        const bottomLimit = window.innerHeight - edgeMargin;
+
+        if (yStart < topLimit) {
+            const stickyLimit = targetEndY;
+            return Math.min(Math.max(yStart, topLimit), stickyLimit);
+        } else if (yEnd > bottomLimit) {
+            const stickyLimit = targetStartY;
+            return Math.max(Math.min(yEnd, bottomLimit), stickyLimit) - boxHeight - edgeMargin;
+        }
+
+        return y;
+    });
+}
+
+function useStickyX(options: {
+    x: MaybeRef<number>;
+    offset: MaybeRef<number>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    edgeMargin: MaybeRef<number>;
+}): ComputedRef<number> {
+    return computed(() => {
+        const x = unref(options.x);
+        const position = unref(options.position);
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+
+        if (!targetRect || !boxRect || !position) return x;
+
+        if (!STICKY_X_POSITIONS.includes(position)) return x;
+
+        const offsetX = unref(options.offset);
+        const edgeMargin = unref(options.edgeMargin);
+
+        const { x: targetXInitial, width: targetWidth } = targetRect;
+        const { width: boxWidth } = boxRect;
+
+        const xStart = x;
+        const xEnd = xStart + boxWidth;
+
+        const targetStartX = targetXInitial + offsetX;
+        const targetEndX = targetStartX + targetWidth;
+
+        const leftLimit = edgeMargin;
+        const rightLimit = window.innerWidth - edgeMargin;
+
+        if (xStart < leftLimit) {
+            const stickyLimit = targetEndX;
+            return Math.min(Math.max(xStart, leftLimit), stickyLimit);
+        } else if (xEnd > rightLimit) {
+            const stickyLimit = targetStartX;
+            return Math.max(Math.min(xEnd, rightLimit), stickyLimit) - boxWidth - edgeMargin;
+        }
+
+        return x;
+    });
 }
 
 /** Get pure box Y coordinate, without limited by screen and target sizes */
-function calculateYForPosition(
-    options: IAttachOptions,
-    offset: number,
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): number {
-    const { y: targetYInitial, height: targetHeight } = targetRect;
-    const { height: boxHeight } = boxRect;
-    const targetY = targetYInitial + offset;
+function usePureY(options: {
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    nudge: MaybeRef<number>;
+    offset: MaybeRef<number>;
+}): ComputedRef<number | null> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+
+        if (!targetRect || !boxRect || !position) return null;
+
+        const nudge = unref(options.nudge);
+        const offset = unref(options.offset);
+
+        return calculateYForPosition({
+            position,
+            nudge,
+            offset,
+            targetRect,
+            boxRect,
+        });
+    });
+}
+
+/** Get pure box X coordinate, without limited by screen and target sizes */
+function usePureX(options: {
+    position: MaybeRef<EAttachedBoxPosition | null>;
+    targetRect: MaybeRef<DOMRect | null>;
+    boxRect: MaybeRef<DOMRect | null>;
+    nudge: MaybeRef<number>;
+    offset: MaybeRef<number>;
+}): ComputedRef<number | null> {
+    return computed(() => {
+        const targetRect = unref(options.targetRect);
+        const boxRect = unref(options.boxRect);
+        const position = unref(options.position);
+
+        if (!targetRect || !boxRect || !position) return null;
+
+        const nudge = unref(options.nudge);
+        const offset = unref(options.offset);
+
+        return calculateXForPosition({
+            position,
+            nudge,
+            offset,
+            targetRect,
+            boxRect,
+        });
+    });
+}
+
+/** Get pure box Y coordinate, without limited by screen and target sizes */
+function calculateYForPosition(options: {
+    position: EAttachedBoxPosition;
+    targetRect: DOMRect;
+    boxRect: DOMRect;
+    nudge: number;
+    offset: number;
+}): number {
+    const { y: targetYInitial, height: targetHeight } = options.targetRect;
+    const { height: boxHeight } = options.boxRect;
+    const targetY = targetYInitial + options.offset;
 
     switch (options.position) {
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER:
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
             return targetY - boxHeight - options.nudge;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
             return targetY + targetHeight + options.nudge;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_START:
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.LEFT_START:
             return targetY;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_END:
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.LEFT_END:
             return targetY + targetHeight - boxHeight;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER:
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER:
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
             return targetY + targetHeight / 2 - boxHeight / 2;
 
         default:
@@ -460,37 +637,38 @@ function calculateYForPosition(
 }
 
 /** Get pure box X coordinate, without limited by screen and target sizes */
-function calculateXForPosition(
-    options: IAttachOptions,
-    offset: number,
-    targetRect: DOMRect,
-    boxRect: DOMRect,
-): number {
-    const { x: targetXInitial, width: targetWidth } = targetRect;
-    const { width: boxWidth } = boxRect;
-    const targetX = targetXInitial + offset;
+function calculateXForPosition(options: {
+    position: EAttachedBoxPosition;
+    targetRect: DOMRect;
+    boxRect: DOMRect;
+    nudge: number;
+    offset: number;
+}): number {
+    const { x: targetXInitial, width: targetWidth } = options.targetRect;
+    const { width: boxWidth } = options.boxRect;
+    const targetX = targetXInitial + options.offset;
 
     switch (options.position) {
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_CENTER:
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_CENTER:
+        case ATTACHED_BOX_POSITION.TOP_CENTER:
+        case ATTACHED_BOX_POSITION.BOTTOM_CENTER:
             return targetX + targetWidth / 2 - boxWidth / 2;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_START:
+        case ATTACHED_BOX_POSITION.TOP_START:
+        case ATTACHED_BOX_POSITION.BOTTOM_START:
             return targetX;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.TOP_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.BOTTOM_END:
+        case ATTACHED_BOX_POSITION.TOP_END:
+        case ATTACHED_BOX_POSITION.BOTTOM_END:
             return targetX + targetWidth - boxWidth;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.RIGHT_CENTER:
+        case ATTACHED_BOX_POSITION.RIGHT_END:
+        case ATTACHED_BOX_POSITION.RIGHT_START:
+        case ATTACHED_BOX_POSITION.RIGHT_CENTER:
             return targetX + targetWidth + options.nudge;
 
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_END:
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_START:
-        case <%upper%>_ATTACHED_BOX_POSITION.LEFT_CENTER:
+        case ATTACHED_BOX_POSITION.LEFT_END:
+        case ATTACHED_BOX_POSITION.LEFT_START:
+        case ATTACHED_BOX_POSITION.LEFT_CENTER:
             return targetX - boxWidth - options.nudge;
 
         default:
@@ -507,4 +685,121 @@ async function getElementBounding(element: Element): Promise<DOMRect | null> {
         });
         observer.observe(element);
     });
+}
+
+/** Get all parents of element */
+function getAllParents(element: Element): Element[] {
+    if (!(element instanceof Element)) return [];
+
+    const root = element.getRootNode();
+
+    let result = [];
+    let currentElement: Element | null = element;
+
+    while (currentElement) {
+        currentElement = currentElement.parentElement;
+        result.push(currentElement);
+    }
+
+    if (root instanceof ShadowRoot) {
+        result = result.concat(getAllParents(root.host));
+    }
+
+    result = result.filter(Boolean) as Element[];
+
+    return result.filter(Boolean) as Element[];
+}
+
+/** Get surrounding elements, with scroll\size characteristics */
+function getSurrounding(element: Element): IAttachSurroundingData[] {
+    const position = getComputedStyle(element).position;
+    const windowSurrounding: IAttachSurroundingData = {
+        id: 0,
+        target: window,
+        scrollY: window.scrollY,
+        scrollX: window.scrollX,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        position: null,
+    };
+
+    if (position === 'fixed') {
+        return [windowSurrounding];
+    }
+
+    const parents = getAllParents(element);
+    const parentsSurrounding: IAttachSurroundingData[] = [];
+
+    let savedPosition: string = '';
+
+    for (const parent of parents) {
+        const parentPosition = getComputedStyle(parent).position;
+
+        if (parentPosition === 'fixed') {
+            savedPosition = parentPosition;
+            break;
+        }
+
+        if (['sticky', 'absolute'].includes(savedPosition) && parentPosition !== 'relative') {
+            continue;
+        }
+
+        if (['sticky', 'absolute'].includes(savedPosition) && parentPosition === 'relative') {
+            savedPosition = '';
+        }
+
+        if (parentPosition === 'absolute' || parentPosition === 'sticky') {
+            savedPosition = parentPosition;
+        }
+
+        parentsSurrounding.push({
+            id: parentsSurrounding.length + 1,
+            target: parent,
+            scrollY: parent.scrollTop,
+            scrollX: parent.scrollLeft,
+            width: parent.clientWidth,
+            height: parent.clientHeight,
+            position: parentPosition,
+        });
+    }
+
+    if (['sticky', 'absolute'].includes(savedPosition)) {
+        return parentsSurrounding;
+    }
+
+    windowSurrounding.id = parentsSurrounding.length + 1;
+
+    return [...parentsSurrounding, windowSurrounding];
+}
+
+function getResizeHandler(
+    action: (entries: ResizeObserverEntry[]) => void,
+    immediateAction: (entries: ResizeObserverEntry[]) => void,
+    delay: number = 100,
+): {
+    handler: (entries: ResizeObserverEntry[]) => void;
+    isResizing: Ref<boolean>;
+} {
+    let isFirstResize: boolean = true;
+    const isResizing = ref<boolean>(false);
+
+    const handler = useDebounce<[ResizeObserverEntry[]]>({
+        delay,
+        immediateAction: entries => {
+            if (isFirstResize) return;
+            isResizing.value = true;
+            immediateAction(entries);
+        },
+        action: async entries => {
+            if (isFirstResize) {
+                isFirstResize = false;
+                return;
+            }
+
+            isResizing.value = false;
+            action(entries);
+        },
+    });
+
+    return { handler, isResizing };
 }

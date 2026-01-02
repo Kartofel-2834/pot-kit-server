@@ -1,0 +1,141 @@
+<script lang="ts" generic="VALUE = unknown" setup>
+// Types
+import type { I<%camel%>OptionExpose, I<%camel%>OptionProps } from '<%typesImport%>/components/option';
+
+// Vue
+import { toRef, useTemplateRef } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+
+const props = withDefaults(defineProps<I<%camel%>OptionProps<VALUE>>(), {
+    tag: 'div',
+    label: '',
+    selected: false,
+    focused: false,
+    disabled: false,
+    fluid: false,
+});
+
+// Refs
+const container = useTemplateRef<HTMLElement>('container');
+
+// Composables
+const $classList = useClassList(
+    {
+        selected: toRef(() => props.selected),
+        focused: toRef(() => props.focused),
+        disabled: toRef(() => props.disabled),
+        fluid: toRef(() => props.fluid),
+    },
+    'option',
+);
+
+// Exports
+defineExpose<I<%camel%>OptionExpose>({
+    element: container,
+    value: toRef(() => props.value),
+    label: toRef(() => props.label),
+});
+</script>
+
+<template>
+    <component
+        ref="container"
+        :is="tag"
+        :class="['<%kebab%>-option', $classList]"
+        :data-label="label"
+        :data-value="value"
+    >
+        <div
+            v-if="$slots.preicon"
+            class="<%kebab%>-option-icon <%kebab%>-option-icon_left"
+        >
+            <slot name="preicon" />
+        </div>
+
+        <slot name="content">
+            <div class="<%kebab%>-option-text">
+                <slot> {{ label }} </slot>
+            </div>
+        </slot>
+
+        <div
+            v-if="$slots.icon"
+            class="<%kebab%>-option-icon <%kebab%>-option-icon_right"
+        >
+            <slot name="icon" />
+        </div>
+    </component>
+</template>
+
+<style>
+.<%kebab%>-option {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    cursor: pointer;
+    user-select: none;
+    border-style: solid;
+
+    /* --- <%camel%>Option - Color --- */
+    border-color: var(--<%kebab%>-option-color-border, transparent);
+    background-color: var(--<%kebab%>-option-color-background, transparent);
+    color: var(--<%kebab%>-option-color-text, inherit);
+    outline-color: var(--<%kebab%>-option-color-outline, initial);
+
+    /* --- <%camel%>Option - Size --- */
+    height: var(--<%kebab%>-option-size-height, auto);
+    gap: var(--<%kebab%>-option-size-gap, 0.8em);
+    padding: var(--<%kebab%>-option-size-padding, 0);
+    border-width: var(--<%kebab%>-option-size-border, 0);
+    font-size: var(--<%kebab%>-option-size-text, inherit);
+    font-weight: var(--<%kebab%>-option-size-text-weight, 400);
+    line-height: var(--<%kebab%>-option-size-text-height, 1);
+    outline-width: var(--<%kebab%>-option-size-outline, initial);
+    outline-offset: var(--<%kebab%>-option-size-outline-offset, initial);
+
+    /* --- <%camel%>Option - Radius --- */
+    border-radius: var(--<%kebab%>-option-radius-value, 0);
+
+    /* --- <%camel%>Option - Transition --- */
+    transition:
+        color var(--<%kebab%>-option-transition-duration, 0.2s)
+            var(--<%kebab%>-option-transition-function, ease),
+        border-color var(--<%kebab%>-option-transition-duration, 0.2s)
+            var(--<%kebab%>-option-transition-function, ease),
+        outline-color var(--<%kebab%>-option-transition-duration, 0.2s)
+            var(--<%kebab%>-option-transition-function, ease),
+        background-color var(--<%kebab%>-option-transition-duration, 0.2s)
+            var(--<%kebab%>-option-transition-function, ease);
+}
+
+/* --- Fluid --- */
+.<%kebab%>-option._option-fluid {
+    width: 100%;
+}
+
+/* --- Disabled --- */
+.<%kebab%>-option._option-disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.<%kebab%>-option-text {
+    flex-basis: 100%;
+    height: 100%;
+}
+
+.<%kebab%>-option-icon {
+    flex-shrink: 0;
+    pointer-events: none;
+    font-size: inherit;
+
+    /* --- <%camel%>Option - Color --- */
+    color: var(--<%kebab%>-option-color-icon, initial);
+    fill: var(--<%kebab%>-option-color-icon, initial);
+
+    /* --- <%camel%>Option - Size --- */
+    width: var(--<%kebab%>-option-size-icon, auto);
+}
+</style>

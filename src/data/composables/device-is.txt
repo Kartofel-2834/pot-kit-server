@@ -1,12 +1,22 @@
 // Types
-import type { TDeviceIs } from '<%typesImport%>/composables/device-is';
+import type { MaybeRef } from 'vue';
+import type {
+    TDeviceIs,
+    TDeviceProperties,
+    TDevicePropertyValue,
+} from '<%typesImport%>/composables/device-is';
 import type { E<%camel%>Device } from '<%typesImport%>';
 
 // Constants
-import { ALL_DEVICES, <%upper%>_BREAKPOINT } from '<%typesImport%>';
+import { ALL_DEVICES, ALL_DEVICES_REVERSED, <%upper%>_BREAKPOINT } from '<%typesImport%>';
+
+// Composables
+import { useSubscriptions } from '<%composablesImport%>/subscriptions';
 
 // Vue
-import { computed, ref } from 'vue';
+import { computed, readonly, ref, unref } from 'vue';
+
+const $subscriptions = useSubscriptions();
 
 const emptyState: Record<E<%camel%>Device, boolean> = Object.keys(<%upper%>_BREAKPOINT).reduce(
     (res, breakpoint) => {
@@ -55,22 +65,48 @@ function createQuery(
 
     const createdQuery: MediaQueryList = window.matchMedia(query);
 
-    createdQuery.onchange = (event: MediaQueryListEvent) => {
-        handleQueryChange(event, currentBreakpoint);
-    };
+    $subscriptions.addEventListener<MediaQueryListEvent>({
+        target: createdQuery,
+        eventName: 'change',
+        listener: event => handleQueryChange(event, currentBreakpoint),
+    });
 
     return createdQuery;
+}
+
+/** Get value for current breakpoint */
+function getCurrentValue<T>(
+    values: T[keyof T],
+    currentDevice: E<%camel%>Device | null,
+    devices: E<%camel%>Device[],
+): TDevicePropertyValue<T[keyof T]> | null {
+    if (!Array.isArray(values)) return values as TDevicePropertyValue<T[keyof T]>;
+
+    if (!currentDevice) return values[0] ?? null;
+
+    const deviceIndex = ALL_DEVICES_REVERSED.indexOf(currentDevice as E<%camel%>Device);
+
+    if (deviceIndex === -1) return null;
+
+    for (let index = deviceIndex; index >= 0; index--) {
+        const device = ALL_DEVICES_REVERSED[index];
+        const nearestDeviceIndex = devices.indexOf(device);
+
+        if (nearestDeviceIndex === -1) continue;
+
+        const value = values[nearestDeviceIndex];
+
+        if (value !== undefined) return value as TDevicePropertyValue<T[keyof T]>;
+    }
+
+    return null;
 }
 
 /** Terminate all media-queries listeners */
 export function terminate() {
     if (!queries) return;
 
-    queries.forEach(value => {
-        if (!value.onchange) return;
-
-        value.removeEventListener('change', value.onchange);
-    });
+    $subscriptions.clear();
 
     queries = null;
     device.value = null;
@@ -106,5 +142,28 @@ export function setup() {
 
 /** Composable for get current screen breakpoint */
 export function useDeviceIs(): TDeviceIs<E<%camel%>Device> {
-    return { state, device };
+    return {
+        state: readonly(state),
+        device: readonly(device),
+    };
+}
+
+/** Composable for getting values depending on screen breakpoints */
+export function useDeviceProperties<T extends object>(
+    properties: T,
+    devices?: MaybeRef<E<%camel%>Device[] | undefined | null>,
+): TDeviceProperties<T> {
+    return Object.keys(properties).reduce((res, property) => {
+        const computedValue = computed(() => {
+            const values = unref(properties[property as keyof T]);
+            const devicesList = unref(devices) ?? ALL_DEVICES_REVERSED;
+
+            return getCurrentValue(values, device.value, devicesList);
+        });
+
+        return {
+            ...res,
+            [property]: computedValue,
+        };
+    }, {}) as TDeviceProperties<T>;
 }

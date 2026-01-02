@@ -1,5 +1,5 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { E<%camel%>Device } from '<%typesImport%>';
 
 export const <%upper%>_DRAWER_POSITION = {
@@ -69,7 +69,10 @@ export interface I<%camel%>DrawerProps {
 
 export interface I<%camel%>DrawerExpose {
     /** Drawer visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    isOpen: ComputedRef<boolean>;
+
+    /** Drawer container element */
+    container: Readonly<Ref<Element | null>>;
 
     /** Open drawer */
     open: () => void;

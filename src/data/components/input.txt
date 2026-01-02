@@ -1,21 +1,21 @@
 <script lang="ts" setup>
 // Types
-import type { I<%camel%>InputProps, I<%camel%>InputSlots } from '<%typesImport%>/components/input';
+import type { I<%camel%>InputExpose, I<%camel%>InputProps } from '<%typesImport%>/components/input';
 
 // Vue
-import { ref, computed } from 'vue';
+import { ref, computed, toRef, useTemplateRef } from 'vue';
 
 // Composables
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
 
-const $props = withDefaults(defineProps<I<%camel%>InputProps>(), {
+const props = withDefaults(defineProps<I<%camel%>InputProps>(), {
     value: undefined,
     modelValue: undefined,
+    inputName: 'input',
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     input: [value: string];
     change: [value: string];
     focus: [value: FocusEvent];
@@ -23,96 +23,137 @@ const $emit = defineEmits<{
     'update:modelValue': [value: string];
     keydown: [value: KeyboardEvent];
     keyup: [value: KeyboardEvent];
+    click: [value: PointerEvent];
 }>();
 
-const $slots = defineSlots<I<%camel%>InputSlots>();
+// Refs
+const container = useTemplateRef('container');
+const input = useTemplateRef('input');
 
-const $deviceIs = useDeviceIs();
-
+// Data
 const isFocused = ref<boolean>(false);
 
 // Computed
-const currentValue = computed(() => $props.value ?? $props.modelValue);
+const currentValue = computed(() => props.value ?? props.modelValue);
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
+// Composables
+const $properties = useDeviceProperties(
+    {
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
 
-/** Классы модификаторы */
-const classList = computed(() =>
-    useClassList({
-        ...properties.value,
-        focused: isFocused.value,
-        disabled: $props.disabled,
-        invalid: $props.invalid,
-    }),
+const $classList = useClassList(
+    {
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+        focused: isFocused,
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
+        fluid: toRef(() => props.fluid),
+    },
+    'input',
 );
 
 // Methods
+function onLabelMousedown(event: Event) {
+    if (isFocused.value) event.preventDefault();
+}
+
 function onInput(event: Event): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement;
 
-    $emit('update:modelValue', target.value);
-    $emit('input', target.value);
+    emit('update:modelValue', target.value);
+    emit('input', target.value);
 }
 
 function onChange(event: Event): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement;
 
-    $emit('change', target.value);
+    emit('change', target.value);
 }
 
 function onFocus(event: FocusEvent) {
-    $emit('focus', event);
+    emit('focus', event);
     isFocused.value = true;
 }
 
 function onBlur(event: FocusEvent) {
-    $emit('blur', event);
+    emit('blur', event);
     isFocused.value = false;
 }
+
+function onClick(event: PointerEvent) {
+    emit('click', event);
+}
+
+function onKeydown(event: KeyboardEvent) {
+    emit('keydown', event);
+}
+
+function onKeyup(event: KeyboardEvent) {
+    emit('keyup', event);
+}
+
+// Exports
+defineExpose<I<%camel%>InputExpose>({
+    element: container,
+    input: input,
+});
 </script>
 
 <template>
-    <label :class="['<%kebab%>-input', classList]">
+    <label
+        ref="container"
+        :class="['<%kebab%>-input', $classList]"
+        @mousedown="onLabelMousedown"
+    >
         <slot name="prepend"></slot>
 
-        <div class="<%kebab%>-input__icon <%kebab%>-input__icon_left">
+        <div
+            v-if="$slots.preicon"
+            class="<%kebab%>-input-icon <%kebab%>-input-icon_left"
+        >
             <slot name="preicon" />
         </div>
 
-        <input
-            class="<%kebab%>-input__target"
-            :value="currentValue"
-            :type="type"
-            :name="name"
-            :placeholder="placeholder"
-            :readonly="readonly"
-            :step="step"
-            :min="min"
-            :max="max"
-            :maxlength="maxlength"
-            :tabindex="tabindex"
-            :disabled="disabled"
-            @input="onInput"
-            @change="onChange"
-            @focus="onFocus"
-            @blur="onBlur"
-            @keydown="$emit('keydown', $event)"
-            @keyup="$emit('keyup', $event)"
-        />
+        <div class="<%kebab%>-input-wrapper">
+            <slot name="label" />
 
-        <div class="<%kebab%>-input__icon <%kebab%>-input__icon_right">
+            <input
+                ref="input"
+                class="<%kebab%>-input-target"
+                :value="currentValue"
+                :type="type"
+                :name="inputName"
+                :placeholder="placeholder"
+                :readonly="readonly"
+                :step="step"
+                :min="min"
+                :max="max"
+                :maxlength="maxlength"
+                :tabindex="tabindex"
+                :disabled="disabled"
+                @input="onInput"
+                @change="onChange"
+                @focus="onFocus"
+                @blur="onBlur"
+                @keydown="onKeydown"
+                @keyup="onKeyup"
+                @click="onClick"
+            />
+        </div>
+
+        <div
+            v-if="$slots.icon"
+            class="<%kebab%>-input-icon <%kebab%>-input-icon_right"
+        >
             <slot name="icon" />
         </div>
 
@@ -122,100 +163,110 @@ function onBlur(event: FocusEvent) {
 
 <style>
 .<%kebab%>-input {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-input-color-border: transparent;
-    --<%kebab%>-input-color-background: transparent;
-    --<%kebab%>-input-color-text: inherit;
-    --<%kebab%>-input-color-icon: initial;
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-input-size-height: auto;
-    --<%kebab%>-input-size-padding: 0;
-    --<%kebab%>-input-size-border: 0;
-    --<%kebab%>-input-size-text: inherit;
-    --<%kebab%>-input-size-gap: 1rem;
-    --<%kebab%>-input-size-icon: auto;
-    --<%kebab%>-input-size-outline: initial;
-    --<%kebab%>-input-size-outline-offset: initial;
-
-    /* --- Radius - Configuration --- */
-    --<%kebab%>-input-radius-value: 0;
-
     display: flex;
     align-items: center;
-    width: 100%;
+    flex-wrap: nowrap;
     border-style: solid;
     cursor: text;
-    background-color: inherit;
-    font-weight: 400;
-    line-height: 1;
-    transition:
-        color 0.4s,
-        background-color 0.4s,
-        border-color 0.4s;
 
     /* --- <%camel%>Input - Color --- */
-    color: var(--<%kebab%>-input-color-text);
-    border-color: var(--input-color-border);
+    color: var(--<%kebab%>-input-color-text, inherit);
+    background-color: var(--<%kebab%>-input-color-background, transparent);
+    border-color: var(--<%kebab%>-input-color-border, transparent);
+    outline-color: var(--<%kebab%>-input-color-outline, initial);
 
     /* --- <%camel%>Input - Size --- */
-    padding: 0 var(--<%kebab%>-input-size-padding);
-    gap: var(--<%kebab%>-input-size-gap);
-    font-size: var(--<%kebab%>-input-size-text);
-    border-width: var(--<%kebab%>-input-size-border);
+    padding: var(--<%kebab%>-input-size-padding, 0);
+    gap: var(--<%kebab%>-input-size-gap, 0.8em);
+    font-size: var(--<%kebab%>-input-size-text, inherit);
+    font-weight: var(--<%kebab%>-input-size-text-weight, 400);
+    line-height: var(--<%kebab%>-input-size-text-height, 1);
+    border-width: var(--<%kebab%>-input-size-border, 0);
+    outline-width: var(--<%kebab%>-input-size-outline, initial);
+    outline-offset: var(--<%kebab%>-input-size-outline-offset, initial);
 
     /* --- <%camel%>Input - Radius --- */
-    border-radius: var(--<%kebab%>-input-radius-value);
+    border-radius: var(--<%kebab%>-input-radius-value, 0);
+
+    /* --- <%camel%>Input - Transition --- */
+    transition:
+        color var(--<%kebab%>-input-transition-duration, 0.2s) var(--<%kebab%>-input-transition-function, ease),
+        background-color var(--<%kebab%>-input-transition-duration, 0.2s)
+            var(--<%kebab%>-input-transition-function, ease),
+        border-color var(--<%kebab%>-input-transition-duration, 0.2s)
+            var(--<%kebab%>-input-transition-function, ease);
 }
 
-.<%kebab%>-input._disabled .<%kebab%>-input__target {
-    cursor: not-allowed;
+/* --- Focused --- */
+.<%kebab%>-input:has(.<%kebab%>-input-target:focus-visible) {
+    outline-style: auto;
 }
 
-.<%kebab%>-input__target {
+/* --- Disabled --- */
+._input-disabled .<%kebab%>-input-target {
+    cursor: default;
+}
+
+/* --- Fluid --- */
+.<%kebab%>-input._input-fluid {
+    width: 100%;
+}
+
+.<%kebab%>-input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.<%kebab%>-input-target {
     outline: none;
     padding: 0;
     border: none;
-    outline: none;
     font-family: inherit;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     width: 100%;
     font-size: inherit;
+    cursor: inherit;
 
-    /* Color */
+    /* --- <%camel%>Input - Color --- */
     color: inherit;
-    background-color: var(--input-color-background);
+    background-color: transparent;
+    caret-color: var(--<%kebab%>-input-color-caret, currentColor);
 
-    /* Size */
-    height: var(--input-size-height);
+    /* --- <%camel%>Input - Size --- */
+    height: var(--<%kebab%>-input-size-height, auto);
 }
 
-.<%kebab%>-input__target[type='number']::-webkit-inner-spin-button,
-.<%kebab%>-input__target[type='number']::-webkit-outer-spin-button {
+.<%kebab%>-input-target::placeholder {
+    font-weight: var(--<%kebab%>-input-size-placeholder-weight, inherit);
+    color: var(--<%kebab%>-input-color-placeholder, initial);
+}
+
+.<%kebab%>-input-target[type='number']::-webkit-inner-spin-button,
+.<%kebab%>-input-target[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.<%kebab%>-input__target[disabled] {
+.<%kebab%>-input-target[disabled] {
     opacity: 1;
 }
 
-.<%kebab%>-input__target::-ms-clear {
+.<%kebab%>-input-target::-ms-clear {
     display: none;
 }
 
-.<%kebab%>-input__icon {
+.<%kebab%>-input-icon {
     flex-shrink: 0;
     pointer-events: none;
     font-size: inherit;
 
     /* --- <%camel%>Input - Color --- */
-    color: var(--<%kebab%>-input-color-icon);
-    fill: var(--<%kebab%>-input-color-icon);
+    color: var(--<%kebab%>-input-color-icon, initial);
+    fill: var(--<%kebab%>-input-color-icon, initial);
 
     /* --- <%camel%>Input - Size --- */
-    width: var(--<%kebab%>-input-size-icon);
+    width: var(--<%kebab%>-input-size-icon, auto);
 }
 </style>

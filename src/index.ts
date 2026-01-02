@@ -7,7 +7,7 @@ const app = new Elysia();
 app.use(
     staticPlugin({
         assets: './src/data',
-        prefix: '/',
+        prefix: '',
     }),
 );
 

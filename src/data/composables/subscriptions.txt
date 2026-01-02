@@ -1,0 +1,168 @@
+// Types
+import type { MaybeRef } from 'vue';
+import type {
+    IEventListenerSubscriptionOptions,
+    IObserverSubscriptionOptions,
+    ISubscriptions,
+} from '<%typesImport%>/composables/subscriptions';
+
+// Vue
+import { computed, onUnmounted, unref, watch } from 'vue';
+
+export function useComponentSubscriptions<EVENT_KEY = unknown>() {
+    const $subscriptions = useSubscriptions<EVENT_KEY>();
+
+    onUnmounted(() => $subscriptions.clear());
+
+    return $subscriptions;
+}
+
+export function useSubscriptions<EVENT_KEY = unknown>(): ISubscriptions<EVENT_KEY> {
+    const subscriptions: Map<unknown, AbortController> = new Map();
+
+    function observe<TARGET, ARGUMENTS extends unknown[]>(
+        options: IObserverSubscriptionOptions<EVENT_KEY, TARGET, ARGUMENTS>,
+    ): AbortController {
+        const controller = computed<AbortController | null>(() => {
+            const target = unref(options.target);
+            const observer = unref(options.observer);
+            const args = (unref(options.arguments) ?? []) as ARGUMENTS;
+
+            if (!observer || !target) return null;
+
+            return add(
+                () => observer.observe(target, ...args),
+                () => {
+                    if (observer.unobserve) {
+                        observer.unobserve(target);
+                    } else if (observer.disconnect) {
+                        observer.disconnect();
+                    }
+                },
+                options.key,
+            );
+        });
+
+        return bind(
+            controller,
+            currentController => currentController,
+            currentController => currentController.abort(),
+        );
+    }
+
+    function addEventListener<EVENT>(
+        options: IEventListenerSubscriptionOptions<EVENT_KEY, EVENT>,
+    ): AbortController {
+        const controller = computed<AbortController | null>(() => {
+            const eventName = unref(options.eventName);
+            const target = unref(options.target);
+            const listener = unref(options.listener);
+            const listenerOptions = unref(options.options);
+
+            if (!target || !eventName || !listener) return null;
+
+            return add(
+                () => target.addEventListener(eventName, listener, listenerOptions),
+                () => target.removeEventListener(eventName, listener, listenerOptions),
+                options.key,
+            );
+        });
+
+        return bind(
+            controller,
+            currentController => currentController,
+            currentController => currentController.abort(),
+        );
+    }
+
+    function bind<TARGET, DISPOSE_DATA>(
+        target: MaybeRef<TARGET | null>,
+        subscribe: (target: TARGET) => DISPOSE_DATA,
+        dispose: (data: DISPOSE_DATA) => void,
+        key?: EVENT_KEY,
+    ): AbortController {
+        const controller = computed(() => {
+            const currentTarget = unref(target);
+
+            if (!currentTarget) return null;
+
+            return add(
+                () => subscribe(currentTarget),
+                data => dispose(data),
+                key,
+            );
+        });
+
+        return add(
+            () => {
+                return watch(
+                    () => controller.value,
+                    (newController, oldController) => oldController?.abort?.(),
+                );
+            },
+            unwatch => {
+                unwatch();
+                if (controller.value) controller.value.abort();
+            },
+        );
+    }
+
+    function add<DISPOSE_DATA>(
+        subscribe: () => DISPOSE_DATA,
+        dispose: (data: DISPOSE_DATA) => void,
+        key?: EVENT_KEY,
+    ): AbortController {
+        const currentKey = key ?? Symbol();
+
+        if (key !== undefined && subscriptions.has(key)) {
+            remove(key);
+        }
+
+        const disposeData = subscribe();
+        const controller = createAbortController(() => {
+            dispose(disposeData);
+            subscriptions.delete(currentKey);
+        });
+
+        subscriptions.set(currentKey, controller);
+
+        return controller;
+    }
+
+    function remove(key: EVENT_KEY) {
+        subscriptions.get(key)?.abort();
+    }
+
+    function clear() {
+        subscriptions.forEach(controller => controller.abort());
+    }
+
+    function has(key: EVENT_KEY): boolean {
+        return subscriptions.has(key);
+    }
+
+    return {
+        has,
+        add,
+        bind,
+        addEventListener,
+        observe,
+        remove,
+        clear,
+    };
+}
+
+export function createAbortController(
+    dispose: (controller: AbortController) => void,
+): AbortController {
+    const controller = new AbortController();
+
+    function abort() {
+        controller.signal.removeEventListener('abort', abort);
+        dispose(controller);
+    }
+
+    controller.signal.addEventListener('abort', abort);
+
+    return controller;
+}

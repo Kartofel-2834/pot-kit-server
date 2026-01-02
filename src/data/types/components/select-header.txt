@@ -1,0 +1,26 @@
+// Types
+import type { Ref } from 'vue';
+import type { ISpec } from '<%typesImport%>/composables/specs';
+import type { I<%camel%>SelectSpecData } from '<%typesImport%>/components/select';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export interface I<%camel%>SelectHeaderProps<OPTION, VALUE_FIELD extends keyof OPTION> {
+    specs: ISpec<OPTION, VALUE_FIELD, I<%camel%>SelectSpecData>[];
+    text?: string;
+    editable?: boolean;
+    fluid?: boolean;
+    placeholder?: string;
+    devices?: E<%camel%>Device[];
+}
+
+export interface I<%camel%>SelectHeaderEmits {
+    input: [value: string];
+    focus: [event: FocusEvent];
+    blur: [event: FocusEvent];
+}
+
+export interface I<%camel%>SelectHeaderExpose {
+    element: Ref<HTMLElement | null>;
+    input: Ref<HTMLInputElement | null>;
+    focus: () => void;
+}

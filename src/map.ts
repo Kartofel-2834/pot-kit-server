@@ -77,7 +77,9 @@ async function mapAllComponents() {
             fs.mkdir(path.join(process.cwd(), 'src', 'data', 'components'), { recursive: true }),
         ]);
 
-        await Promise.all([dir.map(mapComponent)]);
+        const components = dir.filter(v => /^Pot.+\.vue$/.test(v));
+
+        await Promise.all([components.map(mapComponent)]);
         logger.success('Components successfully mapped');
     } catch (err) {
         logger.error('Components mapping error', err as Error);
@@ -119,25 +121,16 @@ async function mapTypes(dirPath: string[] = []) {
 
                 if (extName !== '.ts') {
                     return mapTypes([...dirPath, fileName]);
-                } else if (!dirPath.length) {
-                    return;
                 }
 
                 const typeFileName = path.basename(fileName, '.ts');
                 const data = await fs.readFile(path.join(TYPES_PATH, ...dirPath, fileName), 'utf8');
                 const preparedData = multiReplace(data, TYPES_REPLACEMENTS);
 
-                return fs.writeFile(
-                    path.join(
-                        process.cwd(),
-                        'src',
-                        'data',
-                        'types',
-                        ...dirPath,
-                        `${typeFileName}.txt`,
-                    ),
-                    preparedData,
-                );
+                const currentDirPath = path.join(process.cwd(), 'src', 'data', 'types', ...dirPath);
+
+                await fs.mkdir(currentDirPath, { recursive: true });
+                await fs.writeFile(path.join(currentDirPath, `${typeFileName}.txt`), preparedData);
             }),
         );
 

@@ -1,0 +1,69 @@
+// Types
+import type { Ref } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_SLIDER_SIZE = {} as const;
+
+export const <%upper%>_SLIDER_COLOR = {} as const;
+
+export const <%upper%>_SLIDER_RADIUS = {} as const;
+
+export type E<%camel%>SliderSize = (typeof <%upper%>_SLIDER_SIZE)[keyof typeof <%upper%>_SLIDER_SIZE];
+
+export type E<%camel%>SliderColor = (typeof <%upper%>_SLIDER_COLOR)[keyof typeof <%upper%>_SLIDER_COLOR];
+
+export type E<%camel%>SliderRadius = (typeof <%upper%>_SLIDER_RADIUS)[keyof typeof <%upper%>_SLIDER_RADIUS];
+
+export interface I<%camel%>SliderProps {
+    /** Текущее значение (для одиночного слайдера) */
+    value?: number;
+
+    /** То же, что и `value`, добавлен для поддержки v-model */
+    modelValue?: number;
+
+    /** Текущее значение (для диапазона значений) */
+    range?: [number, number];
+
+    /** Минимальное значение */
+    min?: number;
+
+    /** Максимальное значение */
+    max?: number;
+
+    /** Шаг изменения значения */
+    step?: number;
+
+    /** Если true, слайдер будет вертикальным */
+    vertical?: boolean;
+
+    /** Если true, слайдер будет отключен */
+    disabled?: boolean;
+
+    /** Если true, слайдер будет невалиден */
+    invalid?: boolean;
+
+    fluid?: boolean;
+
+    /** Точки останова для адаптивного дизайна */
+    devices?: E<%camel%>Device[];
+
+    /** Радиус границ слайдера */
+    radius?: E<%camel%>SliderRadius | E<%camel%>SliderRadius[] | null;
+
+    /** Размер слайдера */
+    size?: E<%camel%>SliderSize | E<%camel%>SliderSize[] | null;
+
+    /** Цвет слайдера */
+    color?: E<%camel%>SliderColor | E<%camel%>SliderColor[] | null;
+}
+
+export interface I<%camel%>SliderEmits {
+    change: [value: number];
+    changeRange: [value: [number, number]];
+    'update:modelValue': [value: number];
+    'update:range': [value: [number, number]];
+}
+
+export interface I<%camel%>SliderExpose {
+    element: Ref<HTMLElement | null>;
+}

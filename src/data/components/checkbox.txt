@@ -1,0 +1,226 @@
+<script lang="ts" generic="TRUE_VALUE = true, FALSE_VALUE = false" setup>
+// Types
+import type {
+    I<%camel%>CheckboxEmits,
+    I<%camel%>CheckboxExpose,
+    I<%camel%>CheckboxProps,
+} from '<%typesImport%>/components/checkbox';
+
+// Vue
+import { computed, toRef, useTemplateRef } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
+
+// Components
+import <%camel%>Icon from '<%componentsImport%>/<%camel%>Icon.vue';
+
+const props = withDefaults(defineProps<I<%camel%>CheckboxProps<TRUE_VALUE, FALSE_VALUE>>(), {
+    value: undefined,
+    modelValue: undefined,
+    trueValue: undefined,
+    falseValue: undefined,
+    inputName: 'checkbox',
+    transition: '<%kebab%>-checkbox-transition',
+});
+
+const emit = defineEmits<I<%camel%>CheckboxEmits<TRUE_VALUE, FALSE_VALUE>>();
+
+// Refs
+const input = useTemplateRef('input');
+
+// Computed
+const currentValue = computed(() => {
+    return props.value ?? props.modelValue ?? false;
+});
+
+const trueValue = computed(
+    () => (props.trueValue === undefined ? true : props.trueValue) as TRUE_VALUE,
+);
+
+const falseValue = computed(
+    () => (props.falseValue === undefined ? false : props.falseValue) as FALSE_VALUE,
+);
+
+const isIndeterminate = computed(() => {
+    const isTrueValueSelected = currentValue.value === trueValue.value;
+    const isFalseValueSelected = currentValue.value === falseValue.value;
+
+    return props.indeterminate || (!isTrueValueSelected && !isFalseValueSelected);
+});
+
+const isChecked = computed(() => !isIndeterminate.value && currentValue.value === trueValue.value);
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+        checked: isChecked,
+        indeterminate: isIndeterminate,
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
+    },
+    'checkbox',
+);
+
+// Listeners
+function onChange() {
+    const newValue = isChecked.value ? falseValue.value : trueValue.value;
+    emit('update:modelValue', newValue);
+    emit('change', newValue);
+}
+
+// Exports
+defineExpose<Readonly<I<%camel%>CheckboxExpose>>({
+    input: input,
+});
+</script>
+
+<template>
+    <label
+        :class="['<%kebab%>-checkbox', $classList]"
+        @mousedown.prevent
+    >
+        <input
+            ref="input"
+            type="checkbox"
+            class="<%kebab%>-checkbox-input"
+            :checked="isChecked"
+            :name="inputName"
+            :value="currentValue"
+            :disabled="disabled"
+            @change.stop="onChange"
+        />
+
+        <span class="<%kebab%>-checkbox-box">
+            <Transition
+                :name="transition"
+                mode="out-in"
+            >
+                <slot
+                    v-if="isIndeterminate"
+                    name="indeterminate-icon"
+                >
+                    <<%camel%>Icon
+                        class="<%kebab%>-checkbox-icon"
+                        icon="minus"
+                    />
+                </slot>
+
+                <slot
+                    v-else-if="isChecked"
+                    name="check-icon"
+                >
+                    <<%camel%>Icon
+                        class="<%kebab%>-checkbox-icon"
+                        icon="check"
+                    />
+                </slot>
+            </Transition>
+        </span>
+
+        <span
+            v-if="$slots.default"
+            class="<%kebab%>-checkbox-content"
+        >
+            <slot />
+        </span>
+    </label>
+</template>
+
+<style>
+.<%kebab%>-checkbox {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    /* --- <%camel%>Checkbox - Color --- */
+    color: var(--<%kebab%>-checkbox-color-text, inherit);
+
+    /* --- <%camel%>Checkbox - Size --- */
+    gap: var(--<%kebab%>-checkbox-size-gap, 0.8em);
+    font-size: var(--<%kebab%>-checkbox-size-text, inherit);
+    font-weight: var(--<%kebab%>-checkbox-size-text-weight, 400);
+    line-height: var(--<%kebab%>-checkbox-size-text-height, 1);
+}
+
+.<%kebab%>-checkbox:has(.<%kebab%>-checkbox-input:focus-visible) .<%kebab%>-checkbox-box {
+    outline-style: auto;
+}
+
+.<%kebab%>-checkbox-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
+.<%kebab%>-checkbox-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    user-select: none;
+    border-style: solid;
+    transition:
+        color var(--<%kebab%>-checkbox-transition-duration, 0.2s)
+            var(--<%kebab%>-checkbox-transition-function, ease),
+        border-color var(--<%kebab%>-checkbox-transition-duration, 0.2s)
+            var(--<%kebab%>-checkbox-transition-function, ease),
+        background-color var(--<%kebab%>-checkbox-transition-duration, 0.2s)
+            var(--<%kebab%>-checkbox-transition-function, ease);
+
+    /* --- <%camel%>Checkbox - Color --- */
+    background-color: var(--<%kebab%>-checkbox-color-background, transparent);
+    color: var(--<%kebab%>-checkbox-color-icon, currentColor);
+    border-color: var(--<%kebab%>-checkbox-color-border, currentColor);
+
+    /* --- <%camel%>Checkbox - Size --- */
+    width: var(--<%kebab%>-checkbox-size-width, 1.6em);
+    height: var(--<%kebab%>-checkbox-size-width, 1.6em);
+    border-width: var(--<%kebab%>-checkbox-size-border, 1px);
+    outline-width: var(--<%kebab%>-checkbox-size-outline, initial);
+    outline-offset: var(--<%kebab%>-checkbox-size-outline-offset, initial);
+
+    /* --- <%camel%>Checkbox - Radius --- */
+    border-radius: var(--<%kebab%>-checkbox-radius-value, 0);
+}
+
+.<%kebab%>-checkbox-icon {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* --- Disabled --- */
+.<%kebab%>-checkbox._checkbox-disabled {
+    cursor: default;
+}
+
+.<%kebab%>-checkbox-transition-enter-active,
+.<%kebab%>-checkbox-transition-leave-active {
+    transition: opacity var(--<%kebab%>-checkbox-transition-duration, 0.2s)
+        var(--<%kebab%>-checkbox-transition-function, ease);
+}
+
+.<%kebab%>-checkbox-transition-enter-from,
+.<%kebab%>-checkbox-transition-leave-to {
+    opacity: 0;
+}
+</style>

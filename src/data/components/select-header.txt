@@ -1,0 +1,170 @@
+<script lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION" setup>
+// Types
+import type {
+    I<%camel%>SelectHeaderEmits,
+    I<%camel%>SelectHeaderExpose,
+    I<%camel%>SelectHeaderProps,
+} from '<%typesImport%>/components/select-header';
+
+// Vue
+import { computed, ref, toRef, useTemplateRef } from 'vue';
+
+// Components
+import <%camel%>Input from '<%componentsImport%>/<%camel%>Input.vue';
+import <%camel%>Icon from '<%componentsImport%>/<%camel%>Icon.vue';
+
+const props = defineProps<I<%camel%>SelectHeaderProps<OPTION, VALUE_FIELD>>();
+
+const emit = defineEmits<I<%camel%>SelectHeaderEmits>();
+
+// Refs
+const container = useTemplateRef('container');
+
+// Data
+const isFocused = ref<boolean>(false);
+
+// Computed
+const label = computed(() => {
+    const selectedLabels = props.specs.filter(spec => spec.selected).map(spec => spec.label);
+
+    return props.editable && isFocused.value ? props.text : selectedLabels.join(', ');
+});
+
+// Listeners
+function onInput(value: string) {
+    emit('input', value);
+}
+
+function onFocus(event: FocusEvent) {
+    isFocused.value = true;
+    emit('focus', event);
+}
+
+function onBlur(event: FocusEvent) {
+    isFocused.value = false;
+    emit('blur', event);
+}
+
+// Methods
+function focus() {
+    container.value?.input?.focus?.();
+}
+
+// Expose
+defineExpose<I<%camel%>SelectHeaderExpose>({
+    element: toRef(() => container.value?.element ?? null),
+    input: toRef(() => container.value?.input ?? null),
+    focus,
+});
+</script>
+
+<template>
+    <<%camel%>Input
+        ref="container"
+        class="<%kebab%>-select-header"
+        :value="label"
+        :readonly="!editable"
+        :devices="devices"
+        :placeholder="placeholder"
+        @input="onInput"
+        @focus="onFocus"
+        @blur="onBlur"
+    >
+        <template
+            v-if="$slots.preicon"
+            #preicon="$slotData"
+        >
+            <slot
+                name="preicon"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.prepend"
+            #prepend="$slotData"
+        >
+            <slot
+                name="prepend"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.append"
+            #append="$slotData"
+        >
+            <slot
+                name="append"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.label"
+            #label="$slotData"
+        >
+            <slot
+                name="label"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template #icon="$slotData">
+            <slot
+                name="icon"
+                v-bind="$slotData"
+            >
+                <<%camel%>Icon
+                    class="<%kebab%>-select-header-arrow-icon"
+                    icon="arrow"
+                    aria-hidden="true"
+                />
+            </slot>
+        </template>
+    </<%camel%>Input>
+</template>
+
+<style>
+.<%kebab%>-select-header.<%kebab%>-input {
+    /* --- <%camel%>SelectHeader - Color - Input --- */
+    --<%kebab%>-input-color-border: var(--<%kebab%>-select-header-color-border, transparent);
+    --<%kebab%>-input-color-background: var(--<%kebab%>-select-header-color-background, transparent);
+    --<%kebab%>-input-color-text: var(--<%kebab%>-select-header-color-text, inherit);
+    --<%kebab%>-input-color-caret: var(--<%kebab%>-select-header-color-caret, currentColor);
+    --<%kebab%>-input-color-placeholder: var(--<%kebab%>-select-header-color-placeholder, inherit);
+    --<%kebab%>-input-color-icon: var(--<%kebab%>-select-header-color-icon, initial);
+    --<%kebab%>-input-color-outline: var(--<%kebab%>-select-header-color-outline, initial);
+
+    /* --- <%camel%>SelectHeader - Size - Input --- */
+    --<%kebab%>-input-size-height: var(--<%kebab%>-select-header-size-height, auto);
+    --<%kebab%>-input-size-padding: var(--<%kebab%>-select-header-size-padding, 0);
+    --<%kebab%>-input-size-border: var(--<%kebab%>-select-header-size-border, 0);
+    --<%kebab%>-input-size-text: var(--<%kebab%>-select-header-size-text, inherit);
+    --<%kebab%>-input-size-text-weight: var(--<%kebab%>-select-header-size-text-weight, 400);
+    --<%kebab%>-input-size-text-height: var(--<%kebab%>-select-header-size-text-height, 1);
+    --<%kebab%>-input-size-gap: var(--<%kebab%>-select-header-size-gap, 0.8em);
+    --<%kebab%>-input-size-icon: var(--<%kebab%>-select-header-size-padding-icon, auto);
+    --<%kebab%>-input-size-outline: var(--<%kebab%>-select-header-size-outline, initial);
+    --<%kebab%>-input-size-outline-offset: var(--<%kebab%>-select-header-size-outline-offset, initial);
+
+    /* --- <%camel%>SelectHeader - Radius - Input --- */
+    --<%kebab%>-input-radius-value: var(--<%kebab%>-select-header-radius-value, 0);
+
+    /* --- <%camel%>SelectHeader - Transition - Input --- */
+    --<%kebab%>-input-transition-duration: var(--<%kebab%>-select-header-transition-duration, 0.2s);
+    --<%kebab%>-input-transition-function: var(--<%kebab%>-select-header-transition-function, ease);
+
+    cursor: pointer;
+}
+
+/* --- Opened --- */
+._select-opened .<%kebab%>-select-header-arrow-icon {
+    transform: rotate(180deg);
+}
+
+.<%kebab%>-select-header-arrow-icon {
+    transition: transform var(--<%kebab%>-input-transition-duration, 0.2s)
+        var(--<%kebab%>-input-transition-function, ease);
+}
+</style>

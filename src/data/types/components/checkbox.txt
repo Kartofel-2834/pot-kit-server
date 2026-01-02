@@ -1,0 +1,65 @@
+// Types
+import type { Ref } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_CHECKBOX_SIZE = {} as const;
+
+export const <%upper%>_CHECKBOX_COLOR = {} as const;
+
+export const <%upper%>_CHECKBOX_RADIUS = {} as const;
+
+export type E<%camel%>CheckboxSize = (typeof <%upper%>_CHECKBOX_SIZE)[keyof typeof <%upper%>_CHECKBOX_SIZE];
+
+export type E<%camel%>CheckboxColor = (typeof <%upper%>_CHECKBOX_COLOR)[keyof typeof <%upper%>_CHECKBOX_COLOR];
+
+export type E<%camel%>CheckboxRadius = (typeof <%upper%>_CHECKBOX_RADIUS)[keyof typeof <%upper%>_CHECKBOX_RADIUS];
+
+export interface I<%camel%>CheckboxProps<TRUE_VALUE = true, FALSE_VALUE = false> {
+    /** Current value */
+    value?: TRUE_VALUE | FALSE_VALUE;
+
+    /** Same as `value`, added for v-model support */
+    modelValue?: TRUE_VALUE | FALSE_VALUE;
+
+    trueValue?: TRUE_VALUE;
+
+    falseValue?: FALSE_VALUE;
+
+    /** Checkbox border radius */
+    radius?: E<%camel%>CheckboxRadius | E<%camel%>CheckboxRadius[] | null;
+
+    /** Checkbox size */
+    size?: E<%camel%>CheckboxSize | E<%camel%>CheckboxSize[] | null;
+
+    /** Checkbox color */
+    color?: E<%camel%>CheckboxColor | E<%camel%>CheckboxColor[] | null;
+
+    /** Breakpoints for responsive design */
+    devices?: E<%camel%>Device[];
+
+    indeterminate?: boolean;
+
+    /** If true, the checkbox will be disabled and inactive */
+    disabled?: boolean;
+
+    /** If true, the checkbox will be invalid */
+    invalid?: boolean;
+
+    /** Name for input element */
+    inputName?: string;
+
+    /** Value for input element */
+    inputValue?: string | number | boolean;
+
+    /** Checkbox checkmark appearance animation */
+    transition?: string;
+}
+
+export interface I<%camel%>CheckboxEmits<TRUE_VALUE = true, FALSE_VALUE = false> {
+    change: [value: TRUE_VALUE | FALSE_VALUE];
+    'update:modelValue': [value: TRUE_VALUE | FALSE_VALUE];
+}
+
+export interface I<%camel%>CheckboxExpose {
+    input: Ref<HTMLInputElement | null>;
+}

@@ -1,8 +1,14 @@
+// Types
+import type { MaybeRef } from 'vue';
+
+// Vue
+import { unref } from 'vue';
+
 /** Get debounced listener */
 export function useDebounce<T extends unknown[]>(options: {
     action: (...args: T) => void;
     immediateAction?: (...args: T) => void;
-    delay: number;
+    delay: MaybeRef<number>;
 }) {
     let timer: number | null = null;
     return (...args: T) => {
@@ -11,7 +17,7 @@ export function useDebounce<T extends unknown[]>(options: {
         }
 
         if (timer) clearTimeout(timer);
-        timer = setTimeout(() => options.action(...args), options.delay);
+        timer = setTimeout(() => options.action(...args), unref(options.delay ?? 0));
     };
 }
 
@@ -19,7 +25,7 @@ export function useDebounce<T extends unknown[]>(options: {
 export function useThrottle<T extends unknown[]>(options: {
     action: (...args: T) => void;
     immediateAction?: (...args: T) => void;
-    delay: number;
+    delay: MaybeRef<number>;
 }) {
     let timer: number | null = null;
     return (...args: T) => {
@@ -30,6 +36,6 @@ export function useThrottle<T extends unknown[]>(options: {
         if (timer) return;
 
         options.action(...args);
-        timer = setTimeout(() => (timer = null), options.delay);
+        timer = setTimeout(() => (timer = null), unref(options.delay ?? 0));
     };
 }

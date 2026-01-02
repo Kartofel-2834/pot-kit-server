@@ -1,0 +1,18 @@
+// Types
+import type { Ref } from 'vue';
+
+export interface I<%camel%>OptionProps<VALUE = unknown> {
+    tag?: string;
+    value?: VALUE;
+    label?: string;
+    selected?: boolean;
+    focused?: boolean;
+    disabled?: boolean;
+    fluid?: boolean;
+}
+
+export interface I<%camel%>OptionExpose<VALUE = unknown> {
+    element: Ref<HTMLElement | null>;
+    value: Ref<VALUE | null>;
+    label: Ref<string>;
+}

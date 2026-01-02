@@ -1,0 +1,223 @@
+<script setup lang="ts">
+// Types
+import type {
+    I<%camel%>SelectDropdownEmits,
+    I<%camel%>SelectDropdownExpose,
+    I<%camel%>SelectDropdownProps,
+} from '<%typesImport%>/components/select-dropdown';
+
+// Vue
+import { computed, ref, toRef, useTemplateRef } from 'vue';
+
+// Constants
+import { ATTACHED_BOX_POSITION } from '<%typesImport%>/composables/attach';
+
+// Composables
+import { useDebounce } from '<%composablesImport%>/timer';
+import { useComponentSubscriptions } from '<%composablesImport%>/subscriptions';
+import { useFocusableChildren, useFocusBox } from '<%composablesImport%>/focus';
+import { useKeyboard } from '<%composablesImport%>/keyboard';
+
+// Components
+import <%camel%>Popover from '<%componentsImport%>/<%camel%>Popover.vue';
+
+const props = withDefaults(defineProps<I<%camel%>SelectDropdownProps>(), {
+    to: 'body',
+    fixedDropdownWidth: true,
+    position: ATTACHED_BOX_POSITION.BOTTOM_START,
+    nudge: 20,
+    edgeMargin: 0,
+    transition: '<%kebab%>-select-dropdown-transition',
+});
+
+const emit = defineEmits<I<%camel%>SelectDropdownEmits>();
+
+// Refs
+const container = useTemplateRef('container');
+const popover = useTemplateRef('popover');
+
+// Data
+const headerWidth = ref<number>(0);
+
+const resizeObserver = new ResizeObserver(
+    useDebounce({
+        action: ([entry]) => (headerWidth.value = entry.target.clientWidth ?? 0),
+        delay: 100,
+    }),
+);
+
+// Computed
+const headerElement = computed(() => props.header?.element ?? null);
+
+const headerInput = computed(() => props.header?.input ?? null);
+
+const currentStyles = computed(() => {
+    return {
+        '--<%kebab%>-select-dropdown-size-width': headerWidth.value ? `${headerWidth.value}px` : '',
+    };
+});
+
+// Composables
+const $subscriptions = useComponentSubscriptions();
+
+const { focusableChildren: $focusableChildren } = useFocusableChildren(container);
+
+useFocusBox({
+    element: container,
+    leave: () => props.header?.focus?.(),
+    leaveFromEnd: () => close(),
+    leaveFromStart: event => event.preventDefault(),
+});
+
+useKeyboard({
+    target: headerInput,
+    handlers: {
+        tab: event => {
+            if (!container.value) return;
+
+            const data = $focusableChildren.value;
+            const firstFocusableElement = data[0];
+            const lastFocusableElement = data[data.length - 1];
+
+            if (!firstFocusableElement && !lastFocusableElement) {
+                close();
+            } else if (!event.shiftKey) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                firstFocusableElement.focus();
+            } else {
+                close();
+            }
+        },
+    },
+});
+
+$subscriptions.observe({
+    target: headerElement,
+    observer: resizeObserver,
+});
+
+// Methods
+function close() {
+    if (!props.opened) return;
+    emit('close');
+}
+
+// Exports
+defineExpose<I<%camel%>SelectDropdownExpose>({
+    element: container,
+    marker: toRef(() => popover.value?.marker ?? null),
+});
+</script>
+
+<template>
+    <<%camel%>Popover
+        ref="popover"
+        :visible="opened"
+        :class-list="classList"
+        :target="headerElement"
+        :to="to"
+        :position="position"
+        :nudge="nudge"
+        :edge-margin="edgeMargin"
+        :persistent="persistent"
+        :no-sticky="noSticky"
+        :close-on-move="closeOnMove"
+        :transition="transition"
+        no-auto-focus
+        no-focus-trap
+        @close="close"
+    >
+        <div
+            ref="container"
+            :style="currentStyles"
+            class="<%kebab%>-select-dropdown"
+        >
+            <slot
+                name="dropdown-header"
+                :on-close="close"
+            />
+
+            <slot
+                name="options-list"
+                :on-close="close"
+            >
+                <ul
+                    class="<%kebab%>-select-options-list"
+                    role="listbox"
+                    tabindex="-1"
+                >
+                    <slot />
+                </ul>
+            </slot>
+
+            <slot
+                name="dropdown-footer"
+                :on-close="close"
+            />
+        </div>
+    </<%camel%>Popover>
+</template>
+
+<style>
+.<%kebab%>-select-dropdown {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    top: 0;
+    left: 0;
+    border-style: solid;
+
+    /* --- <%camel%>SelectDropdown - Color --- */
+    border-color: var(--<%kebab%>-select-dropdown-color-border, transparent);
+    background-color: var(--<%kebab%>-select-dropdown-color-background, transparent);
+    color: var(--<%kebab%>-select-dropdown-color-text, inherit);
+
+    /* --- <%camel%>SelectDropdown - Size --- */
+    height: var(--<%kebab%>-select-dropdown-size-height, auto);
+    max-height: var(--<%kebab%>-select-dropdown-size-max-height, none);
+    gap: var(--<%kebab%>-select-dropdown-size-gap, 1.6rem);
+    border-width: var(--<%kebab%>-select-dropdown-size-border, 0);
+    padding: var(--<%kebab%>-select-dropdown-size-padding, 0);
+    box-shadow: var(--<%kebab%>-select-dropdown-size-shadow, none);
+    font-size: var(--<%kebab%>-select-dropdown-size-text, inherit);
+    font-weight: var(--<%kebab%>-select-dropdown-size-text-weight, 400);
+    line-height: var(--<%kebab%>-select-dropdown-size-text-height, 1);
+
+    /* --- <%camel%>SelectDropdown - Radius --- */
+    border-radius: var(--<%kebab%>-select-dropdown-radius-value, 0);
+}
+
+/* --- Fixed-Width --- */
+._select-fixed-width .<%kebab%>-select-dropdown {
+    /* --- <%camel%>SelectDropdown - Size --- */
+    width: var(--<%kebab%>-select-dropdown-size-width, fit-content);
+}
+
+.<%kebab%>-select-options-list {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+
+    /* --- <%camel%>SelectDropdown - Size --- */
+    height: var(--<%kebab%>-select-dropdown-size-list-height, auto);
+    max-height: var(--<%kebab%>-select-dropdown-size-list-max-height, 10rem);
+}
+
+/* --- <%camel%>SelectDropdown - Transition --- */
+.<%kebab%>-select-dropdown-transition-enter-active,
+.<%kebab%>-select-dropdown-transition-leave-active {
+    transition: opacity var(--<%kebab%>-select-dropdown-transition-duration, 0.2s)
+        var(--<%kebab%>-select-dropdown-transition-function, ease);
+}
+
+.<%kebab%>-select-dropdown-transition-enter-from,
+.<%kebab%>-select-dropdown-transition-leave-to {
+    opacity: 0;
+}
+</style>

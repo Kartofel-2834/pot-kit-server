@@ -1,0 +1,59 @@
+// Types
+import type { Ref } from 'vue';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_RADIO_SIZE = {} as const;
+
+export const <%upper%>_RADIO_COLOR = {} as const;
+
+export const <%upper%>_RADIO_RADIUS = {} as const;
+
+export type E<%camel%>RadioSize = (typeof <%upper%>_RADIO_SIZE)[keyof typeof <%upper%>_RADIO_SIZE];
+
+export type E<%camel%>RadioColor = (typeof <%upper%>_RADIO_COLOR)[keyof typeof <%upper%>_RADIO_COLOR];
+
+export type E<%camel%>RadioRadius = (typeof <%upper%>_RADIO_RADIUS)[keyof typeof <%upper%>_RADIO_RADIUS];
+
+export interface I<%camel%>RadioProps<VALUE> {
+    /** Current value */
+    value?: VALUE;
+
+    /** Same as `value`, added for v-model support */
+    modelValue?: VALUE;
+
+    /** Radio button value */
+    radioValue?: VALUE;
+
+    /** Radio button border radius */
+    radius?: E<%camel%>RadioRadius | E<%camel%>RadioRadius[] | null;
+
+    /** Radio button size */
+    size?: E<%camel%>RadioSize | E<%camel%>RadioSize[] | null;
+
+    /** Radio button color */
+    color?: E<%camel%>RadioColor | E<%camel%>RadioColor[] | null;
+
+    /** Breakpoints for responsive design */
+    devices?: E<%camel%>Device[];
+
+    /** If true, the radio will be disabled and inactive */
+    disabled?: boolean;
+
+    /** If true, the radio will be invalid */
+    invalid?: boolean;
+
+    /** Name for input element */
+    inputName?: string;
+
+    /** Radio button appearance animation */
+    transition?: string;
+}
+
+export interface I<%camel%>RadioEmits<VALUE> {
+    change: [value: VALUE];
+    'update:modelValue': [value: VALUE];
+}
+
+export interface I<%camel%>RadioExpose {
+    input: Ref<HTMLInputElement | null>;
+}

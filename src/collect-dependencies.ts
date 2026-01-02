@@ -127,16 +127,18 @@ async function readdir(dirpath: string) {
 }
 
 async function collectAllDeps(): Promise<Record<string, Record<string, TPotDependencies>>> {
-    const [components, composables, types] = await Promise.all([
+    const [allComponents, composables, types] = await Promise.all([
         readdir(COMPONENTS_PATH),
         readdir(COMPOSABLES_PATH),
         readdir(TYPES_PATH),
     ]);
 
+    const components = allComponents.filter(v => /^Pot.+\.vue$/.test(v));
+
     const [componentsDeps, composablesDeps, typesDeps] = await Promise.all([
         Promise.all(components.map(v => collectComponentDeps(v))),
         Promise.all(composables.map(v => collectComposableDeps(v))),
-        Promise.all(types.filter(v => v.includes('toast')).map(v => collectTypeDeps(v))),
+        Promise.all(types.map(v => collectTypeDeps(v))),
     ]);
 
     return {

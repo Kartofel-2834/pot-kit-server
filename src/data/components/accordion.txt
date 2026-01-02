@@ -1,32 +1,31 @@
 <script lang="ts" setup>
 // Types
-import type { I<%camel%>AccordionProps, I<%camel%>AccordionSlots } from '<%typesImport%>/components/accordion';
+import type { I<%camel%>AccordionProps } from '<%typesImport%>/components/accordion';
 
 // Vue
-import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
+import { ref, computed, onMounted, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '<%composablesImport%>/class-list';
 import { useThrottle } from '<%composablesImport%>/timer';
+import { useComponentSubscriptions } from '<%composablesImport%>/subscriptions';
 
-const $slots = defineSlots<I<%camel%>AccordionSlots>();
+// Components
+import <%camel%>Icon from '<%componentsImport%>/<%camel%>Icon.vue';
 
-const $props = withDefaults(defineProps<I<%camel%>AccordionProps>(), {
+const props = withDefaults(defineProps<I<%camel%>AccordionProps>(), {
     opened: undefined,
     modelValue: undefined,
     disabled: false,
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     open: [];
     close: [];
     'update:modelValue': [isVisible: boolean];
 }>();
 
 // Data
-const content = ref<Element | null>(null);
-const contentHeight = ref<number>(NaN);
-
 const contentResizeObserver = new ResizeObserver(
     useThrottle({
         delay: 500,
@@ -34,38 +33,40 @@ const contentResizeObserver = new ResizeObserver(
     }),
 );
 
+const content = ref<Element | null>(null);
+const contentHeight = ref<number>(NaN);
+
 // Lifecycle
 onMounted(() => setTimeout(updateContentHeight));
-onUnmounted(() => contentResizeObserver.disconnect());
 
 // Computed
-const isOpen = computed(() => Boolean(!$props.disabled && ($props.opened ?? $props.modelValue)));
-
-const classList = computed(() =>
-    useClassList({
-        opened: isOpen.value,
-        disabled: $props.disabled,
-    }),
-);
+const isOpen = computed(() => Boolean(!props.disabled && (props.opened ?? props.modelValue)));
 
 const currentStyles = computed(() => {
     return {
-        '--<%kebab%>-accordion-content-height': `${contentHeight.value || 1000}px`,
+        '--<%kebab%>-accordion-content-height': contentHeight.value ? `${contentHeight.value}px` : '',
     };
 });
 
-// Watchers
-watch(
-    () => content.value,
-    (newContent, oldContent) => {
-        if (newContent) contentResizeObserver.observe(newContent);
-        if (oldContent) contentResizeObserver.unobserve(oldContent);
+// Composables
+const $subscriptions = useComponentSubscriptions();
+
+const $classList = useClassList(
+    {
+        opened: isOpen,
+        disabled: toRef(() => props.disabled),
     },
+    'accordion',
 );
+
+$subscriptions.observe({
+    target: content,
+    observer: contentResizeObserver,
+});
 
 // Methods
 function toggle() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
     if (isOpen.value) {
         close();
@@ -75,17 +76,17 @@ function toggle() {
 }
 
 function open() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
-    $emit('open');
-    $emit('update:modelValue', true);
+    emit('open');
+    emit('update:modelValue', true);
 }
 
 function close() {
-    if ($props.disabled) return;
+    if (props.disabled) return;
 
-    $emit('close');
-    $emit('update:modelValue', false);
+    emit('close');
+    emit('update:modelValue', false);
 }
 
 function updateContentHeight() {
@@ -101,7 +102,7 @@ function updateContentHeight() {
 
 <template>
     <div
-        :class="['<%kebab%>-accordion', classList]"
+        :class="['<%kebab%>-accordion', $classList]"
         :style="currentStyles"
     >
         <slot
@@ -113,26 +114,19 @@ function updateContentHeight() {
             <div
                 v-if="$slots.title"
                 data-<%kebab%>-accordion-header
-                class="<%kebab%>-accordion__header"
+                class="<%kebab%>-accordion-header"
                 :tabindex="disabled ? -1 : 0"
                 @click="toggle"
                 @keydown.enter="toggle"
                 @keydown.space="toggle"
             >
-                <div class="<%kebab%>-accordion__header__title">
+                <div class="<%kebab%>-accordion-title">
                     <slot name="title" />
                 </div>
 
-                <div class="<%kebab%>-accordion__header__icon">
+                <div class="<%kebab%>-accordion-icon">
                     <slot name="icon">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 -960 960 960"
-                            width="24px"
-                            fill="currentColor"
-                        >
-                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
-                        </svg>
+                        <<%camel%>Icon icon="arrow" />
                     </slot>
                 </div>
             </div>
@@ -141,7 +135,7 @@ function updateContentHeight() {
         <Transition name="<%kebab%>-accordion-transition">
             <div
                 v-show="isOpen"
-                class="<%kebab%>-accordion__content"
+                class="<%kebab%>-accordion-content"
                 ref="content"
             >
                 <slot />
@@ -151,34 +145,7 @@ function updateContentHeight() {
 </template>
 
 <style>
-.<%kebab%>-accordion {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-accordion-color-background: transparent;
-    --<%kebab%>-accordion-color-border: transparent;
-    --<%kebab%>-accordion-color-text: inherit;
-    --<%kebab%>-accordion-color-icon: inherit;
-    --<%kebab%>-accordion-color-outline: initial;
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-accordion-size-text: inherit;
-    --<%kebab%>-accordion-size-icon: 1.4rem;
-    --<%kebab%>-accordion-size-padding: 0;
-    --<%kebab%>-accordion-size-border: 1px;
-    --<%kebab%>-accordion-size-outline: initial;
-    --<%kebab%>-accordion-size-outline-offset: initial;
-}
-
-/* --- <%camel%>Accordion - Disabled --- */
-.<%kebab%>-accordion._disabled .<%kebab%>-accordion__header {
-    cursor: not-allowed;
-}
-
-/* --- <%camel%>Accordion - Opened --- */
-.<%kebab%>-accordion._opened .<%kebab%>-accordion__header__icon {
-    transform: scaleY(-1);
-}
-
-.<%kebab%>-accordion__header {
+.<%kebab%>-accordion-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -186,48 +153,56 @@ function updateContentHeight() {
     cursor: pointer;
 
     /* --- <%camel%>Accordion - Color --- */
-    background-color: var(--<%kebab%>-accordion-color-background);
-    border-color: var(--<%kebab%>-accordion-color-border);
-    color: var(--<%kebab%>-accordion-color-text);
-    outline-color: var(--<%kebab%>-accordion-color-outline);
+    background-color: var(--<%kebab%>-accordion-color-background, transparent);
+    border-color: var(--<%kebab%>-accordion-color-border, transparent);
+    color: var(--<%kebab%>-accordion-color-text, inherit);
+    outline-color: var(--<%kebab%>-accordion-color-outline, initial);
 
     /* --- <%camel%>Accordion - Size --- */
-    padding: var(--<%kebab%>-accordion-size-padding);
-    border-width: var(--<%kebab%>-accordion-size-border);
-    font-size: var(--<%kebab%>-accordion-size-text);
-    outline-width: var(--<%kebab%>-accordion-size-outline);
-    outline-offset: var(--<%kebab%>-accordion-size-outline-offset);
+    padding: var(--<%kebab%>-accordion-size-padding, 0);
+    border-width: var(--<%kebab%>-accordion-size-border, 1px);
+    font-size: var(--<%kebab%>-accordion-size-text, inherit);
+    font-weight: var(--<%kebab%>-accordion-size-text-weight, 400);
+    line-height: var(--<%kebab%>-accordion-size-text-height, 1);
+    outline-width: var(--<%kebab%>-accordion-size-outline, initial);
+    outline-offset: var(--<%kebab%>-accordion-size-outline-offset, initial);
 }
 
-.<%kebab%>-accordion__header:disabled {
-    cursor: not-allowed;
+.<%kebab%>-accordion-header:disabled {
+    cursor: default;
 }
 
-.<%kebab%>-accordion__header__icon {
+.<%kebab%>-accordion-icon {
     display: flex;
-    transition: transform 0.2s ease;
+    transition: transform var(--<%kebab%>-accordion-transition-duration, 0.2s)
+        var(--<%kebab%>-accordion-transition-function, ease);
 
     /* --- <%camel%>Accordion - Color --- */
-    color: var(--<%kebab%>-accordion-color-icon);
+    color: var(--<%kebab%>-accordion-color-icon, inherit);
 
     /* --- <%camel%>Accordion - Size --- */
-    font-size: var(--<%kebab%>-accordion-size-icon);
+    font-size: var(--<%kebab%>-accordion-size-icon, 1.4rem);
 }
 
-.<%kebab%>-accordion__header__icon svg {
-    width: 1em;
-    height: 1em;
-}
-
-.<%kebab%>-accordion__content {
+.<%kebab%>-accordion-content {
     overflow: hidden;
 }
 
-/* --- Transition --- */
+/* --- Disabled --- */
+._accordion-disabled .<%kebab%>-accordion-header {
+    cursor: default;
+}
+
+/* --- Opened --- */
+._accordion-opened .<%kebab%>-accordion-icon {
+    transform: scaleY(-1);
+}
+
 .<%kebab%>-accordion-transition-enter-active,
 .<%kebab%>-accordion-transition-leave-active {
     max-height: var(--<%kebab%>-accordion-content-height);
-    transition: 0.4s ease;
+    transition: var(--<%kebab%>-accordion-transition-duration, 0.2s)
+        var(--<%kebab%>-accordion-transition-function, ease);
 }
 
 .<%kebab%>-accordion-transition-enter-from,

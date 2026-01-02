@@ -1,83 +1,71 @@
-<script lang="ts" generic="T = unknown" setup>
+<script lang="ts" generic="DATA = any" setup>
 // Types
-import type { Ref } from 'vue';
 import type { I<%camel%>ToastExpose, I<%camel%>ToastProps } from '<%typesImport%>/components/toast';
 import type { IToastDialog } from '<%typesImport%>/composables/toast';
-import type { EDialogLayers } from '<%typesImport%>/composables/dialog';
+
+// Vue
+import { computed, toRef } from 'vue';
 
 // Constants
 import { <%upper%>_TOAST_POSITION } from '<%typesImport%>/components/toast';
 import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
-// Vue
-import { computed, ref, inject, onUnmounted, provide } from 'vue';
-
 // Composables
 import { useToast } from '<%composablesImport%>/toast';
+import { useDialog } from '<%composablesImport%>/dialog';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
-import { useDialog, useDialogLayer, useDialogZIndex } from '<%composablesImport%>/dialog';
 
-const $layer = DIALOG_LAYERS.TOAST as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('<%kebab%>-dialog-layer', ref(DIALOG_LAYERS.NONE));
-
-const $props = withDefaults(defineProps<I<%camel%>ToastProps<T>>(), {
+const $props = withDefaults(defineProps<I<%camel%>ToastProps<DATA>>(), {
     group: undefined,
     position: <%upper%>_TOAST_POSITION.TOP_LEFT,
     to: 'body',
     transition: '<%kebab%>-toast-transition',
 });
 
-const $deviceIs = useDeviceIs();
-
-const $toast = useToast<T>();
-
-const $dialog = useDialog({
-    triggers: [],
-    isOpen: computed(() => Boolean($toast.list.value.length)),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
-    close: pop,
-    open: () => {},
-});
-
-// Data
-const toastDialogsList = ref<HTMLElement[]>([]);
-
-// Lifecycle
-onUnmounted(() => {
-    $dialog.terminate();
-});
-
 // Computed
 const toastsList = computed(() => {
-    return $toast.list.value.filter(toast => toast.group === $props.group) as IToastDialog<T>[];
+    return $toast.list.value.filter(toast => toast.group === $props.group) as IToastDialog<DATA>[];
 });
 
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
+const currentStyles = computed(() => ({ zIndex: $dialog.zIndex.value }));
+
+// Composables
+const $toast = useToast<DATA>();
+
+const $dialog = useDialog({
+    triggers: [],
+    isOpen: toRef(() => Boolean($toast.list.value.length)),
+    layer: DIALOG_LAYERS.TOAST,
+    close: pop,
+    open: () => {},
 });
 
-const classList = computed(() => useClassList({ ...properties.value }));
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => $props.position),
+        size: toRef(() => $props.size),
+        color: toRef(() => $props.color),
+        radius: toRef(() => $props.radius),
+    },
+    toRef(() => $props.devices),
+);
 
-const currentStyles = computed(() => ({
-    zIndex: useDialogZIndex($dialog),
-}));
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+    },
+    'toast',
+);
 
 // Methods
-function getData(toast: IToastDialog): T {
-    return toast.data as T;
+function getData(toast: IToastDialog): DATA {
+    return toast.data as DATA;
 }
 
 function pop() {
@@ -90,9 +78,7 @@ function close(id: Symbol) {
 }
 
 // Exports
-provide('<%kebab%>-dialog-layer', $dialog.layer);
-
-defineExpose<I<%camel%>ToastExpose<T>>({
+defineExpose<I<%camel%>ToastExpose<DATA>>({
     list: toastsList,
     pop,
     close,
@@ -106,8 +92,9 @@ defineExpose<I<%camel%>ToastExpose<T>>({
     >
         <TransitionGroup
             :name="transition"
-            :class="['<%kebab%>-toast', classList]"
+            :class="['<%kebab%>-toast', $classList, classList]"
             :style="currentStyles"
+            v-bind="$dialog.marker"
             tag="div"
             role="alert"
         >
@@ -115,9 +102,9 @@ defineExpose<I<%camel%>ToastExpose<T>>({
                 v-for="(toastDialog, index) in toastsList"
                 :key="toastDialog.id.description"
                 ref="toastDialogsList"
-                class="<%kebab%>-toast__item"
+                class="<%kebab%>-toast-item"
             >
-                <div class="<%kebab%>-toast__item__container">
+                <div class="<%kebab%>-toast-item-container">
                     <slot
                         :id="toastDialog.id"
                         :data="getData(toastDialog)"
@@ -134,104 +121,90 @@ defineExpose<I<%camel%>ToastExpose<T>>({
 
 <style>
 .<%kebab%>-toast {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-toast-color-background: transparent;
-    --<%kebab%>-toast-color-border: transparent;
-    --<%kebab%>-toast-color-text: inherit;
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-toast-size-border: 0;
-    --<%kebab%>-toast-size-padding: 0;
-    --<%kebab%>-toast-size-shadow: none;
-    --<%kebab%>-toast-size-text: inherit;
-    --<%kebab%>-toast-size-edge-margin: 20px;
-    --<%kebab%>-toast-size-gap: 20px;
-
-    /* --- Radius - Configuration --- */
-    --<%kebab%>-toast-radius-value: 0;
-
     position: fixed;
     display: flex;
     flex-direction: column;
 }
 
-.<%kebab%>-toast__item {
+.<%kebab%>-toast-item {
     position: relative;
     max-height: 1000px;
 }
 
-.<%kebab%>-toast__item__container {
+.<%kebab%>-toast-item-container {
     border-style: solid;
 
-    /* --- <%camel%>Tooltip - Color --- */
-    border-color: var(--<%kebab%>-toast-color-border);
-    background-color: var(--<%kebab%>-toast-color-background);
-    color: var(--<%kebab%>-toast-color-text);
+    /* --- <%camel%>Toast - Color --- */
+    border-color: var(--<%kebab%>-toast-color-border, transparent);
+    background-color: var(--<%kebab%>-toast-color-background, transparent);
+    color: var(--<%kebab%>-toast-color-text, inherit);
 
-    /* --- <%camel%>Tooltip - Size --- */
-    border-width: var(--<%kebab%>-toast-size-border);
-    padding: var(--<%kebab%>-toast-size-padding);
-    box-shadow: var(--<%kebab%>-toast-size-shadow);
-    font-size: var(--<%kebab%>-toast-size-text);
+    /* --- <%camel%>Toast - Size --- */
+    border-width: var(--<%kebab%>-toast-size-border, 0);
+    padding: var(--<%kebab%>-toast-size-padding, 0);
+    box-shadow: var(--<%kebab%>-toast-size-shadow, none);
+    font-size: var(--<%kebab%>-toast-size-text, inherit);
 
-    /* --- <%camel%>Tooltip - Radius --- */
-    border-radius: var(--<%kebab%>-toast-radius-value);
+    /* --- <%camel%>Toast - Radius --- */
+    border-radius: var(--<%kebab%>-toast-radius-value, 0);
 }
 
-.<%kebab%>-toast._position-top-left .<%kebab%>-toast__item__container,
-.<%kebab%>-toast._position-top-center .<%kebab%>-toast__item__container,
-.<%kebab%>-toast._position-top-right .<%kebab%>-toast__item__container {
-    margin-bottom: var(--<%kebab%>-toast-size-gap);
+/* --- Position - Top --- */
+._toast-position-top-left .<%kebab%>-toast-item-container,
+._toast-position-top-center .<%kebab%>-toast-item-container,
+._toast-position-top-right .<%kebab%>-toast-item-container {
+    margin-bottom: var(--<%kebab%>-toast-size-gap, 20px);
 }
 
-.<%kebab%>-toast._position-bottom-left .<%kebab%>-toast__item__container,
-.<%kebab%>-toast._position-bottom-center .<%kebab%>-toast__item__container,
-.<%kebab%>-toast._position-bottom-right .<%kebab%>-toast__item__container {
-    margin-top: var(--<%kebab%>-toast-size-gap);
+/* --- Position - Bottom --- */
+._toast-position-bottom-left .<%kebab%>-toast-item-container,
+._toast-position-bottom-center .<%kebab%>-toast-item-container,
+._toast-position-bottom-right .<%kebab%>-toast-item-container {
+    margin-top: var(--<%kebab%>-toast-size-gap, 20px);
 }
 
-/* --- Toast - Position - Top-left  --- */
-.<%kebab%>-toast._position-top-left {
-    top: var(--<%kebab%>-toast-size-edge-margin);
-    left: var(--<%kebab%>-toast-size-edge-margin);
+/* --- Position - Top-left  --- */
+._toast-position-top-left {
+    top: var(--<%kebab%>-toast-size-edge-margin, 20px);
+    left: var(--<%kebab%>-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Top-center  --- */
-.<%kebab%>-toast._position-top-center {
-    top: var(--<%kebab%>-toast-size-edge-margin);
+/* --- Position - Top-center  --- */
+._toast-position-top-center {
+    top: var(--<%kebab%>-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* --- Toast - Position - Top-right  --- */
-.<%kebab%>-toast._position-top-right {
-    top: var(--<%kebab%>-toast-size-edge-margin);
-    right: var(--<%kebab%>-toast-size-edge-margin);
+/* --- Position - Top-right  --- */
+._toast-position-top-right {
+    top: var(--<%kebab%>-toast-size-edge-margin, 20px);
+    right: var(--<%kebab%>-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Bottom-left  --- */
-.<%kebab%>-toast._position-bottom-left {
+/* --- Position - Bottom-left  --- */
+._toast-position-bottom-left {
     flex-direction: column-reverse;
-    bottom: var(--<%kebab%>-toast-size-edge-margin);
-    left: var(--<%kebab%>-toast-size-edge-margin);
+    bottom: var(--<%kebab%>-toast-size-edge-margin, 20px);
+    left: var(--<%kebab%>-toast-size-edge-margin, 20px);
 }
 
-/* --- Toast - Position - Bottom-center  --- */
-.<%kebab%>-toast._position-bottom-center {
+/* --- Position - Bottom-center  --- */
+._toast-position-bottom-center {
     flex-direction: column-reverse;
-    bottom: var(--<%kebab%>-toast-size-edge-margin);
+    bottom: var(--<%kebab%>-toast-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* --- Toast - Position - Bottom-right  --- */
-.<%kebab%>-toast._position-bottom-right {
+/* --- Position - Bottom-right  --- */
+._toast-position-bottom-right {
     flex-direction: column-reverse;
-    bottom: var(--<%kebab%>-toast-size-edge-margin);
-    right: var(--<%kebab%>-toast-size-edge-margin);
+    bottom: var(--<%kebab%>-toast-size-edge-margin, 20px);
+    right: var(--<%kebab%>-toast-size-edge-margin, 20px);
 }
 
-/* --- Transition - Toast --- */
+/* --- Transition --- */
 .<%kebab%>-toast-transition-enter-active,
 .<%kebab%>-toast-transition-leave-active {
     transition:

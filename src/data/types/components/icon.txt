@@ -1,0 +1,27 @@
+// Types
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_ICON_NAME = {} as const;
+
+export const <%upper%>_ICON_SIZE = {} as const;
+
+export const <%upper%>_ICON_COLOR = {} as const;
+
+export type E<%camel%>IconName = (typeof <%upper%>_ICON_NAME)[keyof typeof <%upper%>_ICON_NAME] extends never
+    ? string
+    : (typeof <%upper%>_ICON_NAME)[keyof typeof <%upper%>_ICON_NAME];
+
+export type E<%camel%>IconSize = (typeof <%upper%>_ICON_SIZE)[keyof typeof <%upper%>_ICON_SIZE];
+
+export type E<%camel%>IconColor = (typeof <%upper%>_ICON_COLOR)[keyof typeof <%upper%>_ICON_COLOR];
+
+export interface I<%camel%>IconProps {
+    /** Имя иконки */
+    icon: E<%camel%>IconName | E<%camel%>IconName[];
+
+    /** Размер иконки */
+    size?: E<%camel%>IconSize | number | Array<E<%camel%>IconSize | number> | null;
+
+    /** Точки останова для адаптивного дизайна */
+    devices?: E<%camel%>Device[];
+}

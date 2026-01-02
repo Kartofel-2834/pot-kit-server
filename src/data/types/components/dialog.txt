@@ -1,5 +1,5 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { E<%camel%>Device } from '<%typesImport%>';
 
 export const <%upper%>_DIALOG_POSITION = {
@@ -76,7 +76,10 @@ export interface I<%camel%>DialogProps {
 
 export interface I<%camel%>DialogExpose {
     /** Dialog visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    isOpen: ComputedRef<boolean>;
+
+    /** Dialog container element */
+    container: Readonly<Ref<Element | null>>;
 
     /** Open dialog */
     open: () => void;

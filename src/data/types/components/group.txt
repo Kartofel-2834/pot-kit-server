@@ -84,7 +84,7 @@ export interface I<%camel%>GroupProps {
     wrap?: T<%camel%>GroupWrap | T<%camel%>GroupWrap[] | null;
 
     /** Gap size */
-    gap?: E<%camel%>GroupGap | E<%camel%>GroupGap[] | null;
+    gap?: number | E<%camel%>GroupGap | Array<E<%camel%>GroupGap | number> | null;
 
     /** Breakpoints for responsive design */
     devices?: E<%camel%>Device[];

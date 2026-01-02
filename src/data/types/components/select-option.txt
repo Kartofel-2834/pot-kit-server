@@ -1,0 +1,18 @@
+// Types
+import type { Ref } from 'vue';
+import type { ISpec, TOptionValue } from '<%typesImport%>/composables/specs';
+import type { I<%camel%>SelectSpecData } from '<%typesImport%>/components/select';
+
+export interface I<%camel%>SelectOptionProps<OPTION, VALUE_FIELD extends keyof OPTION> {
+    spec: ISpec<OPTION, VALUE_FIELD, I<%camel%>SelectSpecData>;
+}
+
+export interface I<%camel%>SelectOptionEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
+    select: [spec: ISpec<OPTION, VALUE_FIELD, I<%camel%>SelectSpecData>];
+}
+
+export interface I<%camel%>SelectOptionExpose<OPTION, VALUE_FIELD extends keyof OPTION> {
+    element: Ref<HTMLElement | null>;
+    value: Ref<TOptionValue<OPTION, VALUE_FIELD> | null>;
+    label: Ref<string>;
+}

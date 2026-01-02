@@ -1,274 +1,274 @@
-<script
-    lang="ts"
-    generic="TOpenTriggers extends string[] = string[], TCloseTriggers extends string[] = string[]"
-    setup
->
+<script lang="ts" setup>
 // Types
-import type { Ref } from 'vue';
+import type { VNode } from 'vue';
 import type { I<%camel%>TooltipExpose, I<%camel%>TooltipProps } from '<%typesImport%>/components/tooltip';
-import type { EDialogLayers } from '<%typesImport%>/composables/dialog';
-
-// Constants
-import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
+import { cloneVNode, computed, isVNode, ref, toRef } from 'vue';
+
+// Constants
+import { ATTACHED_BOX_POSITION } from '<%typesImport%>/composables/attach';
+import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
 // Composables
-import { useDialog, useDialogLayer, useDialogZIndex } from '<%composablesImport%>/dialog';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
 import { useClassList } from '<%composablesImport%>/class-list';
+import { useDialog } from '<%composablesImport%>/dialog';
+import { useAttach } from '<%composablesImport%>/attach';
+import { useComponentSubscriptions } from '<%composablesImport%>/subscriptions';
+import { useAutoFocus, useFocusTrap } from '<%composablesImport%>/focus';
 
 // Components
-import <%camel%>AttachTarget from '<%componentsImport%>/<%camel%>AttachTarget.vue';
+import <%camel%>SlotCatcher from '<%componentsImport%>/<%camel%>SlotCatcher.vue';
 
-const isOpen = ref<boolean>(false);
-
-const $layer = DIALOG_LAYERS.POPOVER as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('<%kebab%>-dialog-layer', ref(DIALOG_LAYERS.NONE));
-
-const $props = withDefaults(defineProps<I<%camel%>TooltipProps<TOpenTriggers, TCloseTriggers>>(), {
+const props = withDefaults(defineProps<I<%camel%>TooltipProps>(), {
     text: '',
     to: 'body',
     openDelay: 0,
     closeDelay: 200,
     autoCloseDelay: 0,
-    openTriggers: () => ['mouseover', 'focus'] as TOpenTriggers,
-    closeTriggers: () => ['mouseout', 'blur'] as TCloseTriggers,
-    enterable: false,
+    openTriggers: () => ['mouseenter', 'focus'],
+    closeTriggers: () => ['mouseleave', 'blur'],
+    noAutoFocus: true,
+    noFocusTrap: true,
+    position: ATTACHED_BOX_POSITION.TOP_CENTER,
+    nudge: 10,
+    edgeMargin: 10,
     transition: '<%kebab%>-tooltip-transition',
 });
 
-const $emit = defineEmits<{
+const emit = defineEmits<{
     open: [];
     close: [];
     'trigger:open': [event: Event, trigger: string];
     'trigger:close': [event: Event, trigger: string];
 }>();
 
-const $deviceIs = useDeviceIs();
-
-const $dialog = useDialog({
-    triggers: ['escape'],
-    isOpen: computed(() => isOpen.value),
-    layer: computed(() => useDialogLayer($layer, $parentLayer?.value)),
-    close: close,
-    open: open,
-});
-
 // Data
+const target = ref<Element | null>(null);
 const box = ref<Element | null>(null);
-const attachTarget = ref<InstanceType<typeof <%camel%>AttachTarget> | null>(null);
 
-const delayedAction = ref<{ timeoutId: number; action: Function | null; delay: number }>({
-    timeoutId: NaN,
-    action: null,
-    delay: 0,
-});
-
-// Lifecycle
-onUnmounted(() => {
-    $dialog.terminate();
-
-    if (attachTarget.value?.target) {
-        terminateTargetTriggers(attachTarget.value.target as Element);
-    }
-
-    if (box.value) {
-        terminateBoxListeners(box.value as Element);
-    }
-});
+const isOpen = ref<boolean>(false);
 
 // Computed
-const teleportTo = computed(() => $props.to ?? 'body');
+const currentTarget = computed(() => props.target ?? target.value ?? null);
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            nudge: $props.nudge,
-            edgeMargin: $props.edgeMargin,
-            color: $props.color,
-            size: $props.size,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
-
-const classList = computed(() => useClassList({ ...properties.value }));
+const teleportTo = computed(() => props.to ?? 'body');
 
 const currentStyles = computed(() => {
-    const [x, y] = attachTarget.value?.boxCoordinates ?? [0, 0];
+    const x = $attach.x.value ?? 0;
+    const y = $attach.y.value ?? 0;
 
     return {
-        zIndex: useDialogZIndex($dialog),
+        zIndex: $dialog.zIndex.value,
         transform: `translate(${x}px, ${y}px)`,
     };
 });
 
-// Watchers
-watch(
-    () => [attachTarget.value?.target, $props.openTriggers, $props.closeTriggers],
-    (newValue, oldValue) => {
-        const [newTarget] = newValue;
-        const [oldTarget] = oldValue;
+const triggers = computed(() => {
+    return Array.from(new Set([...(props.openTriggers ?? []), ...(props.closeTriggers ?? [])]));
+});
 
-        if (oldTarget instanceof Element) terminateTargetTriggers(oldTarget);
-        if (newTarget instanceof Element) setupTargetTriggers(newTarget);
+// Composables
+const $subscriptions = useComponentSubscriptions();
+
+const $dialog = useDialog({
+    triggers: ['escape'],
+    isOpen,
+    layer: DIALOG_LAYERS.POPOVER,
+    close,
+    open,
+});
+
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => props.position),
+        nudge: toRef(() => props.nudge),
+        edgeMargin: toRef(() => props.edgeMargin),
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
     },
+    toRef(() => props.devices),
 );
 
-watch(
-    () => [box.value, $props.enterable],
-    (newValue, oldValue) => {
-        const [boxElement, enterable] = newValue;
-        const [oldBoxElement] = oldValue;
-
-        if (!enterable) return;
-
-        if (oldBoxElement instanceof Element) {
-            terminateBoxListeners(oldBoxElement);
-        }
-
-        if (boxElement instanceof Element) {
-            setupBoxListeners(boxElement);
-        }
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
+        opened: $dialog.isOpen,
+        closed: toRef(() => !$dialog.isOpen.value),
+        hidden: toRef(() => $attach.x.value === null || $attach.y.value === null),
     },
+    'tooltip',
+);
+
+const $attach = useAttach({
+    target: currentTarget,
+    box: box,
+    position: $properties.position,
+    nudge: $properties.nudge,
+    edgeMargin: $properties.edgeMargin,
+    persistent: toRef(() => props.persistent),
+    sticky: toRef(() => !props.noSticky),
+    onChange: () => {
+        if (props.closeOnMove) close();
+    },
+});
+
+useFocusTrap(computed(() => (props.noFocusTrap || !isOpen.value ? null : box.value)));
+
+useAutoFocus(computed(() => (props.noAutoFocus || !isOpen.value ? null : box.value)));
+
+$subscriptions.addEventListener({
+    eventName: 'mouseenter',
+    target: computed(() => (props.enterable ? box.value : null)),
+    listener: enter,
+});
+
+$subscriptions.addEventListener({
+    eventName: 'mouseleave',
+    target: computed(() => (props.enterable ? box.value : null)),
+    listener: leave,
+});
+
+$subscriptions.bind(
+    triggers,
+    currentTriggers => {
+        return currentTriggers.map(triggger =>
+            $subscriptions.addEventListener({
+                eventName: triggger,
+                target: currentTarget,
+                listener: event => handleTrigger(triggger, event),
+            }),
+        );
+    },
+    controllers => controllers.forEach(controller => controller.abort()),
 );
 
 // Methods
+function enter() {
+    if (!props.enterable) return;
+
+    $subscriptions.add(
+        () => {
+            const isClosing = $subscriptions.has('delayed-close');
+            const isAutoClosing = $subscriptions.has('autoclose');
+
+            $subscriptions.remove('delayed-close');
+            $subscriptions.remove('autoclose');
+            return [isClosing, isAutoClosing];
+        },
+        ([isClosing, isAutoClosing]) => {
+            if (isClosing) delayedClose();
+            if (isAutoClosing) autoclose();
+        },
+        'enter-leave',
+    );
+}
+
+function leave() {
+    if (!props.enterable) return;
+    $subscriptions.remove('enter-leave');
+}
+
+function delayedOpen(delay?: number) {
+    $subscriptions.remove('delayed-close');
+    $subscriptions.add(
+        () => setTimeout(open, delay ?? props.openDelay),
+        timeoutId => clearTimeout(timeoutId),
+        'delayed-open',
+    );
+}
+
+function delayedClose(delay?: number) {
+    $subscriptions.remove('delayed-open');
+    $subscriptions.add(
+        () => setTimeout(close, delay ?? props.closeDelay),
+        timeoutId => clearTimeout(timeoutId),
+        'delayed-close',
+    );
+}
+
+function autoclose() {
+    if (!props.autoCloseDelay) return;
+
+    $subscriptions.add(
+        () => setTimeout(close, props.autoCloseDelay),
+        timeoutId => clearTimeout(timeoutId),
+        'autoclose',
+    );
+}
+
 function open() {
+    autoclose();
+
     if (isOpen.value) return;
 
-    clearDelayedAction();
     isOpen.value = true;
-    $emit('open');
-
-    if ($props.autoCloseDelay > 0) startAutoClose();
+    emit('open');
 }
 
 function close() {
+    if (props.autoCloseDelay) $subscriptions.remove('autoclose');
+
     if (!isOpen.value) return;
 
-    clearDelayedAction();
     isOpen.value = false;
-    $emit('close');
+    emit('close');
 }
 
-function delayedOpen(event: Event, trigger: TOpenTriggers[number]): number {
-    return setDelayedAction(() => {
-        if (isOpen.value) return;
+function handleTrigger(trigger: string, event: Event) {
+    const isOpenTrigger = props.openTriggers?.includes?.(trigger) ?? false;
+    const isCloseTrigger = props.closeTriggers?.includes?.(trigger) ?? false;
 
-        $emit('trigger:open', event, trigger);
-        open();
-    }, $props.openDelay);
+    if (isOpenTrigger && (!isOpen.value || $subscriptions.has('delayed-close'))) {
+        emit('trigger:open', event, trigger);
+        delayedOpen();
+        return;
+    }
+
+    if (isCloseTrigger && (isOpen.value || $subscriptions.has('delayed-open'))) {
+        emit('trigger:close', event, trigger);
+        delayedClose();
+        return;
+    }
 }
 
-function delayedClose(event: Event, trigger: string): number {
-    return setDelayedAction(() => {
-        if (!isOpen.value) return;
+function findTarget(vnode: VNode): VNode | null {
+    if (!isVNode(vnode)) return vnode;
 
-        $emit('trigger:close', event, trigger);
-        close();
-    }, $props.closeDelay);
-}
+    if (Array.isArray(vnode.children)) {
+        vnode.children = vnode.children.map(v => (isVNode(v) ? findTarget(v) : v));
+    }
 
-function startAutoClose(): number {
-    if ($props.autoCloseDelay <= 0 || isNaN($props.autoCloseDelay)) return NaN;
+    return cloneVNode(vnode, {
+        onVnodeMounted(vnode) {
+            if (target.value || !(vnode.el instanceof Element)) return;
+            target.value = vnode.el as Element;
+        },
 
-    return setDelayedAction(() => {
-        if (!isOpen.value) return;
-
-        isOpen.value = false;
-        $emit('close');
-    }, $props.autoCloseDelay);
-}
-
-function pause() {
-    clearTimeout(delayedAction.value.timeoutId);
-    delayedAction.value = { ...delayedAction.value, timeoutId: NaN };
-}
-
-function resume() {
-    setDelayedAction(delayedAction.value.action, delayedAction.value.delay);
-}
-
-function clearDelayedAction() {
-    clearTimeout(delayedAction.value.timeoutId);
-    delayedAction.value = { action: null, timeoutId: NaN, delay: 0 };
-}
-
-function setDelayedAction(action: Function | null, delay: number): number {
-    if (!action) return NaN;
-
-    clearTimeout(delayedAction.value.timeoutId);
-    const timeoutId = delay ? setTimeout(action, delay) : NaN;
-
-    if (!delay) action();
-
-    delayedAction.value = {
-        action: delay ? action : null,
-        timeoutId,
-        delay,
-    };
-
-    return timeoutId;
-}
-
-function setupTargetTriggers(element: Element) {
-    if (!element) return;
-
-    $props.closeTriggers?.forEach?.(trigger =>
-        element.addEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
-    );
-    $props.openTriggers?.forEach?.(trigger =>
-        element.addEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
-    );
-}
-
-function terminateTargetTriggers(element: Element) {
-    if (!element) return;
-
-    $props.closeTriggers?.forEach?.(trigger =>
-        element.removeEventListener(trigger, (event: Event) => delayedClose(event, trigger)),
-    );
-    $props.openTriggers?.forEach?.(trigger =>
-        element.removeEventListener(trigger, (event: Event) => delayedOpen(event, trigger)),
-    );
-}
-
-function setupBoxListeners(element: Element) {
-    if (!element) return;
-
-    element.addEventListener('mouseover', pause);
-    element.addEventListener('mouseout', resume);
-}
-
-function terminateBoxListeners(element: Element) {
-    if (!element) return;
-
-    element.removeEventListener('mouseover', pause);
-    element.removeEventListener('mouseout', resume);
+        onVnodeBeforeUnmount() {
+            if (target.value === vnode.el) {
+                target.value = null;
+            }
+        },
+    });
 }
 
 // Exports
-provide('<%kebab%>-dialog-layer', $dialog.layer);
-
-defineExpose<I<%camel%>TooltipExpose>({
-    isOpen: readonly(isOpen),
-    coordinates: attachTarget.value?.boxCoordinates,
-    target: attachTarget.value?.target as Element,
-    tooltip: box.value,
+defineExpose<Readonly<I<%camel%>TooltipExpose>>({
+    isOpen: $dialog.isOpen,
+    x: $attach.x,
+    y: $attach.y,
+    target: currentTarget,
+    tooltip: box,
     open,
     close,
     delayedOpen,
     delayedClose,
-    pause,
-    resume,
-    clearDelayedAction,
 });
 </script>
 
@@ -280,12 +280,11 @@ defineExpose<I<%camel%>TooltipExpose>({
         <Transition :name="transition">
             <div
                 ref="box"
-                v-if="$dialog.isOpen.value"
-                v-bind="$attrs"
-                :key="`${$dialog.id.description}_${$dialog.isOpen.value}`"
-                :class="['<%kebab%>-tooltip', classList]"
+                v-if="isOpen"
+                v-bind="$dialog.marker"
+                :key="`${$dialog.id.description}_${isOpen}`"
+                :class="['<%kebab%>-tooltip', $classList, classList]"
                 :style="currentStyles"
-                :data-<%kebab%>-dialog-id="$dialog.id.description"
             >
                 <slot name="content">
                     {{ text }}
@@ -294,55 +293,31 @@ defineExpose<I<%camel%>TooltipExpose>({
         </Transition>
     </Teleport>
 
-    <<%camel%>AttachTarget
-        ref="attachTarget"
-        :box="box"
-        :position="properties.position"
-        :edge-margin="properties.edgeMargin"
-        :nudge="properties.nudge"
-        :target="target"
-        :to="to"
-        :sticky="!noSticky"
-        :persistent="persistent"
-    >
-        <slot />
-    </<%camel%>AttachTarget>
+    <<%camel%>SlotCatcher :map-v-node="findTarget">
+        <slot :marker="$dialog.marker" />
+    </<%camel%>SlotCatcher>
 </template>
 
 <style>
 .<%kebab%>-tooltip {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-tooltip-color-background: transparent;
-    --<%kebab%>-tooltip-color-border: transparent;
-    --<%kebab%>-tooltip-color-text: inherit;
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-tooltip-size-border: 0;
-    --<%kebab%>-tooltip-size-padding: 0;
-    --<%kebab%>-tooltip-size-shadow: none;
-    --<%kebab%>-tooltip-size-text: inherit;
-
-    /* --- Radius - Configuration --- */
-    --<%kebab%>-tooltip-radius-value: 0;
-
     position: fixed;
     top: 0;
     left: 0;
     border-style: solid;
 
     /* --- <%camel%>Tooltip - Color --- */
-    border-color: var(--<%kebab%>-tooltip-color-border);
-    background-color: var(--<%kebab%>-tooltip-color-background);
-    color: var(--<%kebab%>-tooltip-color-text);
+    border-color: var(--<%kebab%>-tooltip-color-border, transparent);
+    background-color: var(--<%kebab%>-tooltip-color-background, transparent);
+    color: var(--<%kebab%>-tooltip-color-text, inherit);
 
     /* --- <%camel%>Tooltip - Size --- */
-    border-width: var(--<%kebab%>-tooltip-size-border);
-    padding: var(--<%kebab%>-tooltip-size-padding);
-    box-shadow: var(--<%kebab%>-tooltip-size-shadow);
-    font-size: var(--<%kebab%>-tooltip-size-text);
+    border-width: var(--<%kebab%>-tooltip-size-border, 0);
+    padding: var(--<%kebab%>-tooltip-size-padding, 0);
+    box-shadow: var(--<%kebab%>-tooltip-size-shadow, none);
+    font-size: var(--<%kebab%>-tooltip-size-text, inherit);
 
     /* --- <%camel%>Tooltip - Radius --- */
-    border-radius: var(--<%kebab%>-tooltip-radius-value);
+    border-radius: var(--<%kebab%>-tooltip-radius-value, 0);
 }
 
 .<%kebab%>-tooltip-transition-enter-active,

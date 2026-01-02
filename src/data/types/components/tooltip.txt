@@ -1,7 +1,7 @@
 // Types
-import type { Ref, RendererElement } from 'vue';
+import type { ComputedRef, Ref, RendererElement } from 'vue';
 import type { E<%camel%>Device } from '<%typesImport%>';
-import type { E<%camel%>AttachedBoxPosition } from '<%typesImport%>/components/attach-target';
+import type { EAttachedBoxPosition } from '<%typesImport%>/composables/attach';
 
 export const <%upper%>_TOOLTIP_SIZE = {} as const;
 
@@ -15,18 +15,21 @@ export type E<%camel%>TooltipColor = (typeof <%upper%>_TOOLTIP_COLOR)[keyof type
 
 export type E<%camel%>TooltipRadius = (typeof <%upper%>_TOOLTIP_RADIUS)[keyof typeof <%upper%>_TOOLTIP_RADIUS];
 
-export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTriggers extends string[]> {
+export interface I<%camel%>TooltipProps {
     /** Tooltip text (may be replaced by slot) */
     text?: string;
 
     /** Place where tooltip will be mounted */
     to?: string | RendererElement | null;
 
+    /** Tooltip element classlist */
+    classList?: string[] | Record<string, unknown>;
+
     /** Target events names, that will open tooltip */
-    openTriggers?: TOpenTriggers;
+    openTriggers?: string[];
 
     /** Target events names, that will close tooltip */
-    closeTriggers?: TCloseTriggers;
+    closeTriggers?: string[];
 
     /** Tooltip open delay in milliseconds */
     openDelay?: number;
@@ -44,7 +47,7 @@ export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTr
     transition?: string;
 
     /** Tooltip position that relative to target */
-    position?: E<%camel%>AttachedBoxPosition | E<%camel%>AttachedBoxPosition[];
+    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
 
     /** Distance between tooltip and target */
     nudge?: number | number[];
@@ -57,6 +60,15 @@ export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTr
 
     /** Tooltip will not be sticky and will not follow target on scroll */
     noSticky?: boolean;
+
+    /** Tooltip will not focus first focusable element on container mount */
+    noAutoFocus?: boolean;
+
+    /** Tooltip will not lock focus outside of container */
+    noFocusTrap?: boolean;
+
+    /** Tooltip will be closed if target or box rect changed or on surrounding scroll/resize */
+    closeOnMove?: boolean;
 
     /** Target element */
     target?: Element | null;
@@ -76,16 +88,19 @@ export interface I<%camel%>TooltipProps<TOpenTriggers extends string[], TCloseTr
 
 export interface I<%camel%>TooltipExpose {
     /** Tooltip visibility flag */
-    isOpen: Readonly<Ref<boolean>>;
+    isOpen: ComputedRef<boolean>;
 
-    /** Tooltip left-top corner coordinates */
-    coordinates?: [x: number, y: number];
+    /** Tooltip left-top corner x coordinate */
+    x: ComputedRef<number | null>;
+
+    /** Tooltip left-top corner y coordinate */
+    y: ComputedRef<number | null>;
 
     /** Target element */
-    target?: Element | null;
+    target: ComputedRef<Element | null>;
 
     /** Tooltip element */
-    tooltip?: Element | null;
+    tooltip: Readonly<Ref<Element | null>>;
 
     /** Open tooltip */
     open: () => void;
@@ -93,18 +108,9 @@ export interface I<%camel%>TooltipExpose {
     /** Close tooltip */
     close: () => void;
 
-    /** Tooltip will open after openDelay prop value in milliseconds, if delay greater than zero */
-    delayedOpen: (event: Event, trigger: string) => number;
+    /** Tooltip will open after openDelay prop value in milliseconds */
+    delayedOpen: () => void;
 
-    /** Tooltip will open after closeDelay prop value in milliseconds, if delay greater than zero */
-    delayedClose: (event: Event, trigger: string) => number;
-
-    /** Pause delayed tooltip open action */
-    pause: () => void;
-
-    /** Resume delayed tooltip open action */
-    resume: () => void;
-
-    /** Clear delayed tooltip open action */
-    clearDelayedAction: () => void;
+    /** Tooltip will open after closeDelay prop value in milliseconds */
+    delayedClose: () => void;
 }

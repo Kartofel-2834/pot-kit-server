@@ -1,0 +1,28 @@
+// Types
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_TAG_SIZE = {} as const;
+
+export const <%upper%>_TAG_COLOR = {} as const;
+
+export const <%upper%>_TAG_RADIUS = {} as const;
+
+export type E<%camel%>TagSize = (typeof <%upper%>_TAG_SIZE)[keyof typeof <%upper%>_TAG_SIZE];
+
+export type E<%camel%>TagColor = (typeof <%upper%>_TAG_COLOR)[keyof typeof <%upper%>_TAG_COLOR];
+
+export type E<%camel%>TagRadius = (typeof <%upper%>_TAG_RADIUS)[keyof typeof <%upper%>_TAG_RADIUS];
+
+export interface I<%camel%>TagProps {
+    /** Tag size */
+    size?: E<%camel%>TagSize | E<%camel%>TagSize[] | null;
+
+    /** Tag color */
+    color?: E<%camel%>TagColor | E<%camel%>TagColor[] | null;
+
+    /** Tag border radius */
+    radius?: E<%camel%>TagRadius | E<%camel%>TagRadius[] | null;
+
+    /** Breakpoints names for responsive design */
+    devices?: E<%camel%>Device[];
+}

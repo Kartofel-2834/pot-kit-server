@@ -1,0 +1,35 @@
+// Types
+import type { Ref, RendererElement, UnwrapRef } from 'vue';
+import type { I<%camel%>SelectHeaderExpose } from '<%typesImport%>/components/select-header';
+import type { E<%camel%>Device } from '<%typesImport%>';
+import type { EAttachedBoxPosition } from '<%typesImport%>/composables/attach';
+import type { TDialogMarker } from '<%typesImport%>/composables/dialog';
+
+export interface I<%camel%>SelectDropdownProps {
+    header: UnwrapRef<I<%camel%>SelectHeaderExpose> | null;
+
+    opened?: boolean;
+
+    className?: string;
+    classList?: string[] | Record<string, boolean>;
+    devices?: E<%camel%>Device[];
+
+    to?: string | RendererElement | null;
+    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
+    nudge?: number | number[];
+    edgeMargin?: number | number[];
+    persistent?: boolean;
+    noSticky?: boolean;
+    closeOnMove?: boolean;
+    transition?: string;
+}
+
+export interface I<%camel%>SelectDropdownEmits {
+    close: [];
+    open: [];
+}
+
+export interface I<%camel%>SelectDropdownExpose {
+    element: Ref<HTMLElement | null>;
+    marker: Ref<TDialogMarker | null>;
+}

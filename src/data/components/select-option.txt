@@ -1,0 +1,110 @@
+<script lang="ts" generic="OPTION, VALUE_FIELD extends keyof OPTION" setup>
+// Types
+import type {
+    I<%camel%>SelectOptionEmits,
+    I<%camel%>SelectOptionExpose,
+    I<%camel%>SelectOptionProps,
+} from '<%typesImport%>/components/select-option';
+
+// Vue
+import { toRef, useTemplateRef } from 'vue';
+
+// Components
+import <%camel%>Option from '<%componentsImport%>/<%camel%>Option.vue';
+
+const props = withDefaults(defineProps<I<%camel%>SelectOptionProps<OPTION, VALUE_FIELD>>(), {});
+
+const emit = defineEmits<I<%camel%>SelectOptionEmits<OPTION, VALUE_FIELD>>();
+
+// Refs
+const container = useTemplateRef('container');
+
+// Listeners
+function onOptionClick() {
+    emit('select', props.spec);
+}
+
+// Expose
+defineExpose<I<%camel%>SelectOptionExpose<OPTION, VALUE_FIELD>>({
+    element: toRef(() => container.value?.element ?? null),
+    value: toRef(() => props.spec.value),
+    label: toRef(() => props.spec.label),
+});
+</script>
+
+<template>
+    <<%camel%>Option
+        ref="container"
+        tag="li"
+        role="option"
+        class="<%kebab%>-select-option"
+        :value="spec.value"
+        :label="spec.label"
+        :disabled="spec.disabled"
+        :selected="spec.selected"
+        :focused="spec.data?.focused"
+        @click="onOptionClick"
+    >
+        <template
+            v-if="$slots.content"
+            #content="$slotData"
+        >
+            <slot
+                name="content"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.default"
+            #default="$slotData"
+        >
+            <slot v-bind="$slotData" />
+        </template>
+
+        <template
+            v-if="$slots.preicon"
+            #preicon="$slotData"
+        >
+            <slot
+                name="preicon"
+                v-bind="$slotData"
+            />
+        </template>
+
+        <template
+            v-if="$slots.icon"
+            #icon="$slotData"
+        >
+            <slot
+                name="icon"
+                v-bind="$slotData"
+            />
+        </template>
+    </<%camel%>Option>
+</template>
+
+<style>
+.<%kebab%>-select-option.<%kebab%>-option {
+    /* --- <%camel%>Select - Color - Option --- */
+    --<%kebab%>-option-color-border: var(--<%kebab%>-select-option-color-border, transparent);
+    --<%kebab%>-option-color-background: var(--<%kebab%>-select-option-color-background, transparent);
+    --<%kebab%>-option-color-text: var(--<%kebab%>-select-option-color-text, inherit);
+    --<%kebab%>-option-color-outline: var(--<%kebab%>-select-option-color-outline, initial);
+    --<%kebab%>-option-color-icon: var(--<%kebab%>-select-option-color-icon, initial);
+
+    /* --- <%camel%>Select - Size - Option --- */
+    --<%kebab%>-option-size-height: var(--<%kebab%>-select-option-size-height, auto);
+    --<%kebab%>-option-size-gap: var(--<%kebab%>-select-option-size-gap, 0.8em);
+    --<%kebab%>-option-size-padding: var(--<%kebab%>-select-option-size-padding, 0);
+    --<%kebab%>-option-size-border: var(--<%kebab%>-select-option-size-border, 0);
+    --<%kebab%>-option-size-text: var(--<%kebab%>-select-option-size-text, inherit);
+    --<%kebab%>-option-size-text-weight: var(--<%kebab%>-select-option-size-text-weight, 400);
+    --<%kebab%>-option-size-text-height: var(--<%kebab%>-select-option-size-text-height, 1);
+    --<%kebab%>-option-size-outline: var(--<%kebab%>-select-option-size-outline, initial);
+    --<%kebab%>-option-size-outline-offset: var(--<%kebab%>-select-option-size-outline-offset, initial);
+
+    /* --- <%camel%>Select - Radius - Option --- */
+    --<%kebab%>-option-radius-value: var(--<%kebab%>-select-option-radius-value, 0);
+}
+</style>

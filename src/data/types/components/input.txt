@@ -1,4 +1,5 @@
 // Types
+import type { Ref } from 'vue';
 import type { E<%camel%>Device } from '<%typesImport%>';
 
 export const <%upper%>_INPUT_SIZE = {} as const;
@@ -38,6 +39,9 @@ export interface I<%camel%>InputProps {
     /** Если true, то инпут будет невалиден */
     invalid?: boolean;
 
+    /** Если true, то инпут будет полностью заполнен */
+    fluid?: boolean;
+
     type?: string;
     placeholder?: string;
     readonly?: boolean;
@@ -46,12 +50,10 @@ export interface I<%camel%>InputProps {
     max?: number;
     maxlength?: number;
     tabindex?: string | number;
-    name?: string;
+    inputName?: string;
 }
 
-export interface I<%camel%>InputSlots {
-    prepend?: () => unknown;
-    preicon?: () => unknown;
-    icon?: () => unknown;
-    append?: () => unknown;
+export interface I<%camel%>InputExpose {
+    element: Ref<HTMLElement | null>;
+    input: Ref<HTMLInputElement | null>;
 }

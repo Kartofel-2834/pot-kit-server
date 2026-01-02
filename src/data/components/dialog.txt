@@ -1,25 +1,19 @@
 <script lang="ts" setup>
 // Types
-import type { Ref } from 'vue';
 import type { I<%camel%>DialogExpose, I<%camel%>DialogProps } from '<%typesImport%>/components/dialog';
-import type { EDialogLayers } from '<%typesImport%>/composables/dialog';
 
 // Constants
 import { <%upper%>_DIALOG_POSITION } from '<%typesImport%>/components/dialog';
 import { DIALOG_LAYERS } from '<%typesImport%>/composables/dialog';
 
 // Vue
-import { computed, inject, onUnmounted, provide, readonly, ref, watch } from 'vue';
+import { computed, ref, toRef } from 'vue';
 
 // Composables
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
-import { useDialog, useDialogLayer, useDialogZIndex } from '<%composablesImport%>/dialog';
-import { useFocusTrap } from '<%composablesImport%>/focus-trap';
-
-const $layer = DIALOG_LAYERS.DIALOG as EDialogLayers;
-const $parentLayer = inject<Ref<EDialogLayers>>('<%kebab%>-dialog-layer', ref(DIALOG_LAYERS.NONE));
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
+import { useDialog } from '<%composablesImport%>/dialog';
+import { useAutoFocus, useFocusTrap } from '<%composablesImport%>/focus';
 
 const $props = withDefaults(defineProps<I<%camel%>DialogProps>(), {
     visible: undefined,
@@ -28,7 +22,8 @@ const $props = withDefaults(defineProps<I<%camel%>DialogProps>(), {
     to: 'body',
     transition: '<%kebab%>-dialog-transition',
     noOverlay: false,
-    noFocus: false,
+    noAutoFocus: false,
+    noFocusTrap: false,
 });
 
 const $emit = defineEmits<{
@@ -37,65 +32,46 @@ const $emit = defineEmits<{
     'update:modelValue': [isVisible: boolean];
 }>();
 
-const $dialog = useDialog({
-    triggers: ['escape'],
-    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
-    layer: computed(() => useDialogLayer($layer, $parentLayer.value)),
-    close,
-    open,
-});
-
-const $deviceIs = useDeviceIs();
-
-const $focusTrap = useFocusTrap();
-
 // Data
 const container = ref<Element | null>(null);
-
-// Lifecycle
-onUnmounted(() => {
-    $dialog.terminate();
-    $focusTrap.terminate();
-});
 
 // Computed
 const teleportTo = computed(() => $props.to ?? 'body');
 
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            position: $props.position,
-            size: $props.size,
-            color: $props.color,
-            radius: $props.radius,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
+const currentStyles = computed(() => ({ zIndex: $dialog.zIndex.value }));
+
+// Composables
+const $dialog = useDialog({
+    isOpen: computed(() => Boolean($props.visible ?? $props.modelValue)),
+    triggers: ['escape'],
+    layer: DIALOG_LAYERS.DIALOG,
+    close,
+    open,
 });
 
-const classList = computed(() => useClassList({ ...properties.value }));
-
-const currentStyles = computed(() => ({
-    zIndex: useDialogZIndex($dialog),
-}));
-
-// Watchers
-watch(
-    () => [container.value, $props.noFocusTrap],
-    newValue => {
-        const [container] = newValue;
-
-        if (container instanceof Element) {
-            $focusTrap.setup(container, {
-                trap: !$props.noFocusTrap,
-                autofocus: !$props.noAutoFocus,
-            });
-        } else {
-            $focusTrap.terminate();
-        }
+const $properties = useDeviceProperties(
+    {
+        position: toRef(() => $props.position),
+        size: toRef(() => $props.size),
+        color: toRef(() => $props.color),
+        radius: toRef(() => $props.radius),
     },
+    toRef(() => $props.devices),
 );
+
+const $classList = useClassList(
+    {
+        position: $properties.position,
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+    },
+    'dialog',
+);
+
+useFocusTrap(computed(() => ($props.noFocusTrap ? null : container.value)));
+
+useAutoFocus(computed(() => ($props.noAutoFocus ? null : container.value)));
 
 // Methods
 function open() {
@@ -109,10 +85,9 @@ function close() {
 }
 
 // Exports
-provide('<%kebab%>-dialog-layer', $dialog.layer);
-
-defineExpose<I<%camel%>DialogExpose>({
-    isOpen: readonly($dialog.isOpen),
+defineExpose<Readonly<I<%camel%>DialogExpose>>({
+    isOpen: $dialog.isOpen,
+    container,
     open,
     close,
 });
@@ -126,25 +101,29 @@ defineExpose<I<%camel%>DialogExpose>({
         <Transition :name="transition">
             <div
                 v-if="$dialog.isOpen.value"
-                :data-<%kebab%>-dialog-id="$dialog.id.description"
-                :class="['<%kebab%>-dialog', classList]"
+                v-bind="$dialog.marker"
+                :class="['<%kebab%>-dialog', $classList]"
                 :style="currentStyles"
             >
                 <div
                     v-if="!noOverlay"
-                    class="<%kebab%>-dialog__overlay"
+                    class="<%kebab%>-dialog-overlay"
                     @click="close"
                 />
 
                 <div
                     ref="container"
-                    class="<%kebab%>-dialog__container"
+                    class="<%kebab%>-dialog-container"
                     role="dialog"
                     aria-modal="true"
                     :aria-labelledby="ariaLabelledby"
                     :aria-describedby="ariaDescribedby"
                 >
-                    <slot />
+                    <slot
+                        :marker="$dialog.marker"
+                        :close="close"
+                        :open="open"
+                    />
                 </div>
             </div>
         </Transition>
@@ -153,44 +132,31 @@ defineExpose<I<%camel%>DialogExpose>({
 
 <style>
 .<%kebab%>-dialog {
-    /* --- Color - Configuration --- */
-    --<%kebab%>-dialog-color-background: transparent;
-    --<%kebab%>-dialog-color-border: transparent;
-    --<%kebab%>-dialog-color-overlay: rgba(0, 0, 0, 0.3);
-
-    /* --- Size - Configuration --- */
-    --<%kebab%>-dialog-size-text: inherit;
-    --<%kebab%>-dialog-size-padding: 0;
-    --<%kebab%>-dialog-size-border: 1px;
-    --<%kebab%>-dialog-size-edge-margin: 20px;
-    --<%kebab%>-dialog-size-shadow: none;
-
-    /* --- Radius - Configuration --- */
-    --<%kebab%>-dialog-radius-value: 0;
-
     position: fixed;
 }
 
-.<%kebab%>-dialog__container {
+.<%kebab%>-dialog-container {
     position: fixed;
     overflow: auto;
     border-style: solid;
 
     /* --- <%camel%>Dialog - Color --- */
-    border-color: var(--<%kebab%>-dialog-color-border);
-    background-color: var(--<%kebab%>-dialog-color-background);
+    background-color: var(--<%kebab%>-dialog-color-background, transparent);
+    border-color: var(--<%kebab%>-dialog-color-border, transparent);
 
     /* --- <%camel%>Dialog - Size --- */
-    padding: var(--<%kebab%>-dialog-size-padding);
-    border-width: var(--<%kebab%>-dialog-size-border);
-    font-size: var(--<%kebab%>-dialog-size-text);
-    box-shadow: var(--<%kebab%>-dialog-size-shadow);
+    padding: var(--<%kebab%>-dialog-size-padding, 0);
+    border-width: var(--<%kebab%>-dialog-size-border, 1px);
+    font-size: var(--<%kebab%>-dialog-size-text, inherit);
+    font-weight: var(--<%kebab%>-dialog-size-text-weight, 400);
+    line-height: var(--<%kebab%>-dialog-size-text-height, 1);
+    box-shadow: var(--<%kebab%>-dialog-size-shadow, none);
 
     /* --- <%camel%>Dialog - Radius --- */
-    border-radius: var(--<%kebab%>-dialog-radius-value);
+    border-radius: var(--<%kebab%>-dialog-radius-value, 0);
 }
 
-.<%kebab%>-dialog__overlay {
+.<%kebab%>-dialog-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -198,11 +164,11 @@ defineExpose<I<%camel%>DialogExpose>({
     height: 100%;
 
     /* --- <%camel%>Dialog - Color --- */
-    background-color: var(--<%kebab%>-dialog-color-overlay);
+    background-color: var(--<%kebab%>-dialog-color-overlay, rgba(0, 0, 0, 0.3));
 }
 
 /* --- Position - Center --- */
-.<%kebab%>-dialog._position-center .<%kebab%>-dialog__container {
+._dialog-position-center .<%kebab%>-dialog-container {
     --<%kebab%>-dialog-position-transform: scale(0.5) translate(-50%, -50%);
 
     top: 50%;
@@ -212,111 +178,123 @@ defineExpose<I<%camel%>DialogExpose>({
 }
 
 /* --- Position - Bottom --- */
-.<%kebab%>-dialog._position-bottom .<%kebab%>-dialog__container {
+._dialog-position-bottom .<%kebab%>-dialog-container {
     --<%kebab%>-dialog-position-transform: translate(
         -50%,
-        calc(100% + var(--<%kebab%>-dialog-size-edge-margin))
+        calc(100% + var(--<%kebab%>-dialog-size-edge-margin, 20px))
     );
 
-    bottom: var(--<%kebab%>-dialog-size-edge-margin);
+    bottom: var(--<%kebab%>-dialog-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Position - Bottom-Left --- */
-.<%kebab%>-dialog._position-bottom-left .<%kebab%>-dialog__container {
-    --<%kebab%>-dialog-position-transform: translateX(calc(-100% - var(--<%kebab%>-dialog-size-edge-margin)));
+._dialog-position-bottom-left .<%kebab%>-dialog-container {
+    --<%kebab%>-dialog-position-transform: translateX(
+        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin, 20px))
+    );
 
-    bottom: var(--<%kebab%>-dialog-size-edge-margin);
-    left: var(--<%kebab%>-dialog-size-edge-margin);
+    bottom: var(--<%kebab%>-dialog-size-edge-margin, 20px);
+    left: var(--<%kebab%>-dialog-size-edge-margin, 20px);
 }
 
 /* --- Position - Bottom-Right --- */
-.<%kebab%>-dialog._position-bottom-right .<%kebab%>-dialog__container {
-    --<%kebab%>-dialog-position-transform: translateX(calc(100% + var(--<%kebab%>-dialog-size-edge-margin)));
+._dialog-position-bottom-right .<%kebab%>-dialog-container {
+    --<%kebab%>-dialog-position-transform: translateX(
+        calc(100% + var(--<%kebab%>-dialog-size-edge-margin, 20px))
+    );
 
-    bottom: var(--<%kebab%>-dialog-size-edge-margin);
-    right: var(--<%kebab%>-dialog-size-edge-margin);
+    bottom: var(--<%kebab%>-dialog-size-edge-margin, 20px);
+    right: var(--<%kebab%>-dialog-size-edge-margin, 20px);
 }
 
 /* --- Position - Top --- */
-.<%kebab%>-dialog._position-top .<%kebab%>-dialog__container {
+._dialog-position-top .<%kebab%>-dialog-container {
     --<%kebab%>-dialog-position-transform: translate(
         -50%,
-        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin))
+        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin, 20px))
     );
 
-    top: var(--<%kebab%>-dialog-size-edge-margin);
+    top: var(--<%kebab%>-dialog-size-edge-margin, 20px);
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* --- Position - Top-Left --- */
-.<%kebab%>-dialog._position-top-left .<%kebab%>-dialog__container {
-    --<%kebab%>-dialog-position-transform: translateX(calc(-100% - var(--<%kebab%>-dialog-size-edge-margin)));
+._dialog-position-top-left .<%kebab%>-dialog-container {
+    --<%kebab%>-dialog-position-transform: translateX(
+        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin, 20px))
+    );
 
-    top: var(--<%kebab%>-dialog-size-edge-margin);
-    left: var(--<%kebab%>-dialog-size-edge-margin);
+    top: var(--<%kebab%>-dialog-size-edge-margin, 20px);
+    left: var(--<%kebab%>-dialog-size-edge-margin, 20px);
 }
 
 /* --- Position - Top-Right --- */
-.<%kebab%>-dialog._position-top-right .<%kebab%>-dialog__container {
-    --<%kebab%>-dialog-position-transform: translateX(calc(100% + var(--<%kebab%>-dialog-size-edge-margin)));
+._dialog-position-top-right .<%kebab%>-dialog-container {
+    --<%kebab%>-dialog-position-transform: translateX(
+        calc(100% + var(--<%kebab%>-dialog-size-edge-margin, 20px))
+    );
 
-    top: var(--<%kebab%>-dialog-size-edge-margin);
-    right: var(--<%kebab%>-dialog-size-edge-margin);
+    top: var(--<%kebab%>-dialog-size-edge-margin, 20px);
+    right: var(--<%kebab%>-dialog-size-edge-margin, 20px);
 }
 
 /* --- Position - Left --- */
-.<%kebab%>-dialog._position-left .<%kebab%>-dialog__container {
+._dialog-position-left .<%kebab%>-dialog-container {
     --<%kebab%>-dialog-position-transform: translate(
-        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin)),
+        calc(-100% - var(--<%kebab%>-dialog-size-edge-margin, 20px)),
         -50%
     );
 
     top: 50%;
-    left: var(--<%kebab%>-dialog-size-edge-margin);
+    left: var(--<%kebab%>-dialog-size-edge-margin, 20px);
     transform: translateY(-50%);
 }
 
 /* --- Position - Right --- */
-.<%kebab%>-dialog._position-right .<%kebab%>-dialog__container {
+._dialog-position-right .<%kebab%>-dialog-container {
     --<%kebab%>-dialog-position-transform: translate(
-        calc(100% + var(--<%kebab%>-dialog-size-edge-margin)),
+        calc(100% + var(--<%kebab%>-dialog-size-edge-margin, 20px)),
         -50%
     );
 
     top: 50%;
-    right: var(--<%kebab%>-dialog-size-edge-margin);
+    right: var(--<%kebab%>-dialog-size-edge-margin, 20px);
     transform: translateY(-50%);
 }
 
 /* --- Overlay - Transition --- */
 .<%kebab%>-dialog-transition-enter-active,
 .<%kebab%>-dialog-transition-leave-active {
-    transition: 0.2s ease;
+    transition: var(--<%kebab%>-dialog-transition-duration, 0.2s)
+        var(--<%kebab%>-dialog-transition-function, ease);
 }
 
-.<%kebab%>-dialog-transition-enter-active .<%kebab%>-dialog__overlay,
-.<%kebab%>-dialog-transition-leave-active .<%kebab%>-dialog__overlay {
-    transition: opacity 0.2s ease;
+.<%kebab%>-dialog-transition-enter-active .<%kebab%>-dialog-overlay,
+.<%kebab%>-dialog-transition-leave-active .<%kebab%>-dialog-overlay {
+    transition: opacity var(--<%kebab%>-dialog-transition-duration, 0.2s)
+        var(--<%kebab%>-dialog-transition-function, ease);
 }
 
-.<%kebab%>-dialog-transition-enter-from .<%kebab%>-dialog__overlay,
-.<%kebab%>-dialog-transition-leave-to .<%kebab%>-dialog__overlay {
+.<%kebab%>-dialog-transition-enter-from .<%kebab%>-dialog-overlay,
+.<%kebab%>-dialog-transition-leave-to .<%kebab%>-dialog-overlay {
     opacity: 0;
 }
 
 /* --- Container - Transition --- */
-.<%kebab%>-dialog-transition-enter-active .<%kebab%>-dialog__container,
-.<%kebab%>-dialog-transition-leave-active .<%kebab%>-dialog__container {
+.<%kebab%>-dialog-transition-enter-active .<%kebab%>-dialog-container,
+.<%kebab%>-dialog-transition-leave-active .<%kebab%>-dialog-container {
     transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
+        opacity var(--<%kebab%>-dialog-transition-duration, 0.2s)
+            var(--<%kebab%>-dialog-transition-function, ease),
+        transform var(--<%kebab%>-dialog-transition-duration, 0.2s)
+            var(--<%kebab%>-dialog-transition-function, ease);
 }
 
-.<%kebab%>-dialog.<%kebab%>-dialog-transition-enter-from .<%kebab%>-dialog__container,
-.<%kebab%>-dialog.<%kebab%>-dialog-transition-leave-to .<%kebab%>-dialog__container {
+.<%kebab%>-dialog-transition-enter-from .<%kebab%>-dialog-container,
+.<%kebab%>-dialog-transition-leave-to .<%kebab%>-dialog-container {
     opacity: 0;
     transform: var(--<%kebab%>-dialog-position-transform);
 }

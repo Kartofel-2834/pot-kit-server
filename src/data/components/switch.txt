@@ -1,0 +1,202 @@
+<script lang="ts" generic="TRUE_VALUE = true, FALSE_VALUE = false" setup>
+// Types
+import type { I<%camel%>SwitchEmits, I<%camel%>SwitchExpose, I<%camel%>SwitchProps } from '<%typesImport%>/components/switch';
+
+// Vue
+import { computed, toRef, useTemplateRef } from 'vue';
+
+// Composables
+import { useClassList } from '<%composablesImport%>/class-list';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
+
+const props = withDefaults(defineProps<I<%camel%>SwitchProps<TRUE_VALUE, FALSE_VALUE>>(), {
+    value: undefined,
+    modelValue: undefined,
+    trueValue: undefined,
+    falseValue: undefined,
+    inputName: 'switch',
+    transition: '<%kebab%>-switch-transition',
+});
+
+const emit = defineEmits<I<%camel%>SwitchEmits<TRUE_VALUE, FALSE_VALUE>>();
+
+// Data
+const input = useTemplateRef('input');
+
+// Computed
+const currentValue = computed(() => {
+    return props.value ?? props.modelValue ?? false;
+});
+
+const trueValue = computed(
+    () => (props.trueValue === undefined ? true : props.trueValue) as TRUE_VALUE,
+);
+
+const falseValue = computed(
+    () => (props.falseValue === undefined ? false : props.falseValue) as FALSE_VALUE,
+);
+
+const isChecked = computed(() => currentValue.value === trueValue.value);
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        size: toRef(() => props.size),
+        color: toRef(() => props.color),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        size: $properties.size,
+        color: $properties.color,
+        radius: $properties.radius,
+        checked: isChecked,
+        disabled: toRef(() => props.disabled),
+        invalid: toRef(() => props.invalid),
+    },
+    'switch',
+);
+
+// Methods
+function onChange() {
+    const newValue = isChecked.value ? falseValue.value : trueValue.value;
+    emit('update:modelValue', newValue);
+    emit('change', newValue);
+}
+
+// Exports
+defineExpose<Readonly<I<%camel%>SwitchExpose>>({
+    input: input,
+});
+</script>
+
+<template>
+    <label
+        :class="['<%kebab%>-switch', $classList]"
+        @mousedown.prevent
+    >
+        <input
+            ref="input"
+            type="checkbox"
+            class="<%kebab%>-switch-input"
+            :checked="isChecked"
+            :name="inputName"
+            :value="currentValue"
+            :disabled="disabled"
+            @change.stop="onChange"
+        />
+
+        <span class="<%kebab%>-switch-track">
+            <span class="<%kebab%>-switch-thumb" />
+        </span>
+
+        <span
+            v-if="$slots.default"
+            class="<%kebab%>-switch-content"
+        >
+            <slot />
+        </span>
+    </label>
+</template>
+
+<style>
+.<%kebab%>-switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    /* --- <%camel%>Switch - Color --- */
+    color: var(--<%kebab%>-switch-color-text, inherit);
+
+    /* --- <%camel%>Switch - Size --- */
+    gap: var(--<%kebab%>-switch-size-gap, 0.8em);
+    font-size: var(--<%kebab%>-switch-size-text, inherit);
+    font-weight: var(--<%kebab%>-switch-size-text-weight, 400);
+    line-height: var(--<%kebab%>-switch-size-text-height, 1);
+}
+
+.<%kebab%>-switch:has(.<%kebab%>-switch-input:focus-visible) .<%kebab%>-switch-track {
+    outline-style: auto;
+}
+
+.<%kebab%>-switch-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
+.<%kebab%>-switch-track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    user-select: none;
+
+    /* --- <%camel%>Switch - Color --- */
+    background-color: var(--<%kebab%>-switch-color-background, transparent);
+    border-color: var(--<%kebab%>-switch-color-border, currentColor);
+    border-style: solid;
+
+    /* --- <%camel%>Switch - Size --- */
+    width: var(--<%kebab%>-switch-size-width, 2.4em);
+    height: var(--<%kebab%>-switch-size-height, 1.4em);
+    border-width: var(--<%kebab%>-switch-size-border, 1px);
+    outline-width: var(--<%kebab%>-switch-size-outline, initial);
+    outline-offset: var(--<%kebab%>-switch-size-outline-offset, initial);
+
+    /* --- <%camel%>Switch - Radius --- */
+    border-radius: var(--<%kebab%>-switch-radius-value, 1000px);
+
+    /* --- <%camel%>Switch - Transition --- */
+    transition:
+        color var(--<%kebab%>-switch-transition-duration, 0.2s)
+            var(--<%kebab%>-switch-transition-function, ease),
+        border-color var(--<%kebab%>-switch-transition-duration, 0.2s)
+            var(--<%kebab%>-switch-transition-function, ease),
+        background-color var(--<%kebab%>-switch-transition-duration, 0.2s)
+            var(--<%kebab%>-switch-transition-function, ease);
+}
+
+.<%kebab%>-switch-thumb {
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+
+    /* --- <%camel%>Switch - Color --- */
+    background-color: var(--<%kebab%>-switch-color-thumb, currentColor);
+
+    /* --- <%camel%>Switch - Size --- */
+    left: var(--<%kebab%>-switch-thumb-offset, 2px);
+    width: var(--<%kebab%>-switch-thumb-size-width, 1em);
+    height: var(--<%kebab%>-switch-thumb-size-width, 1em);
+
+    /* --- <%camel%>Switch - Transition --- */
+    transition:
+        transform var(--<%kebab%>-switch-transition-duration, 0.2s)
+            var(--<%kebab%>-switch-transition-function, ease),
+        background-color var(--<%kebab%>-switch-transition-duration, 0.2s)
+            var(--<%kebab%>-switch-transition-function, ease);
+}
+
+/* --- Disabled --- */
+._switch-disabled {
+    cursor: default;
+}
+
+/* --- Checked --- */
+._switch-checked .<%kebab%>-switch-thumb {
+    transform: translateX(
+        calc(
+            var(--<%kebab%>-switch-size-width, 2.4em) - var(--<%kebab%>-switch-thumb-size-width, 1em) - 2 *
+                var(--<%kebab%>-switch-thumb-offset, 2px)
+        )
+    );
+}
+</style>

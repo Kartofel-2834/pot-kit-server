@@ -1,0 +1,65 @@
+// Types
+import type { RendererElement } from 'vue';
+import type { TOptionValue } from '<%typesImport%>/composables/specs';
+import type { EAttachedBoxPosition } from '<%typesImport%>/composables/attach';
+import type { E<%camel%>Device } from '<%typesImport%>';
+
+export const <%upper%>_SELECT_COLOR = {
+    <%upper%>: '<%kebab%>',
+} as const;
+
+export type E<%camel%>SelectColor = (typeof <%upper%>_SELECT_COLOR)[keyof typeof <%upper%>_SELECT_COLOR];
+
+export const <%upper%>_SELECT_SIZE = {
+    MEDIUM: 'medium',
+} as const;
+
+export const <%upper%>_SELECT_RADIUS = {
+    CIRCLE: 'circle',
+} as const;
+
+export type E<%camel%>SelectSize = (typeof <%upper%>_SELECT_SIZE)[keyof typeof <%upper%>_SELECT_SIZE];
+
+export type E<%camel%>SelectRadius = (typeof <%upper%>_SELECT_RADIUS)[keyof typeof <%upper%>_SELECT_RADIUS];
+
+export interface I<%camel%>SelectSpecData {
+    focused: boolean;
+}
+
+export interface I<%camel%>SelectProps<OPTION, VALUE_FIELD extends keyof OPTION> {
+    values?: TOptionValue<OPTION, VALUE_FIELD>[];
+    modelValue?: TOptionValue<OPTION, VALUE_FIELD>[];
+    options?: OPTION[];
+    optionLabel?: keyof OPTION | ((option: OPTION) => string);
+    optionDisabled?: keyof OPTION | ((option: OPTION) => boolean);
+    optionValue?: VALUE_FIELD | ((option: OPTION) => TOptionValue<OPTION, VALUE_FIELD>);
+
+    multiple?: boolean;
+    text?: string;
+    placeholder?: string;
+    editable?: boolean;
+    fluid?: boolean;
+    fixedDropdownWidth?: boolean;
+
+    to?: string | RendererElement | null;
+    position?: EAttachedBoxPosition | EAttachedBoxPosition[];
+    nudge?: number | number[];
+    edgeMargin?: number | number[];
+    persistent?: boolean;
+    noSticky?: boolean;
+    closeOnMove?: boolean;
+    transition?: string;
+
+    size?: E<%camel%>SelectSize | E<%camel%>SelectSize[] | null;
+    color?: E<%camel%>SelectColor | E<%camel%>SelectColor[] | null;
+    radius?: E<%camel%>SelectRadius | E<%camel%>SelectRadius[] | null;
+
+    devices?: E<%camel%>Device[];
+}
+
+export interface I<%camel%>SelectEmits<OPTION, VALUE_FIELD extends keyof OPTION> {
+    change: [value: TOptionValue<OPTION, VALUE_FIELD>[], option: OPTION];
+    'update:modelValue': [value: TOptionValue<OPTION, VALUE_FIELD>[]];
+    changeText: [text: string];
+    'update:text': [text: string];
+}

@@ -1,10 +1,13 @@
 {
     "components": {
         "accordion": {
-            "components": [],
+            "components": [
+                "icon"
+            ],
             "composables": [
                 "class-list",
-                "timer"
+                "timer",
+                "subscriptions"
             ],
             "types": [
                 "components/accordion"
@@ -13,40 +16,41 @@
         "accordion-group": {
             "components": [],
             "composables": [
-                "focus-trap"
-            ],
-            "types": []
-        },
-        "attach-target": {
-            "components": [
-                "slot-catcher"
-            ],
-            "composables": [
-                "attach"
+                "subscriptions",
+                "focus",
+                "keyboard"
             ],
             "types": [
-                "components/attach-target"
+                "components/accordion"
             ]
         },
         "button": {
             "components": [],
             "composables": [
-                "class-list",
-                "device-properties",
-                "device-is"
+                "device-is",
+                "class-list"
             ],
             "types": [
                 "components/button"
             ]
+        },
+        "checkbox": {
+            "components": [
+                "icon"
+            ],
+            "composables": [
+                "class-list",
+                "device-is"
+            ],
+            "types": []
         },
         "dialog": {
             "components": [],
             "composables": [
                 "class-list",
                 "device-is",
-                "device-properties",
                 "dialog",
-                "focus-trap"
+                "focus"
             ],
             "types": [
                 "components/dialog",
@@ -58,9 +62,8 @@
             "composables": [
                 "class-list",
                 "device-is",
-                "device-properties",
                 "dialog",
-                "focus-trap"
+                "focus"
             ],
             "types": [
                 "components/drawer",
@@ -70,7 +73,6 @@
         "grid": {
             "components": [],
             "composables": [
-                "device-properties",
                 "class-list",
                 "device-is"
             ],
@@ -82,39 +84,126 @@
             "components": [],
             "composables": [
                 "class-list",
-                "device-properties",
                 "device-is"
             ],
             "types": [
-                "components/group"
+                "components/group",
+                "components/grid"
+            ]
+        },
+        "icon": {
+            "components": [],
+            "composables": [
+                "device-is",
+                "class-list"
+            ],
+            "types": [
+                "components/icon"
             ]
         },
         "input": {
             "components": [],
             "composables": [
                 "class-list",
-                "device-is",
-                "device-properties"
+                "device-is"
             ],
             "types": [
                 "components/input"
             ]
         },
+        "option": {
+            "components": [],
+            "composables": [
+                "class-list"
+            ],
+            "types": [
+                "components/option"
+            ]
+        },
         "popover": {
             "components": [
-                "attach-target"
+                "slot-catcher"
             ],
             "composables": [
-                "dialog",
                 "device-is",
-                "device-properties",
+                "attach",
+                "dialog",
                 "class-list",
-                "focus-trap"
+                "focus"
             ],
             "types": [
                 "components/popover",
                 "composables/dialog",
-                "components/attach-target"
+                "composables/attach"
+            ]
+        },
+        "radio": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-is"
+            ],
+            "types": [
+                "components/radio"
+            ]
+        },
+        "select": {
+            "components": [
+                "select-header",
+                "select-dropdown",
+                "select-option"
+            ],
+            "composables": [
+                "device-is",
+                "specs",
+                "class-list",
+                "keyboard",
+                "subscriptions"
+            ],
+            "types": [
+                "composables/specs"
+            ]
+        },
+        "select-dropdown": {
+            "components": [
+                "popover"
+            ],
+            "composables": [
+                "timer",
+                "subscriptions",
+                "focus",
+                "keyboard"
+            ],
+            "types": [
+                "composables/attach"
+            ]
+        },
+        "select-header": {
+            "components": [
+                "input",
+                "icon"
+            ],
+            "composables": [],
+            "types": []
+        },
+        "select-option": {
+            "components": [
+                "option"
+            ],
+            "composables": [],
+            "types": []
+        },
+        "slider": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-is",
+                "subscriptions",
+                "timer",
+                "keyboard"
+            ],
+            "types": [
+                "components/slider"
             ]
         },
         "slot-catcher": {
@@ -124,14 +213,33 @@
                 "components/slot-catcher"
             ]
         },
+        "switch": {
+            "components": [],
+            "composables": [
+                "class-list",
+                "device-is"
+            ],
+            "types": [
+                "components/switch"
+            ]
+        },
+        "tag": {
+            "components": [],
+            "composables": [
+                "device-is",
+                "class-list"
+            ],
+            "types": [
+                "components/tag"
+            ]
+        },
         "toast": {
             "components": [],
             "composables": [
                 "toast",
-                "class-list",
-                "device-properties",
+                "dialog",
                 "device-is",
-                "dialog"
+                "class-list"
             ],
             "types": [
                 "components/toast",
@@ -141,16 +249,19 @@
         },
         "tooltip": {
             "components": [
-                "attach-target"
+                "slot-catcher"
             ],
             "composables": [
-                "dialog",
-                "device-properties",
                 "device-is",
-                "class-list"
+                "class-list",
+                "dialog",
+                "attach",
+                "subscriptions",
+                "focus"
             ],
             "types": [
                 "components/tooltip",
+                "composables/attach",
                 "composables/dialog"
             ]
         }
@@ -159,13 +270,11 @@
         "attach": {
             "components": [],
             "composables": [
-                "surrounding",
+                "subscriptions",
                 "timer"
             ],
             "types": [
-                "components/attach-target",
-                "composables/attach",
-                "composables/surrounding"
+                "composables/attach"
             ]
         },
         "class-list": {
@@ -175,48 +284,60 @@
         },
         "device-is": {
             "components": [],
-            "composables": [],
+            "composables": [
+                "subscriptions"
+            ],
             "types": [
                 "composables/device-is",
                 "index"
             ]
         },
-        "device-properties": {
-            "components": [],
-            "composables": [],
-            "types": [
-                "composables/device-properties",
-                "index"
-            ]
-        },
         "dialog": {
             "components": [],
-            "composables": [],
+            "composables": [
+                "subscriptions",
+                "keyboard"
+            ],
             "types": [
                 "composables/dialog"
             ]
         },
-        "focus-trap": {
+        "focus": {
             "components": [],
             "composables": [
-                "timer"
+                "timer",
+                "keyboard"
             ],
             "types": [
-                "composables/focus-trap"
+                "composables/focus"
             ]
+        },
+        "keyboard": {
+            "components": [],
+            "composables": [
+                "subscriptions"
+            ],
+            "types": []
         },
         "request": {
             "components": [],
             "composables": [],
             "types": [
-                "ui/composables/request"
+                "composables/request"
             ]
         },
-        "surrounding": {
+        "specs": {
             "components": [],
             "composables": [],
             "types": [
-                "composables/surrounding"
+                "composables/specs"
+            ]
+        },
+        "subscriptions": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/subscriptions"
             ]
         },
         "timer": {
@@ -233,10 +354,194 @@
         }
     },
     "types": {
+        "index": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/attach": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/device-is": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/dialog": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/focus": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/request": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/specs": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "composables/subscriptions": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
         "composables/toast": {
             "components": [],
             "composables": [],
             "types": []
+        },
+        "components/accordion": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "components/button": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/checkbox": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/dialog": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/drawer": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/grid": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/group": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/icon": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/input": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/option": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "components/popover": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index",
+                "composables/attach",
+                "composables/dialog"
+            ]
+        },
+        "components/radio": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/select-dropdown": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "components/select-header",
+                "index",
+                "composables/attach",
+                "composables/dialog"
+            ]
+        },
+        "components/select-header": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/specs",
+                "components/select",
+                "index"
+            ]
+        },
+        "components/select-option": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/specs",
+                "components/select"
+            ]
+        },
+        "components/select": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "composables/specs",
+                "composables/attach",
+                "index"
+            ]
+        },
+        "components/slider": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/slot-catcher": {
+            "components": [],
+            "composables": [],
+            "types": []
+        },
+        "components/switch": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
+        },
+        "components/tag": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index"
+            ]
         },
         "components/toast": {
             "components": [],
@@ -244,6 +549,14 @@
             "types": [
                 "index",
                 "composables/toast"
+            ]
+        },
+        "components/tooltip": {
+            "components": [],
+            "composables": [],
+            "types": [
+                "index",
+                "composables/attach"
             ]
         }
     }

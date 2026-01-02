@@ -1,0 +1,75 @@
+<script lang="ts" setup>
+// Types
+import type { I<%camel%>TagProps } from '<%typesImport%>/components/tag';
+
+// Vue
+import { toRef } from 'vue';
+
+// Composables
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
+import { useClassList } from '<%composablesImport%>/class-list';
+
+const props = defineProps<I<%camel%>TagProps>();
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        color: toRef(() => props.color),
+        size: toRef(() => props.size),
+        radius: toRef(() => props.radius),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        color: $properties.color,
+        size: $properties.size,
+        radius: $properties.radius,
+    },
+    'tag',
+);
+</script>
+
+<template>
+    <span :class="['<%kebab%>-tag', $classList]">
+        <slot />
+    </span>
+</template>
+
+<style>
+.<%kebab%>-tag {
+    display: flex;
+    align-items: center;
+    border-style: solid;
+
+    /* --- <%camel%>Tag - Color --- */
+    background-color: var(--<%kebab%>-tag-color-background, transparent);
+    color: var(--<%kebab%>-tag-color-text, inherit);
+    border-color: var(--<%kebab%>-tag-color-border, transparent);
+    outline-color: var(--<%kebab%>-tag-color-outline, initial);
+
+    /* --- <%camel%>Tag - Size --- */
+    padding: var(--<%kebab%>-tag-size-padding, 0);
+    border-width: var(--<%kebab%>-tag-size-border, 0);
+    gap: var(--<%kebab%>-tag-size-gap, 0.4em);
+    font-size: var(--<%kebab%>-tag-size-text, inherit);
+    font-weight: var(--<%kebab%>-tag-size-text-weight, 500);
+    line-height: var(--<%kebab%>-tag-size-text-height, 1);
+    outline-width: var(--<%kebab%>-tag-size-outline, initial);
+    outline-offset: var(--<%kebab%>-tag-size-outline-offset, initial);
+
+    /* --- <%camel%>Tag - Radius --- */
+    border-radius: var(--<%kebab%>-tag-radius-value, 0);
+
+    /* --- <%camel%>Tag - Transition --- */
+    transition:
+        color var(--<%kebab%>-tag-transition-duration, 0.2s) var(--<%kebab%>-tag-transition-function, ease),
+        border-color var(--<%kebab%>-tag-transition-duration, 0.2s)
+            var(--<%kebab%>-tag-transition-function, ease),
+        outline-color var(--<%kebab%>-tag-transition-duration, 0.2s)
+            var(--<%kebab%>-tag-transition-function, ease),
+        background-color var(--<%kebab%>-tag-transition-duration, 0.2s)
+            var(--<%kebab%>-tag-transition-function, ease);
+}
+</style>

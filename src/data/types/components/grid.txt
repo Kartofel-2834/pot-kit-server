@@ -57,23 +57,15 @@ export const <%upper%>_GRID_GAP = {} as const;
 
 export type E<%camel%>GridGap = (typeof <%upper%>_GRID_GAP)[keyof typeof <%upper%>_GRID_GAP];
 
-export const <%upper%>_GRID_ROW_GAP = {} as const;
-
-export type E<%camel%>GridRowGap = (typeof <%upper%>_GRID_ROW_GAP)[keyof typeof <%upper%>_GRID_ROW_GAP];
-
-export const <%upper%>_GRID_COLUMN_GAP = {} as const;
-
-export type E<%camel%>GridColumnGap = (typeof <%upper%>_GRID_COLUMN_GAP)[keyof typeof <%upper%>_GRID_COLUMN_GAP];
-
 export interface I<%camel%>GridProps {
     /** Tag of the element defining the grid */
     tag?: string;
 
     /** Number of columns in the grid */
-    cols?: number | number[] | string | string[];
+    cols?: number | string | Array<number | string>;
 
     /** Number of rows in the grid */
-    rows?: number | number[] | string | string[];
+    rows?: number | string | Array<number | string>;
 
     /** Grid direction */
     flow?: string | string[];
@@ -97,13 +89,13 @@ export interface I<%camel%>GridProps {
     justifyItems?: T<%camel%>GridJustifyItems | T<%camel%>GridJustifyItems[] | null;
 
     /** Grid margin size */
-    gap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
+    gap?: number | E<%camel%>GridGap | Array<E<%camel%>GridGap | number> | null;
 
     /** Grid row indent size */
-    rowGap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
+    rowGap?: number | E<%camel%>GridGap | Array<E<%camel%>GridGap | number> | null;
 
     /** Grid column indent size */
-    columnGap?: E<%camel%>GridGap | E<%camel%>GridGap[] | null;
+    columnGap?: number | E<%camel%>GridGap | Array<E<%camel%>GridGap | number> | null;
 
     /** Breakpoints for responsive design */
     devices?: E<%camel%>Device[];

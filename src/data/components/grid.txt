@@ -1,75 +1,80 @@
-<template>
-    <component
-        :is="tag"
-        :class="['<%kebab%>-grid', classList]"
-        :style="currentStyles"
-    >
-        <slot />
-    </component>
-</template>
-
 <script lang="ts" setup>
 // Types
-import type { I<%camel%>GridProps } from '<%typesImport%>/components/grid';
+import type { E<%camel%>GridGap, I<%camel%>GridProps } from '<%typesImport%>/components/grid';
 
 // Vue
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 
 // Composables
-import { useDeviceProperties } from '<%composablesImport%>/device-properties';
 import { useClassList } from '<%composablesImport%>/class-list';
-import { useDeviceIs } from '<%composablesImport%>/device-is';
+import { useDeviceProperties } from '<%composablesImport%>/device-is';
 
-const $props = withDefaults(defineProps<I<%camel%>GridProps>(), {
+const props = withDefaults(defineProps<I<%camel%>GridProps>(), {
     tag: 'div',
 });
 
-const $deviceIs = useDeviceIs();
-
 // Computed
-const properties = computed(() => {
-    return useDeviceProperties(
-        {
-            cols: $props.cols,
-            rows: $props.rows,
-            flow: $props.flow,
-            autoCols: $props.autoCols,
-            autoRows: $props.autoRows,
-            align: $props.align,
-            alignContent: $props.alignContent,
-            justify: $props.justify,
-            justifyItems: $props.justifyItems,
-            gap: $props.gap,
-            rowGap: $props.rowGap,
-            columnGap: $props.columnGap,
-        },
-        $deviceIs.device.value,
-        $props.devices,
-    );
-});
-
-const classList = computed(() =>
-    useClassList({
-        gap: properties.value.gap,
-        'row-gap': properties.value.rowGap,
-        'column-gap': properties.value.columnGap,
-        'divided-gap': Boolean(properties.value.rowGap || properties.value.columnGap),
-    }),
-);
-
 const currentStyles = computed(() => {
+    const rowGap = formatGap($properties.rowGap.value);
+    const columnGap = formatGap($properties.columnGap.value);
+    const gap = formatGap($properties.gap.value);
+
+    const data = rowGap || columnGap ? { 'row-gap': rowGap, 'column-gap': columnGap } : { gap };
+
     return {
-        'grid-template-columns': formatNumberToFr(properties.value.cols),
-        'grid-template-rows': formatNumberToFr(properties.value.rows),
-        'grid-auto-flow': properties.value.flow,
-        'grid-auto-rows': properties.value.autoRows,
-        'grid-auto-columns': properties.value.autoCols,
-        'align-items': properties.value.align,
-        'align-content': properties.value.alignContent,
-        'justify-content': properties.value.justify,
-        'justify-items': properties.value.justifyItems,
+        ...data,
+        'grid-template-columns': formatNumberToFr($properties.cols.value),
+        'grid-template-rows': formatNumberToFr($properties.rows.value),
+        'grid-auto-flow': $properties.flow.value,
+        'grid-auto-rows': $properties.autoRows.value,
+        'grid-auto-columns': $properties.autoCols.value,
+        'align-items': $properties.align.value,
+        'align-content': $properties.alignContent.value,
+        'justify-content': $properties.justify.value,
+        'justify-items': $properties.justifyItems.value,
     };
 });
+
+// Composables
+const $properties = useDeviceProperties(
+    {
+        cols: toRef(() => props.cols),
+        rows: toRef(() => props.rows),
+        flow: toRef(() => props.flow),
+        autoCols: toRef(() => props.autoCols),
+        autoRows: toRef(() => props.autoRows),
+        align: toRef(() => props.align),
+        alignContent: toRef(() => props.alignContent),
+        justify: toRef(() => props.justify),
+        justifyItems: toRef(() => props.justifyItems),
+        gap: toRef(() => props.gap),
+        rowGap: toRef(() => props.rowGap),
+        columnGap: toRef(() => props.columnGap),
+    },
+    toRef(() => props.devices),
+);
+
+const $classList = useClassList(
+    {
+        'divided-gap': computed(() => {
+            const [rowGap, columnGap] = [$properties.rowGap.value, $properties.columnGap.value];
+            const hasRowGap = rowGap && typeof rowGap !== 'number';
+            const hasColumnGap = columnGap && typeof columnGap !== 'number';
+
+            return hasRowGap || hasColumnGap;
+        }),
+        gap: toRef(() =>
+            typeof $properties.gap.value !== 'number' ? $properties.gap.value : null,
+        ),
+        'row-gap': toRef(() =>
+            typeof $properties.rowGap.value !== 'number' ? $properties.rowGap.value : null,
+        ),
+        'column-gap': toRef(() =>
+            typeof $properties.columnGap.value !== 'number' ? $properties.columnGap.value : null,
+        ),
+    },
+    'grid',
+);
 
 // Methods
 function formatNumberToFr(v?: string | number): string | undefined {
@@ -79,24 +84,33 @@ function formatNumberToFr(v?: string | number): string | undefined {
 
     return v ? String(v) : undefined;
 }
+
+function formatGap(gap: E<%camel%>GridGap | number | null | undefined): string {
+    return typeof gap === 'number' && !isNaN(gap) && isFinite(gap) ? `${gap}px` : '';
+}
 </script>
+
+<template>
+    <component
+        :is="tag"
+        :class="['<%kebab%>-grid', $classList]"
+        :style="currentStyles"
+    >
+        <slot />
+    </component>
+</template>
 
 <style>
 .<%kebab%>-grid {
-    /* --- Gap - Configuration --- */
-    --<%kebab%>-grid-gap-value: 0;
-    --<%kebab%>-grid-row-gap-value: 0;
-    --<%kebab%>-grid-column-gap-value: 0;
-
     display: grid;
 
     /* --- <%camel%>Grid - Gap --- */
-    gap: var(--<%kebab%>-grid-gap-value);
+    gap: var(--<%kebab%>-grid-gap-value, 0);
 }
 
-.<%kebab%>-grid._divided-gap {
-    /* Gap */
-    row-gap: var(--<%kebab%>-grid-row-gap-value);
-    column-gap: var(--<%kebab%>-grid-column-gap-value);
+/* --- Divided-Gap --- */
+._grid-divided-gap {
+    row-gap: var(--<%kebab%>-grid-gap-row, 0);
+    column-gap: var(--<%kebab%>-grid-gap-column, 0);
 }
 </style>

@@ -1,10 +1,3 @@
-export interface I<%camel%>AccordionSlots {
-    default?: () => unknown;
-    title?: () => unknown;
-    icon?: () => unknown;
-    header?: (options: { toggle: () => void; open: () => void; close: () => void }) => unknown;
-}
-
 export interface I<%camel%>AccordionProps {
     /** Accordion open flag */
     opened?: boolean;
@@ -14,4 +7,9 @@ export interface I<%camel%>AccordionProps {
 
     /** If true, the accordion will be disabled and inactive */
     disabled?: boolean;
+}
+
+export interface I<%camel%>AccordionGroupProps {
+    values?: unknown[];
+    modelValue?: unknown[];
 }
